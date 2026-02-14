@@ -27,3 +27,10 @@
 - Decision: Repairs are limited to four one-pass transforms in fixed order: `stripBOM`, `removeAsciiControlChars`, `trimOuterJunk`, `fixTrailingCommas`.
 - Rationale: Bounded transforms improve auditability and reduce the risk of hidden semantic mutations.
 - Consequence: Inputs requiring broader mutation fail with structured parse diagnostics instead of silent coercion.
+
+## ADR-0005: Shard identity uses program hash + normalized shard text
+- Date: 2026-02-14
+- Context: Prompt 04 requires resumable chunk execution with deterministic shard IDs.
+- Decision: `shardId = sha256(programHash + normalizedTextSlice)` and chunk boundaries are char-based with inclusive `start`, exclusive `end`.
+- Rationale: Pairing program and content isolates shards across extraction programs while keeping IDs portable.
+- Consequence: Changing normalization or chunk options changes shard IDs by design.

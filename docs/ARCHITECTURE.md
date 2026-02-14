@@ -5,6 +5,8 @@
 - `src/core/hash.ts`: cross-runtime SHA-256 via WebCrypto.
 - `src/core/normalize.ts`: deterministic normalization and ledgering.
 - `src/core/invariants.ts`: quote/offset invariant enforcement.
+- `src/engine/chunk.ts`: character-window chunking with overlap and deterministic shard IDs.
+- `src/engine/mapSpan.ts`: shard-local to global span mapping validation.
 - `src/json/extractJson.ts`: deterministic first-JSON extraction and JSON-vs-JSONL detection.
 - `src/json/repair.ts`: bounded repair pipeline with forensic step logs.
 - `src/json/parse.ts`: strict parser with structured error details.

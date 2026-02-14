@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/document-shard.schema.json",
+  "title": "DocumentShard",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["shardId", "start", "end", "text"],
+  "properties": {
+    "shardId": {
+      "type": "string"
+    },
+    "start": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "end": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "text": {
+      "type": "string"
+    }
+  }
+}
