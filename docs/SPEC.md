@@ -65,6 +65,13 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Core and Node adapter boundaries stay explicit to preserve portability.
 - Roundtrip tests validate JSONL codec determinism.
 
+## Prompt-10 anti-drift summary (5 bullets)
+- Visualization output is a single self-contained HTML string.
+- HTML embeds CSS, JS, and serialized data payload for offline viewing.
+- UI supports filtering by extraction class.
+- Highlights are rendered from grounded span indices.
+- A Node example writes the generated HTML file through node adapter utilities.
+
 ## Invariants
 - Offsets use UTF-16 code unit indexing with inclusive `charStart` and exclusive `charEnd`.
 - `assertQuoteInvariant` validates integer spans, bounds, and exact quote matching.
@@ -118,3 +125,7 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Core JSONL codec must not import `node:*` APIs.
 - Node file IO lives only under `src-node/*` and is exposed through `./node` export.
 - JSONL line type is `EvidenceBundle` and UTF-8 encoded.
+
+## Visualization Rules
+- `visualizeEvidenceBundle()` output must contain embedded styles, script payload, and rendering logic.
+- Initial server-rendered HTML includes span index markers for basic no-JS inspection.

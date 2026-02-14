@@ -69,3 +69,10 @@
 - Decision: Implement codec in `src/io/jsonl.ts` and isolate filesystem helpers in `src-node/fs.ts` under `./node` export.
 - Rationale: Keeps core portable across Node, Deno, Bun, and Workers while preserving ergonomic Node file utilities.
 - Consequence: Consumers must import `ekchylisma/node` for fs-backed helpers.
+
+## ADR-0011: Visualization output is self-contained HTML with embedded payload
+- Date: 2026-02-14
+- Context: Prompt 10 requires portable evidence visualization without external assets.
+- Decision: `visualizeEvidenceBundle()` returns a single HTML string containing CSS, JS, and JSON payload.
+- Rationale: Self-contained artifacts are easier to share and inspect across runtimes/environments.
+- Consequence: Visualization HTML can be written directly to disk by Node example tooling.

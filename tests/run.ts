@@ -12,6 +12,7 @@ import "./providers/fake-e2e.test.ts";
 import "./providers/real-providers.test.ts";
 import "./schema/validate.test.ts";
 import "./schema/to-json-schema.test.ts";
+import "./viz/html.test.ts";
 import { run } from "./harness.ts";
 
 await run();

@@ -25,3 +25,10 @@ export async function writeEvidenceBundlesToJsonlFile(
   const encoded = encodeEvidenceBundlesToJsonl(bundles);
   await writeFile(path, encoded, "utf8");
 }
+
+export async function writeTextFile(
+  path: string,
+  content: string,
+): Promise<void> {
+  await writeFile(path, content, "utf8");
+}

@@ -13,6 +13,7 @@ export * from "./io/jsonl.ts";
 export * from "./json/extractJson.ts";
 export * from "./json/repair.ts";
 export * from "./json/parse.ts";
+export * from "./viz/html.ts";
 export * from "./providers/types.ts";
 export * from "./providers/errors.ts";
 export * from "./providers/requestHash.ts";
