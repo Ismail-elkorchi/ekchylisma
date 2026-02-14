@@ -27,6 +27,9 @@
 - `src/providers/ollama.ts`: Ollama `/api/chat` adapter with JSON/schema format mode.
 - `src-node/fs.ts`: Node-only JSONL file adapter exposed via `ekchylisma/node`.
 - `examples/node/render-viz.ts`: Node example that writes visualization HTML output.
+- `examples/shared/scenario.ts`: shared portability scenario used by Node/Deno/Bun/Workers.
+- `examples/node/basic.ts`, `examples/deno/basic.ts`, `examples/bun/basic.ts`: runtime portability examples.
+- `examples/workers/worker.ts`: minimal Worker handler running fake-provider extraction path.
 - `.github/workflows/ci.yml`: deterministic CI checks across Node, Deno, and Bun.
 - `src/schema/s.ts`: dependency-free schema DSL with TypeScript inference.
 - `src/schema/validate.ts`: deterministic validator with JSON pointer errors.
