@@ -10,12 +10,12 @@ Legend:
 | REQ | Code Location(s) | Test(s) | CI Job(s) | Status | Gap / Rationale |
 | --- | --- | --- | --- | --- | --- |
 | REQ-2.3.1 | `package.json` | `tools/orphan-check.ts` | `node` | implemented | `dependencies` is `{}`. |
-| REQ-2.3.2 | `docs/DEVDEPS.md`, `docs/DECISIONS.md` | n/a | `node` | partial | No dev deps currently; debt-tracking path exists for future deps. |
+| REQ-2.3.2 | `docs/DEVDEPS.md`, `docs/DECISIONS.md`, `package.json` (`devDependencies.miniflare`) | `tests/workers/harness.test.ts` | `workers` | implemented | `miniflare` is documented with explicit debt rationale in ADR-0015. |
 | REQ-2.3.3 | `docs/PORTABILITY.md`, `examples/*` | `tests/run.ts` | `node`, `deno`, `bun` | partial | Workers harness CI tracked as follow-up (REQ-4.2.2). |
 | REQ-4.1.1 | `src/core/*`, `src/providers/*` | `tests/core/*`, `tests/providers/*` | `node`, `deno`, `bun` | implemented | Core uses Web APIs (`fetch`, `crypto.subtle`, streams). |
 | REQ-4.1.2 | `src/index.ts`, `src-node/fs.ts`, `package.json` exports | `tests/io/jsonl.test.ts` | `node` | implemented | Node-only fs isolated under `./node` subpath. |
 | REQ-4.2.1 | `.github/workflows/ci.yml` | `tests/run.ts` | `node`, `deno`, `bun` | implemented | Multi-runtime CI matrix exists. |
-| REQ-4.2.2 | `examples/workers/worker.ts` | n/a | n/a | gap | No dedicated workers harness validation job yet. Planned in PR-4. |
+| REQ-4.2.2 | `examples/workers/worker.ts`, `tests/workers/harness.test.ts`, `package.json` (`test:workers`) | `tests/workers/harness.test.ts` | `workers` | implemented | Workers compatibility validated by Miniflare harness in CI. |
 | REQ-4.2.3 | n/a | n/a | n/a | gap | Browser harness not yet implemented. |
 | REQ-6.1.1 | `src/core/types.ts` (`DocumentInput`), `src/engine/run.ts` (`runWithEvidence`) | `tests/engine/run-with-evidence.test.ts` | `node`, `deno`, `bun` | implemented | Document input is explicit and run through public API. |
 | REQ-6.2.1 | `src/core/types.ts` (`Program`) | `tests/providers/fake-e2e.test.ts` | `node`, `deno`, `bun` | partial | Program is structured but does not yet mirror full master-spec shape. |
@@ -51,6 +51,5 @@ Legend:
 ## Explicit Known Gaps
 
 These gaps are intentionally tracked and should be resolved in follow-up implementation work:
-- REQ-4.2.2 workers harness CI validation.
 - REQ-13.1 license + notice artifacts.
 - REQ-11.3.1 long-text regression fixtures.
