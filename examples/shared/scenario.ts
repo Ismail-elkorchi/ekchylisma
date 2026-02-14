@@ -1,4 +1,4 @@
-import { FakeProvider, runExtractionWithProvider, sha256Hex } from "../../src/index.ts";
+import { FakeProvider, runWithEvidence, sha256Hex } from "../../src/index.ts";
 
 export async function runPortabilityScenario(runtime: string) {
   const documentText = "Alpha Beta";
@@ -26,10 +26,13 @@ export async function runPortabilityScenario(runtime: string) {
     }),
   });
 
-  const result = await runExtractionWithProvider({
+  const evidenceBundle = await runWithEvidence({
     runId: `example-${runtime}`,
     program,
-    documentText,
+    document: {
+      documentId: `example-${runtime}-doc`,
+      text: documentText,
+    },
     provider,
     model: "fake-model",
     chunkSize: 64,
@@ -38,7 +41,8 @@ export async function runPortabilityScenario(runtime: string) {
 
   return {
     runtime,
-    extractionCount: result.extractions.length,
-    extractions: result.extractions,
+    extractionCount: evidenceBundle.extractions.length,
+    extractions: evidenceBundle.extractions,
+    evidenceBundle,
   };
 }

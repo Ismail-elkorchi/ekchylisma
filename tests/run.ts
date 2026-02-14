@@ -5,6 +5,7 @@ import "./engine/chunk-map-span.test.ts";
 import "./engine/checkpoint-retry-executor.test.ts";
 import "./engine/json-pipeline-run.test.ts";
 import "./engine/prompt-compiler.test.ts";
+import "./engine/run-with-evidence.test.ts";
 import "./eval/run-suite.test.ts";
 import "./io/jsonl.test.ts";
 import "./json/extract-json.test.ts";
