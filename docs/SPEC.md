@@ -44,6 +44,13 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Engine can run end-to-end with `FakeProvider`, producing grounded extractions.
 - Quote invariants remain enforced after provider payload mapping.
 
+## Prompt-07 anti-drift summary (5 bullets)
+- Real providers are implemented with `fetch` plus explicit config objects only.
+- Providers never read `process.env` directly; callers pass credentials/config.
+- OpenAI and Gemini support JSON schema controlled generation when schema is provided.
+- Ollama uses `/api/chat` with JSON mode/schema where available.
+- Integration tests are present and intentionally skipped when credentials are absent.
+
 ## Invariants
 - Offsets use UTF-16 code unit indexing with inclusive `charStart` and exclusive `charEnd`.
 - `assertQuoteInvariant` validates integer spans, bounds, and exact quote matching.
@@ -86,3 +93,4 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Providers implement `generate(request)` and return deterministic `runRecord` metadata.
 - Provider config is explicit through request/config objects; provider code does not read secrets implicitly.
 - `FakeProvider` is the default deterministic harness for end-to-end tests without network access.
+- Real providers expose minimal fetch adapters for OpenAI/Gemini/Ollama with consistent `ProviderResponse` shape.

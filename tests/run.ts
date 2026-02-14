@@ -7,6 +7,7 @@ import "./json/extract-json.test.ts";
 import "./json/repair.test.ts";
 import "./json/parse.test.ts";
 import "./providers/fake-e2e.test.ts";
+import "./providers/real-providers.test.ts";
 import "./schema/validate.test.ts";
 import "./schema/to-json-schema.test.ts";
 import { run } from "./harness.ts";

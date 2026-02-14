@@ -16,7 +16,11 @@
 - `src/json/parse.ts`: strict parser with structured error details.
 - `src/providers/types.ts`: provider request/response interfaces and run metadata contract.
 - `src/providers/errors.ts`: transient/permanent classification helpers.
+- `src/providers/requestHash.ts`: deterministic request-hash helper for provider harnesses.
 - `src/providers/fake.ts`: deterministic fake provider for tests and offline runs.
+- `src/providers/openai.ts`: OpenAI Chat Completions adapter with optional structured output mode.
+- `src/providers/gemini.ts`: Gemini `generateContent` adapter with optional response schema.
+- `src/providers/ollama.ts`: Ollama `/api/chat` adapter with JSON/schema format mode.
 - `src/schema/s.ts`: dependency-free schema DSL with TypeScript inference.
 - `src/schema/validate.ts`: deterministic validator with JSON pointer errors.
 - `src/schema/toJsonSchema.ts`: limited JSON Schema subset generator.

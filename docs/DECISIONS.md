@@ -48,3 +48,10 @@
 - Decision: Define `Provider` request/response contracts, classify provider failures (`transient`/`permanent`), and use `FakeProvider` mapping by request hash.
 - Rationale: Deterministic provider behavior is required for reproducible engine tests without network I/O.
 - Consequence: End-to-end tests can run locally and still enforce quote invariants using realistic provider contracts.
+
+## ADR-0008: Real providers are explicit fetch adapters without implicit env access
+- Date: 2026-02-14
+- Context: Prompt 07 requires OpenAI/Gemini/Ollama implementations with portable, dependency-free boundaries.
+- Decision: Implement provider classes that accept config objects (`apiKey`, `baseUrl`, etc.), use `fetch` exclusively, and never read `process.env` internally.
+- Rationale: Explicit config keeps core portable and testable across Node, Deno, Bun, and Workers.
+- Consequence: Integration tests require caller-provided credentials and are skipped when env vars are missing.
