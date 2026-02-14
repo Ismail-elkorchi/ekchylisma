@@ -16,6 +16,7 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - uses: oven-sh/setup-bun@v2
       - run: npm run check
       - run: npm test
 
