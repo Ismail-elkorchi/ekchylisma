@@ -18,8 +18,11 @@ export type JsonSchemaSubset = {
   type?: "object" | "array" | "string" | "number" | "boolean";
   properties?: Record<string, JsonSchemaSubset>;
   items?: JsonSchemaSubset;
-  enum?: Array<string | number | boolean>;
+  enum?: Array<string | number | boolean | null>;
+  const?: string | number | boolean | null;
   required?: string[];
+  additionalProperties?: boolean;
+  anyOf?: JsonSchemaSubset[];
 };
 
 export type ProgramExample = {
