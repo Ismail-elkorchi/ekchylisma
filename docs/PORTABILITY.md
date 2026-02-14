@@ -21,5 +21,12 @@ Use the worker module in `examples/workers/worker.ts` with your preferred worker
 A minimal `wrangler.toml` entrypoint would point to:
 - `main = "examples/workers/worker.ts"`
 
+## Workers harness test
+Run the local Workers compatibility harness with:
+```bash
+npm run test:workers
+```
+This uses Miniflare to dispatch a request against `examples/workers/worker.ts`.
+
 ## Expected output
 Each runtime should emit a single extraction for `"Beta"` with span `[6, 10)`.

@@ -1,7 +1,7 @@
 import { runPortabilityScenario } from "../shared/scenario.ts";
 
 export default {
-  async fetch(): Promise<Response> {
+  async fetch() {
     const result = await runPortabilityScenario("workers");
     return new Response(JSON.stringify(result, null, 2), {
       headers: {

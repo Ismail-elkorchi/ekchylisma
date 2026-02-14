@@ -97,3 +97,10 @@
 - Decision: Extend `tools/orphan-check.ts` to verify contract references, docs coverage for every `src/index.ts` export, and runtime example smoke runs.
 - Rationale: Coherence failures should be detected automatically before merge.
 - Consequence: Default check workflow now blocks drift in docs/contracts/examples.
+
+## ADR-0015: Add Miniflare as a dev-only workers harness
+- Date: 2026-02-15
+- Context: MASTER_SPEC `REQ-4.2.2` requires explicit Workers compatibility validation with a local harness.
+- Decision: Add `miniflare` as a `devDependency` and create `tests/workers/harness.test.ts`, runnable via `npm run test:workers`.
+- Rationale: Miniflare pays the specific debt of verifiable Workers runtime behavior in CI without introducing runtime/package dependencies.
+- Consequence: `package.json.dependencies` remains `{}` while CI gains a dedicated workers compatibility signal.

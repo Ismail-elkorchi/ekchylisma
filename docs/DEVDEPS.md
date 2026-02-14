@@ -1,7 +1,5 @@
 # Development Dependencies Debt Register
 
-This project currently uses no dev dependencies.
-
 | Package | Version | Debt It Pays |
 | --- | --- | --- |
-| _none_ | n/a | n/a |
+| `miniflare` | `^3.20250718.3` | Provides a local Cloudflare Workers harness to validate Worker compatibility in tests and CI (REQ-4.2.2). |
