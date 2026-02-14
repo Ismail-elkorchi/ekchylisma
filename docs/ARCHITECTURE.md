@@ -11,6 +11,7 @@
 - `src/engine/retry.ts`: pure retry/backoff/jitter policy helpers.
 - `src/engine/execute.ts`: resumable shard executor with checkpoint skip + transient retries.
 - `src/engine/run.ts`: provider-driven end-to-end extraction orchestration.
+- `src/engine/promptCompiler.ts`: deterministic boundary-safe prompt construction.
 - `src/json/extractJson.ts`: deterministic first-JSON extraction and JSON-vs-JSONL detection.
 - `src/json/repair.ts`: bounded repair pipeline with forensic step logs.
 - `src/json/parse.ts`: strict parser with structured error details.

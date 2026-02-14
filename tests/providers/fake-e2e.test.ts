@@ -1,4 +1,5 @@
 import { sha256Hex } from "../../src/core/hash.ts";
+import { chunkDocument } from "../../src/engine/chunk.ts";
 import {
   buildProviderRequest,
   runExtractionWithProvider,
@@ -29,7 +30,11 @@ test("runExtractionWithProvider executes end-to-end with FakeProvider and quote 
     programHash: await sha256Hex("Extract token Beta."),
   };
 
-  const request = buildProviderRequest(program, documentText, "fake-model");
+  const [shard] = await chunkDocument(documentText, program.programHash, {
+    chunkSize: 32,
+    overlap: 0,
+  });
+  const request = buildProviderRequest(program, shard, "fake-model");
   const requestHash = await hashProviderRequest(request);
 
   const fakeProvider = new FakeProvider();
@@ -67,4 +72,3 @@ test("runExtractionWithProvider executes end-to-end with FakeProvider and quote 
   assertEqual(result.extractions[0].span.charStart, 6);
   assertEqual(result.extractions[0].span.charEnd, 10);
 });
-

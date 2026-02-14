@@ -55,3 +55,10 @@
 - Decision: Implement provider classes that accept config objects (`apiKey`, `baseUrl`, etc.), use `fetch` exclusively, and never read `process.env` internally.
 - Rationale: Explicit config keeps core portable and testable across Node, Deno, Bun, and Workers.
 - Consequence: Integration tests require caller-provided credentials and are skipped when env vars are missing.
+
+## ADR-0009: Prompt compiler enforces trusted/untrusted boundary markers
+- Date: 2026-02-14
+- Context: Prompt 08 requires boundary-safe deterministic prompt formatting.
+- Decision: Compiler always emits trusted program section first, then wraps shard text in fixed markers: `BEGIN_UNTRUSTED_DOCUMENT` / `END_UNTRUSTED_DOCUMENT`.
+- Rationale: Explicit boundaries mitigate prompt-injection confusion and keep format stable for testing.
+- Consequence: Provider request builders rely on compiler output rather than ad-hoc string templates.
