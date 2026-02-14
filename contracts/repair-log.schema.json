@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/repair-log.schema.json",
+  "title": "RepairLog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["steps", "changed"],
+  "properties": {
+    "changed": {
+      "type": "boolean"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step", "applied", "beforeLength", "afterLength"],
+        "properties": {
+          "step": {
+            "type": "string",
+            "enum": [
+              "stripBOM",
+              "removeAsciiControlChars",
+              "trimOuterJunk",
+              "fixTrailingCommas"
+            ]
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "beforeLength": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "afterLength": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}
