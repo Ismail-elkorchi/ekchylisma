@@ -12,12 +12,16 @@
 - Checkpointing from `src/engine/checkpoint.ts`: `CheckpointStore`, `InMemoryCheckpointStore`, `buildCheckpointKey(runId, shardId)`
 - Retry policy helpers from `src/engine/retry.ts`: `computeBackoffMs`, `computeJitterMs`, `computeRetryDelayMs`, `shouldRetry`
 - Retryable executor from `src/engine/execute.ts`: `executeShardsWithCheckpoint(options)`
+- Provider-backed engine run from `src/engine/run.ts`: `runExtractionWithProvider(options)`, `buildProviderRequest(program, shardText, model)`
 - Schema builders from `src/schema/s.ts`: `s.string`, `s.number`, `s.boolean`, `s.literal`, `s.enum`, `s.array`, `s.object`, `s.union`, `s.optional`
 - Schema validator: `validate(schema, value, options)` from `src/schema/validate.ts`
 - JSON Schema generator: `toJsonSchema(schema)` from `src/schema/toJsonSchema.ts`
 - JSON extraction helpers from `src/json/extractJson.ts`: `extractFirstJson(text)`, `detectJsonFlavor(text)`
 - JSON repair pipeline from `src/json/repair.ts`: `repairJsonText(input)` with `RepairLog`
 - JSON parser from `src/json/parse.ts`: `parseJsonStrict(text)`, `tryParseJsonStrict(text)`, `JsonParseFailure`
+- Provider contracts from `src/providers/types.ts`: `Provider`, `ProviderRequest`, `ProviderResponse`
+- Provider error helpers from `src/providers/errors.ts`: `ProviderError`, `classifyProviderStatus`, `isTransientProviderError`
+- Fake provider test adapter from `src/providers/fake.ts`: `FakeProvider`, `hashProviderRequest(request)`
 
 ## Contracts
 - `contracts/span.schema.json`
@@ -29,6 +33,8 @@
 - `contracts/json-parse-error.schema.json`
 - `contracts/document-shard.schema.json`
 - `contracts/checkpoint-entry.schema.json`
+- `contracts/provider-request.schema.json`
+- `contracts/provider-response.schema.json`
 
 ## Schema Example
 ```ts

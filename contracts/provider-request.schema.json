@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/provider-request.schema.json",
+  "title": "ProviderRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["model", "prompt"],
+  "properties": {
+    "model": {
+      "type": "string"
+    },
+    "prompt": {
+      "type": "string"
+    },
+    "schema": {
+      "$ref": "./json-schema-subset.schema.json"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "timeoutMs": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

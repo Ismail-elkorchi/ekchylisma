@@ -37,6 +37,13 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Executor skips completed shards and only retries transient failures.
 - Fault-injection tests must prove eventual completion after transient shard failures.
 
+## Prompt-06 anti-drift summary (5 bullets)
+- Provider integration uses a runtime-agnostic interface with fetch-like request/response contracts.
+- `FakeProvider` deterministically maps request hash to response text for offline tests.
+- Provider errors are explicitly classified as transient or permanent.
+- Engine can run end-to-end with `FakeProvider`, producing grounded extractions.
+- Quote invariants remain enforced after provider payload mapping.
+
 ## Invariants
 - Offsets use UTF-16 code unit indexing with inclusive `charStart` and exclusive `charEnd`.
 - `assertQuoteInvariant` validates integer spans, bounds, and exact quote matching.
@@ -74,3 +81,8 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - `executeShardsWithCheckpoint()` first checks checkpoints and bypasses completed shards.
 - Retry policy is explicit (`attempts`, `baseDelayMs`, `maxDelayMs`, `jitterRatio`) and bounded.
 - Non-transient failures are surfaced immediately without additional retries.
+
+## Provider Contract Rules
+- Providers implement `generate(request)` and return deterministic `runRecord` metadata.
+- Provider config is explicit through request/config objects; provider code does not read secrets implicitly.
+- `FakeProvider` is the default deterministic harness for end-to-end tests without network access.
