@@ -10,9 +10,13 @@
 - `src/engine/checkpoint.ts`: checkpoint store interface and in-memory implementation.
 - `src/engine/retry.ts`: pure retry/backoff/jitter policy helpers.
 - `src/engine/execute.ts`: resumable shard executor with checkpoint skip + transient retries.
+- `src/engine/run.ts`: provider-driven end-to-end extraction orchestration.
 - `src/json/extractJson.ts`: deterministic first-JSON extraction and JSON-vs-JSONL detection.
 - `src/json/repair.ts`: bounded repair pipeline with forensic step logs.
 - `src/json/parse.ts`: strict parser with structured error details.
+- `src/providers/types.ts`: provider request/response interfaces and run metadata contract.
+- `src/providers/errors.ts`: transient/permanent classification helpers.
+- `src/providers/fake.ts`: deterministic fake provider for tests and offline runs.
 - `src/schema/s.ts`: dependency-free schema DSL with TypeScript inference.
 - `src/schema/validate.ts`: deterministic validator with JSON pointer errors.
 - `src/schema/toJsonSchema.ts`: limited JSON Schema subset generator.

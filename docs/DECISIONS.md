@@ -41,3 +41,10 @@
 - Decision: Checkpoints are addressed by `ckpt:v1:<runId>:<shardId>` and executor reuses existing checkpoint values before invoking shard work.
 - Rationale: Explicit run+shard scoping prevents collisions and preserves idempotent reruns.
 - Consequence: Re-running with the same `runId` skips completed shards; changing `runId` creates an isolated checkpoint namespace.
+
+## ADR-0007: Provider core uses deterministic request hashing and explicit error classes
+- Date: 2026-02-14
+- Context: Prompt 06 requires provider abstraction and offline deterministic testing.
+- Decision: Define `Provider` request/response contracts, classify provider failures (`transient`/`permanent`), and use `FakeProvider` mapping by request hash.
+- Rationale: Deterministic provider behavior is required for reproducible engine tests without network I/O.
+- Consequence: End-to-end tests can run locally and still enforce quote invariants using realistic provider contracts.
