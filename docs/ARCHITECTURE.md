@@ -12,6 +12,7 @@
 - `src/engine/execute.ts`: resumable shard executor with checkpoint skip + transient retries.
 - `src/engine/run.ts`: provider-driven end-to-end extraction orchestration.
 - `src/engine/promptCompiler.ts`: deterministic boundary-safe prompt construction.
+- `src/io/jsonl.ts`: runtime-agnostic JSONL encode/decode for evidence bundles.
 - `src/json/extractJson.ts`: deterministic first-JSON extraction and JSON-vs-JSONL detection.
 - `src/json/repair.ts`: bounded repair pipeline with forensic step logs.
 - `src/json/parse.ts`: strict parser with structured error details.
@@ -22,6 +23,7 @@
 - `src/providers/openai.ts`: OpenAI Chat Completions adapter with optional structured output mode.
 - `src/providers/gemini.ts`: Gemini `generateContent` adapter with optional response schema.
 - `src/providers/ollama.ts`: Ollama `/api/chat` adapter with JSON/schema format mode.
+- `src-node/fs.ts`: Node-only JSONL file adapter exposed via `ekchylisma/node`.
 - `src/schema/s.ts`: dependency-free schema DSL with TypeScript inference.
 - `src/schema/validate.ts`: deterministic validator with JSON pointer errors.
 - `src/schema/toJsonSchema.ts`: limited JSON Schema subset generator.

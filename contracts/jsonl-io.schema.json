@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/jsonl-io.schema.json",
+  "title": "JsonlIo",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lineType"],
+  "properties": {
+    "lineType": {
+      "type": "string",
+      "const": "EvidenceBundle"
+    },
+    "encoding": {
+      "type": "string",
+      "const": "utf-8"
+    }
+  }
+}
