@@ -37,6 +37,12 @@ export type Program = {
   programHash: string;
 };
 
+export type DocumentInput = {
+  documentId?: string;
+  text: string;
+  meta?: Record<string, string>;
+};
+
 export type NormalizationStepName =
   | "normalizeNewlines"
   | "trimTrailingWhitespacePerLine";
@@ -64,9 +70,125 @@ export type EvidenceProvenance = {
   programHash: string;
 };
 
+export type JsonRepairStepName =
+  | "stripBOM"
+  | "removeAsciiControlChars"
+  | "trimOuterJunk"
+  | "fixTrailingCommas";
+
+export type JsonRepairStep = {
+  step: JsonRepairStepName;
+  applied: boolean;
+  beforeLength: number;
+  afterLength: number;
+};
+
+export type JsonRepairLog = {
+  steps: JsonRepairStep[];
+  changed: boolean;
+};
+
+export type JsonParseErrorDetail = {
+  name: "JsonParseError";
+  message: string;
+  position: number | null;
+  line: number | null;
+  column: number | null;
+  snippet: string;
+  inputLength: number;
+};
+
+export type JsonPipelineDiagnostic = {
+  extractedJson: {
+    found: boolean;
+    start: number | null;
+    end: number | null;
+    kind: "object" | "array" | null;
+    sourceLength: number;
+    candidateLength: number;
+  };
+  repair: JsonRepairLog;
+  parse:
+    | {
+      ok: true;
+    }
+    | {
+      ok: false;
+      error: JsonParseErrorDetail;
+    };
+};
+
+export type ShardFailureKind =
+  | "provider_error"
+  | "json_pipeline_failure"
+  | "payload_shape_failure"
+  | "quote_invariant_failure"
+  | "unknown_failure";
+
+export type ShardFailure = {
+  shardId: string;
+  kind: ShardFailureKind;
+  message: string;
+  retryable: boolean;
+  errorName: string;
+};
+
+export type ProviderRunRecordSnapshot = {
+  provider: string;
+  model: string;
+  latencyMs: number;
+  retries: number;
+  requestHash: string;
+};
+
+export type ShardOutcome =
+  | {
+    shardId: string;
+    start: number;
+    end: number;
+    status: "success";
+    fromCheckpoint: boolean;
+    attempts: number;
+    extractions: Extraction[];
+    providerRunRecord: ProviderRunRecordSnapshot;
+    jsonPipelineLog: JsonPipelineDiagnostic;
+  }
+  | {
+    shardId: string;
+    start: number;
+    end: number;
+    status: "failure";
+    fromCheckpoint: boolean;
+    attempts: number;
+    extractions: [];
+    failure: ShardFailure;
+  };
+
+export type ShardPlan = {
+  chunkSize: number;
+  overlap: number;
+  shardCount: number;
+};
+
+export type EmptyResultKind =
+  | "non_empty"
+  | "empty_by_evidence"
+  | "empty_by_failure";
+
+export type RunDiagnostics = {
+  emptyResultKind: EmptyResultKind;
+  shardOutcomes: ShardOutcome[];
+  failures: ShardFailure[];
+  checkpointHits: number;
+};
+
 export type EvidenceBundle = {
   bundleVersion: "1";
+  runId: string;
+  program: Program;
   extractions: Extraction[];
   provenance: EvidenceProvenance;
   normalizationLedger: NormalizationLedger;
+  shardPlan: ShardPlan;
+  diagnostics: RunDiagnostics;
 };

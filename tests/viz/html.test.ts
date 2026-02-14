@@ -3,6 +3,13 @@ import { assert, assertEqual, test } from "../harness.ts";
 
 const sampleBundle = {
   bundleVersion: "1" as const,
+  runId: "run-viz",
+  program: {
+    instructions: "Extract token Beta.",
+    examples: [],
+    schema: { type: "object" },
+    programHash: "program-hash",
+  },
   extractions: [
     {
       extractionClass: "token",
@@ -27,6 +34,62 @@ const sampleBundle = {
   },
   normalizationLedger: {
     steps: [],
+  },
+  shardPlan: {
+    chunkSize: 64,
+    overlap: 0,
+    shardCount: 1,
+  },
+  diagnostics: {
+    emptyResultKind: "non_empty" as const,
+    shardOutcomes: [
+      {
+        shardId: "shard-1",
+        start: 0,
+        end: 10,
+        status: "success" as const,
+        fromCheckpoint: false,
+        attempts: 1,
+        extractions: [
+          {
+            extractionClass: "token",
+            quote: "Beta",
+            span: {
+              offsetMode: "utf16_code_unit" as const,
+              charStart: 6,
+              charEnd: 10,
+            },
+            grounding: "explicit" as const,
+          },
+        ],
+        providerRunRecord: {
+          provider: "fake",
+          model: "fake-model",
+          latencyMs: 0,
+          retries: 0,
+          requestHash: "request-hash",
+        },
+        jsonPipelineLog: {
+          extractedJson: {
+            found: true,
+            start: 0,
+            end: 18,
+            kind: "object" as const,
+            sourceLength: 18,
+            candidateLength: 18,
+          },
+          repair: {
+            changed: false,
+            steps: [],
+          },
+          parse: {
+            ok: true as const,
+          },
+        },
+      },
+    ],
+    failures: [],
+    checkpointHits: 0,
   },
 };
 

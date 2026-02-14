@@ -4,11 +4,26 @@
   "title": "EvidenceBundle",
   "type": "object",
   "additionalProperties": false,
-  "required": ["bundleVersion", "extractions", "provenance", "normalizationLedger"],
+  "required": [
+    "bundleVersion",
+    "runId",
+    "program",
+    "extractions",
+    "provenance",
+    "normalizationLedger",
+    "shardPlan",
+    "diagnostics"
+  ],
   "properties": {
     "bundleVersion": {
       "type": "string",
       "const": "1"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "program": {
+      "$ref": "./program.schema.json"
     },
     "extractions": {
       "type": "array",
@@ -82,6 +97,279 @@
               }
             }
           }
+        }
+      }
+    },
+    "shardPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chunkSize", "overlap", "shardCount"],
+      "properties": {
+        "chunkSize": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "overlap": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shardCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["emptyResultKind", "shardOutcomes", "failures", "checkpointHits"],
+      "properties": {
+        "emptyResultKind": {
+          "type": "string",
+          "enum": ["non_empty", "empty_by_evidence", "empty_by_failure"]
+        },
+        "checkpointHits": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/shardFailure"
+          }
+        },
+        "shardOutcomes": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/shardOutcomeSuccess"
+              },
+              {
+                "$ref": "#/$defs/shardOutcomeFailure"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "providerRunRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model", "latencyMs", "retries", "requestHash"],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "latencyMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "requestHash": {
+          "type": "string"
+        }
+      }
+    },
+    "jsonPipelineLog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["extractedJson", "repair", "parse"],
+      "properties": {
+        "extractedJson": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["found", "start", "end", "kind", "sourceLength", "candidateLength"],
+          "properties": {
+            "found": {
+              "type": "boolean"
+            },
+            "start": {
+              "type": ["integer", "null"],
+              "minimum": 0
+            },
+            "end": {
+              "type": ["integer", "null"],
+              "minimum": 0
+            },
+            "kind": {
+              "type": ["string", "null"],
+              "enum": ["object", "array", null]
+            },
+            "sourceLength": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "candidateLength": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "repair": {
+          "$ref": "./repair-log.schema.json"
+        },
+        "parse": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["ok"],
+              "properties": {
+                "ok": {
+                  "type": "boolean",
+                  "const": true
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["ok", "error"],
+              "properties": {
+                "ok": {
+                  "type": "boolean",
+                  "const": false
+                },
+                "error": {
+                  "$ref": "./json-parse-error.schema.json"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "shardFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shardId", "kind", "message", "retryable", "errorName"],
+      "properties": {
+        "shardId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "provider_error",
+            "json_pipeline_failure",
+            "payload_shape_failure",
+            "quote_invariant_failure",
+            "unknown_failure"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "errorName": {
+          "type": "string"
+        }
+      }
+    },
+    "shardOutcomeSuccess": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shardId",
+        "start",
+        "end",
+        "status",
+        "fromCheckpoint",
+        "attempts",
+        "extractions",
+        "providerRunRecord",
+        "jsonPipelineLog"
+      ],
+      "properties": {
+        "shardId": {
+          "type": "string"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "type": "string",
+          "const": "success"
+        },
+        "fromCheckpoint": {
+          "type": "boolean"
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extractions": {
+          "type": "array",
+          "items": {
+            "$ref": "./extraction.schema.json"
+          }
+        },
+        "providerRunRecord": {
+          "$ref": "#/$defs/providerRunRecord"
+        },
+        "jsonPipelineLog": {
+          "$ref": "#/$defs/jsonPipelineLog"
+        }
+      }
+    },
+    "shardOutcomeFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shardId",
+        "start",
+        "end",
+        "status",
+        "fromCheckpoint",
+        "attempts",
+        "extractions",
+        "failure"
+      ],
+      "properties": {
+        "shardId": {
+          "type": "string"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "type": "string",
+          "const": "failure"
+        },
+        "fromCheckpoint": {
+          "type": "boolean"
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extractions": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "failure": {
+          "$ref": "#/$defs/shardFailure"
         }
       }
     }
