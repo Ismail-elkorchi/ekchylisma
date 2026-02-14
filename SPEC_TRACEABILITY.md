@@ -45,11 +45,10 @@ Legend:
 | REQ-12.1 | GitHub PR workflow + branch protections (process) | n/a | `pull_request` workflows | implemented | Enforced by process in this repository workflow. |
 | REQ-12.2 | `.github/workflows/ci.yml` | CI status checks | `node`, `deno`, `bun` | implemented | CI runs on `pull_request`. |
 | REQ-12.3 | `tools/orphan-check.ts` | `npm run orphan-check` | `node` | implemented | Contracts/export/doc path checks enforced. |
-| REQ-13.1 | n/a | n/a | n/a | gap | `LICENSE` and `NOTICE` files not yet present. |
+| REQ-13.1 | `LICENSE`, `NOTICE` | n/a | n/a | implemented | Apache-2.0 license text and project notice are present at repo root. |
 | REQ-14.1 | `src/*`, `src-node/*`, `contracts/*`, `docs/*`, `tests/*`, `tools/*` | `npm run orphan-check` | `node` | partial | Layout is close; differs from exact `/src/node` and `/scripts` naming convention. |
 
 ## Explicit Known Gaps
 
 These gaps are intentionally tracked and should be resolved in follow-up implementation work:
-- REQ-13.1 license + notice artifacts.
 - REQ-11.3.1 long-text regression fixtures.
