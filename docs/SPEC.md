@@ -30,6 +30,13 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Shard-local spans must map back to global document offsets without ambiguity.
 - Overlap tradeoffs are documented for recall-vs-cost behavior.
 
+## Prompt-05 anti-drift summary (5 bullets)
+- Checkpoint persistence is abstracted behind a runtime-agnostic `CheckpointStore` interface.
+- Checkpoint keys are deterministic and include run identity for idempotent resume behavior.
+- Retry policy functions are pure and deterministic from explicit inputs.
+- Executor skips completed shards and only retries transient failures.
+- Fault-injection tests must prove eventual completion after transient shard failures.
+
 ## Invariants
 - Offsets use UTF-16 code unit indexing with inclusive `charStart` and exclusive `charEnd`.
 - `assertQuoteInvariant` validates integer spans, bounds, and exact quote matching.
@@ -61,3 +68,9 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 ## Overlap Tradeoffs
 - Higher overlap increases cross-boundary recall but raises provider calls and duplicate candidates.
 - Lower overlap is cheaper but risks missing entities split at shard boundaries.
+
+## Resume and Retry Rules
+- Checkpoint key format: `ckpt:v1:<runId>:<shardId>`.
+- `executeShardsWithCheckpoint()` first checks checkpoints and bypasses completed shards.
+- Retry policy is explicit (`attempts`, `baseDelayMs`, `maxDelayMs`, `jitterRatio`) and bounded.
+- Non-transient failures are surfaced immediately without additional retries.

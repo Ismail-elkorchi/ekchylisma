@@ -34,3 +34,10 @@
 - Decision: `shardId = sha256(programHash + normalizedTextSlice)` and chunk boundaries are char-based with inclusive `start`, exclusive `end`.
 - Rationale: Pairing program and content isolates shards across extraction programs while keeping IDs portable.
 - Consequence: Changing normalization or chunk options changes shard IDs by design.
+
+## ADR-0006: Checkpoint key format and idempotent resume behavior
+- Date: 2026-02-14
+- Context: Prompt 05 requires survivable partial failure and deterministic resume semantics.
+- Decision: Checkpoints are addressed by `ckpt:v1:<runId>:<shardId>` and executor reuses existing checkpoint values before invoking shard work.
+- Rationale: Explicit run+shard scoping prevents collisions and preserves idempotent reruns.
+- Consequence: Re-running with the same `runId` skips completed shards; changing `runId` creates an isolated checkpoint namespace.

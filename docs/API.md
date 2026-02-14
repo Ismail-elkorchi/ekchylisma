@@ -9,6 +9,9 @@
 - Types from `src/core/types.ts`: `Span`, `Extraction`, `EvidenceBundle`, `Program`
 - Engine chunking from `src/engine/chunk.ts`: `chunkDocument(normalizedText, programHash, options)`
 - Span mapping from `src/engine/mapSpan.ts`: `mapShardSpanToDocument(shard, shardSpan)`
+- Checkpointing from `src/engine/checkpoint.ts`: `CheckpointStore`, `InMemoryCheckpointStore`, `buildCheckpointKey(runId, shardId)`
+- Retry policy helpers from `src/engine/retry.ts`: `computeBackoffMs`, `computeJitterMs`, `computeRetryDelayMs`, `shouldRetry`
+- Retryable executor from `src/engine/execute.ts`: `executeShardsWithCheckpoint(options)`
 - Schema builders from `src/schema/s.ts`: `s.string`, `s.number`, `s.boolean`, `s.literal`, `s.enum`, `s.array`, `s.object`, `s.union`, `s.optional`
 - Schema validator: `validate(schema, value, options)` from `src/schema/validate.ts`
 - JSON Schema generator: `toJsonSchema(schema)` from `src/schema/toJsonSchema.ts`
@@ -25,6 +28,7 @@
 - `contracts/repair-log.schema.json`
 - `contracts/json-parse-error.schema.json`
 - `contracts/document-shard.schema.json`
+- `contracts/checkpoint-entry.schema.json`
 
 ## Schema Example
 ```ts
