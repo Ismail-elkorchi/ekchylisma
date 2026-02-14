@@ -14,6 +14,7 @@
 - Retryable executor from `src/engine/execute.ts`: `executeShardsWithCheckpoint(options)`
 - Provider-backed engine run from `src/engine/run.ts`: `runExtractionWithProvider(options)`, `buildProviderRequest(program, shard, model)`
 - Prompt compiler from `src/engine/promptCompiler.ts`: `compilePrompt(program, shard)`, `compilePromptParts(program, shard)`
+- JSONL codecs from `src/io/jsonl.ts`: `encodeEvidenceBundlesToJsonl(bundles)`, `decodeJsonlToEvidenceBundles(input)`
 - Schema builders from `src/schema/s.ts`: `s.string`, `s.number`, `s.boolean`, `s.literal`, `s.enum`, `s.array`, `s.object`, `s.union`, `s.optional`
 - Schema validator: `validate(schema, value, options)` from `src/schema/validate.ts`
 - JSON Schema generator: `toJsonSchema(schema)` from `src/schema/toJsonSchema.ts`
@@ -25,6 +26,7 @@
 - Provider request hash helper from `src/providers/requestHash.ts`: `hashProviderRequest(request)`
 - Fake provider test adapter from `src/providers/fake.ts`: `FakeProvider`
 - Real providers: `OpenAIProvider`, `GeminiProvider`, `OllamaProvider`
+- Node-only subpath export `ekchylisma/node`: `readEvidenceBundlesFromJsonlFile(path)`, `writeEvidenceBundlesToJsonlFile(path, bundles)` from `src-node/fs.ts`
 
 ## Contracts
 - `contracts/span.schema.json`
@@ -40,6 +42,7 @@
 - `contracts/provider-response.schema.json`
 - `contracts/provider-config.schema.json`
 - `contracts/prompt-compiler.schema.json`
+- `contracts/jsonl-io.schema.json`
 
 ## Schema Example
 ```ts

@@ -62,3 +62,10 @@
 - Decision: Compiler always emits trusted program section first, then wraps shard text in fixed markers: `BEGIN_UNTRUSTED_DOCUMENT` / `END_UNTRUSTED_DOCUMENT`.
 - Rationale: Explicit boundaries mitigate prompt-injection confusion and keep format stable for testing.
 - Consequence: Provider request builders rely on compiler output rather than ad-hoc string templates.
+
+## ADR-0010: Core JSONL codec with isolated Node file adapter
+- Date: 2026-02-14
+- Context: Prompt 09 requires JSONL IO without introducing filesystem coupling in core.
+- Decision: Implement codec in `src/io/jsonl.ts` and isolate filesystem helpers in `src-node/fs.ts` under `./node` export.
+- Rationale: Keeps core portable across Node, Deno, Bun, and Workers while preserving ergonomic Node file utilities.
+- Consequence: Consumers must import `ekchylisma/node` for fs-backed helpers.

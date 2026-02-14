@@ -58,6 +58,13 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Compiler output is consumed by provider request generation to avoid orphaned logic.
 - Threat model docs map OWASP risks to concrete mitigations.
 
+## Prompt-09 anti-drift summary (5 bullets)
+- JSONL encode/decode logic lives in core without filesystem APIs.
+- Decoder accepts string or `ReadableStream` input and yields async iterable bundles.
+- Node filesystem helpers are isolated behind `ekchylisma/node` subpath export.
+- Core and Node adapter boundaries stay explicit to preserve portability.
+- Roundtrip tests validate JSONL codec determinism.
+
 ## Invariants
 - Offsets use UTF-16 code unit indexing with inclusive `charStart` and exclusive `charEnd`.
 - `assertQuoteInvariant` validates integer spans, bounds, and exact quote matching.
@@ -106,3 +113,8 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Trusted instructions and schema excerpt are emitted before document content.
 - Document text is wrapped with `BEGIN_UNTRUSTED_DOCUMENT` and `END_UNTRUSTED_DOCUMENT`.
 - Compiler output is deterministic for identical `(program, shard, options)` input.
+
+## IO Portability Rules
+- Core JSONL codec must not import `node:*` APIs.
+- Node file IO lives only under `src-node/*` and is exposed through `./node` export.
+- JSONL line type is `EvidenceBundle` and UTF-8 encoded.

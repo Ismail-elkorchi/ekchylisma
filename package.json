@@ -5,7 +5,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./node": "./src-node/fs.ts"
   },
   "scripts": {
     "test": "node tests/run.ts",
