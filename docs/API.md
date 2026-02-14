@@ -21,7 +21,9 @@
 - JSON parser from `src/json/parse.ts`: `parseJsonStrict(text)`, `tryParseJsonStrict(text)`, `JsonParseFailure`
 - Provider contracts from `src/providers/types.ts`: `Provider`, `ProviderRequest`, `ProviderResponse`
 - Provider error helpers from `src/providers/errors.ts`: `ProviderError`, `classifyProviderStatus`, `isTransientProviderError`
-- Fake provider test adapter from `src/providers/fake.ts`: `FakeProvider`, `hashProviderRequest(request)`
+- Provider request hash helper from `src/providers/requestHash.ts`: `hashProviderRequest(request)`
+- Fake provider test adapter from `src/providers/fake.ts`: `FakeProvider`
+- Real providers: `OpenAIProvider`, `GeminiProvider`, `OllamaProvider`
 
 ## Contracts
 - `contracts/span.schema.json`
@@ -35,6 +37,7 @@
 - `contracts/checkpoint-entry.schema.json`
 - `contracts/provider-request.schema.json`
 - `contracts/provider-response.schema.json`
+- `contracts/provider-config.schema.json`
 
 ## Schema Example
 ```ts

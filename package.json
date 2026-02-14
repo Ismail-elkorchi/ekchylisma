@@ -11,6 +11,7 @@
     "test": "node tests/run.ts",
     "test:deno": "deno run --allow-read tests/run.ts",
     "test:bun": "bun run tests/run.ts",
+    "test:integration": "node tests/providers/integration.test.ts",
     "typecheck": "deno check tests/schema/inference.check.ts",
     "orphan-check": "node tools/orphan-check.ts",
     "check": "npm test && npm run typecheck && npm run orphan-check"
