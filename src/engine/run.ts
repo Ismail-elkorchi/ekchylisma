@@ -11,10 +11,24 @@ import {
 } from "./checkpoint.ts";
 import type { RetryPolicy } from "./retry.ts";
 import { mapShardSpanToDocument } from "./mapSpan.ts";
-import { parseJsonStrict } from "../json/parse.ts";
-import type { Provider, ProviderRequest } from "../providers/types.ts";
+import {
+  JsonPipelineFailure,
+  parseJsonWithRepairPipeline,
+  type JsonPipelineLog,
+} from "../json/pipeline.ts";
+import type {
+  Provider,
+  ProviderRequest,
+  ProviderRunRecord,
+} from "../providers/types.ts";
 import { isTransientProviderError } from "../providers/errors.ts";
 import { compilePrompt } from "./promptCompiler.ts";
+
+type ShardRunValue = {
+  extractions: Extraction[];
+  jsonPipelineLog: JsonPipelineLog;
+  providerRunRecord: ProviderRunRecord;
+};
 
 export type EngineRunOptions = {
   runId: string;
@@ -24,14 +38,21 @@ export type EngineRunOptions = {
   model: string;
   chunkSize: number;
   overlap: number;
-  checkpointStore?: CheckpointStore<Extraction[]>;
+  checkpointStore?: CheckpointStore<ShardRunValue>;
   retryPolicy?: RetryPolicy;
+};
+
+export type JsonPipelineShardLog = {
+  shardId: string;
+  providerRunRecord: ProviderRunRecord;
+  pipeline: JsonPipelineLog;
 };
 
 export type EngineRunResult = {
   extractions: Extraction[];
   shardsProcessed: number;
   checkpointHits: number;
+  jsonPipelineLogs: JsonPipelineShardLog[];
 };
 
 export function buildProviderRequest(
@@ -86,7 +107,7 @@ export async function runExtractionWithProvider(
   );
 
   const checkpointStore =
-    options.checkpointStore ?? new InMemoryCheckpointStore<Extraction[]>();
+    options.checkpointStore ?? new InMemoryCheckpointStore<ShardRunValue>();
 
   const retryPolicy: RetryPolicy =
     options.retryPolicy ?? {
@@ -96,7 +117,7 @@ export async function runExtractionWithProvider(
       jitterRatio: 0,
     };
 
-  const shardResults: ExecuteShardResult<Extraction[]> =
+  const shardResults: ExecuteShardResult<ShardRunValue> =
     await executeShardsWithCheckpoint({
       runId: options.runId,
       shards,
@@ -110,10 +131,13 @@ export async function runExtractionWithProvider(
           options.model,
         );
         const response = await options.provider.generate(request);
-        const payload = parseJsonStrict(response.text);
-        const rawExtractions = parseExtractions(payload);
+        const parsed = parseJsonWithRepairPipeline(response.text);
+        if (!parsed.ok) {
+          throw new JsonPipelineFailure(parsed.error, parsed.log);
+        }
 
-        return rawExtractions.map((raw) => {
+        const rawExtractions = parseExtractions(parsed.value);
+        const extractions = rawExtractions.map((raw) => {
           const localSpan: Span = {
             offsetMode: raw.span.offsetMode ?? "utf16_code_unit",
             charStart: raw.span.charStart,
@@ -132,12 +156,25 @@ export async function runExtractionWithProvider(
           assertQuoteInvariant(options.documentText, extraction);
           return extraction;
         });
+
+        return {
+          extractions,
+          jsonPipelineLog: parsed.log,
+          providerRunRecord: response.runRecord,
+        };
       },
     });
 
+  const jsonPipelineLogs: JsonPipelineShardLog[] = shardResults.map((entry) => ({
+    shardId: entry.shardId,
+    providerRunRecord: entry.value.providerRunRecord,
+    pipeline: entry.value.jsonPipelineLog,
+  }));
+
   return {
-    extractions: shardResults.flatMap((entry) => entry.value),
+    extractions: shardResults.flatMap((entry) => entry.value.extractions),
     shardsProcessed: shardResults.length,
     checkpointHits: shardResults.filter((entry) => entry.fromCheckpoint).length,
+    jsonPipelineLogs,
   };
 }
