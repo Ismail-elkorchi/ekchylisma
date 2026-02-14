@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/evidence-bundle.schema.json",
+  "title": "EvidenceBundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bundleVersion", "extractions", "provenance", "normalizationLedger"],
+  "properties": {
+    "bundleVersion": {
+      "type": "string",
+      "const": "1"
+    },
+    "extractions": {
+      "type": "array",
+      "items": {
+        "$ref": "./extraction.schema.json"
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "textHash", "runtime", "createdAt", "programHash"],
+      "properties": {
+        "documentId": {
+          "type": "string"
+        },
+        "textHash": {
+          "type": "string"
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "version"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": ["node", "deno", "bun", "workers", "browser"]
+            },
+            "version": {
+              "type": "string"
+            }
+          }
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "programHash": {
+          "type": "string"
+        }
+      }
+    },
+    "normalizationLedger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps"],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["step", "mappingStrategy", "lossy", "beforeLength", "afterLength"],
+            "properties": {
+              "step": {
+                "type": "string",
+                "enum": ["normalizeNewlines", "trimTrailingWhitespacePerLine"]
+              },
+              "mappingStrategy": {
+                "type": "string",
+                "enum": ["not_reversible"]
+              },
+              "lossy": {
+                "type": "boolean"
+              },
+              "beforeLength": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "afterLength": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
