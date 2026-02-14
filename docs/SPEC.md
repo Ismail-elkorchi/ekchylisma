@@ -51,6 +51,13 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Ollama uses `/api/chat` with JSON mode/schema where available.
 - Integration tests are present and intentionally skipped when credentials are absent.
 
+## Prompt-08 anti-drift summary (5 bullets)
+- Prompt compiler output is deterministic and schema-aware.
+- Prompt format uses explicit trusted instructions and untrusted document boundaries.
+- Raw shard text is included verbatim between fixed markers.
+- Compiler output is consumed by provider request generation to avoid orphaned logic.
+- Threat model docs map OWASP risks to concrete mitigations.
+
 ## Invariants
 - Offsets use UTF-16 code unit indexing with inclusive `charStart` and exclusive `charEnd`.
 - `assertQuoteInvariant` validates integer spans, bounds, and exact quote matching.
@@ -94,3 +101,8 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Provider config is explicit through request/config objects; provider code does not read secrets implicitly.
 - `FakeProvider` is the default deterministic harness for end-to-end tests without network access.
 - Real providers expose minimal fetch adapters for OpenAI/Gemini/Ollama with consistent `ProviderResponse` shape.
+
+## Prompt Compiler Rules
+- Trusted instructions and schema excerpt are emitted before document content.
+- Document text is wrapped with `BEGIN_UNTRUSTED_DOCUMENT` and `END_UNTRUSTED_DOCUMENT`.
+- Compiler output is deterministic for identical `(program, shard, options)` input.

@@ -1,6 +1,6 @@
 import type { Extraction, Program, Span } from "../core/types.ts";
 import { assertQuoteInvariant } from "../core/invariants.ts";
-import { chunkDocument } from "./chunk.ts";
+import { chunkDocument, type DocumentShard } from "./chunk.ts";
 import {
   executeShardsWithCheckpoint,
   type ExecuteShardResult,
@@ -14,6 +14,7 @@ import { mapShardSpanToDocument } from "./mapSpan.ts";
 import { parseJsonStrict } from "../json/parse.ts";
 import type { Provider, ProviderRequest } from "../providers/types.ts";
 import { isTransientProviderError } from "../providers/errors.ts";
+import { compilePrompt } from "./promptCompiler.ts";
 
 export type EngineRunOptions = {
   runId: string;
@@ -35,12 +36,12 @@ export type EngineRunResult = {
 
 export function buildProviderRequest(
   program: Program,
-  shardText: string,
+  shard: DocumentShard,
   model: string,
 ): ProviderRequest {
   return {
     model,
-    prompt: `${program.instructions}\n\nUNTRUSTED DOCUMENT SHARD:\n${shardText}`,
+    prompt: compilePrompt(program, shard),
     schema: program.schema,
   };
 }
@@ -105,7 +106,7 @@ export async function runExtractionWithProvider(
       runShard: async (shard) => {
         const request = buildProviderRequest(
           options.program,
-          shard.text,
+          shard,
           options.model,
         );
         const response = await options.provider.generate(request);

@@ -3,6 +3,7 @@ import "./core/normalize.test.ts";
 import "./core/invariants.test.ts";
 import "./engine/chunk-map-span.test.ts";
 import "./engine/checkpoint-retry-executor.test.ts";
+import "./engine/prompt-compiler.test.ts";
 import "./json/extract-json.test.ts";
 import "./json/repair.test.ts";
 import "./json/parse.test.ts";

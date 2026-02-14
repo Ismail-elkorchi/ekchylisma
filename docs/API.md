@@ -12,7 +12,8 @@
 - Checkpointing from `src/engine/checkpoint.ts`: `CheckpointStore`, `InMemoryCheckpointStore`, `buildCheckpointKey(runId, shardId)`
 - Retry policy helpers from `src/engine/retry.ts`: `computeBackoffMs`, `computeJitterMs`, `computeRetryDelayMs`, `shouldRetry`
 - Retryable executor from `src/engine/execute.ts`: `executeShardsWithCheckpoint(options)`
-- Provider-backed engine run from `src/engine/run.ts`: `runExtractionWithProvider(options)`, `buildProviderRequest(program, shardText, model)`
+- Provider-backed engine run from `src/engine/run.ts`: `runExtractionWithProvider(options)`, `buildProviderRequest(program, shard, model)`
+- Prompt compiler from `src/engine/promptCompiler.ts`: `compilePrompt(program, shard)`, `compilePromptParts(program, shard)`
 - Schema builders from `src/schema/s.ts`: `s.string`, `s.number`, `s.boolean`, `s.literal`, `s.enum`, `s.array`, `s.object`, `s.union`, `s.optional`
 - Schema validator: `validate(schema, value, options)` from `src/schema/validate.ts`
 - JSON Schema generator: `toJsonSchema(schema)` from `src/schema/toJsonSchema.ts`
@@ -38,6 +39,7 @@
 - `contracts/provider-request.schema.json`
 - `contracts/provider-response.schema.json`
 - `contracts/provider-config.schema.json`
+- `contracts/prompt-compiler.schema.json`
 
 ## Schema Example
 ```ts

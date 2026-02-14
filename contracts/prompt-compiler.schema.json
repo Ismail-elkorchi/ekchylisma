@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/prompt-compiler.schema.json",
+  "title": "CompiledPromptParts",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trustedInstructionsLabel",
+    "untrustedDocumentLabel",
+    "documentStartMarker",
+    "documentEndMarker",
+    "programHash",
+    "shardId",
+    "shardRange",
+    "schemaExcerpt",
+    "documentText"
+  ],
+  "properties": {
+    "trustedInstructionsLabel": {
+      "type": "string",
+      "const": "TRUSTED PROGRAM INSTRUCTIONS"
+    },
+    "untrustedDocumentLabel": {
+      "type": "string",
+      "const": "UNTRUSTED DOCUMENT"
+    },
+    "documentStartMarker": {
+      "type": "string",
+      "const": "BEGIN_UNTRUSTED_DOCUMENT"
+    },
+    "documentEndMarker": {
+      "type": "string",
+      "const": "END_UNTRUSTED_DOCUMENT"
+    },
+    "programHash": {
+      "type": "string"
+    },
+    "shardId": {
+      "type": "string"
+    },
+    "shardRange": {
+      "type": "string"
+    },
+    "schemaExcerpt": {
+      "type": "string"
+    },
+    "documentText": {
+      "type": "string"
+    }
+  }
+}
