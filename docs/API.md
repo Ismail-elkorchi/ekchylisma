@@ -7,6 +7,8 @@
 - `normalizeText(text, options)` from `src/core/normalize.ts`
 - `assertQuoteInvariant(docText, extraction)` from `src/core/invariants.ts`
 - Types from `src/core/types.ts`: `Span`, `Extraction`, `EvidenceBundle`, `Program`
+- Engine chunking from `src/engine/chunk.ts`: `chunkDocument(normalizedText, programHash, options)`
+- Span mapping from `src/engine/mapSpan.ts`: `mapShardSpanToDocument(shard, shardSpan)`
 - Schema builders from `src/schema/s.ts`: `s.string`, `s.number`, `s.boolean`, `s.literal`, `s.enum`, `s.array`, `s.object`, `s.union`, `s.optional`
 - Schema validator: `validate(schema, value, options)` from `src/schema/validate.ts`
 - JSON Schema generator: `toJsonSchema(schema)` from `src/schema/toJsonSchema.ts`
@@ -22,6 +24,7 @@
 - `contracts/json-schema-subset.schema.json`
 - `contracts/repair-log.schema.json`
 - `contracts/json-parse-error.schema.json`
+- `contracts/document-shard.schema.json`
 
 ## Schema Example
 ```ts
