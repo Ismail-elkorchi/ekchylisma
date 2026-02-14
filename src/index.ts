@@ -9,6 +9,7 @@ export * from "./engine/retry.ts";
 export * from "./engine/execute.ts";
 export * from "./engine/run.ts";
 export * from "./engine/promptCompiler.ts";
+export * from "./eval/runSuite.ts";
 export * from "./io/jsonl.ts";
 export * from "./json/extractJson.ts";
 export * from "./json/repair.ts";

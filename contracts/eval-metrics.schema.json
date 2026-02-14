@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/eval-metrics.schema.json",
+  "title": "EvalSuiteResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaValidRate",
+    "quoteInvariantRate",
+    "uniqueExtractionStability",
+    "variance",
+    "runSummaries"
+  ],
+  "properties": {
+    "schemaValidRate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "quoteInvariantRate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "uniqueExtractionStability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "variance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runCount", "extractionCounts", "min", "max", "mean", "stability"],
+      "properties": {
+        "runCount": { "type": "integer", "minimum": 1 },
+        "extractionCounts": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "mean": { "type": "number" },
+        "stability": { "type": "number" }
+      }
+    },
+    "runSummaries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["runIndex", "extractionCount", "failures"],
+        "properties": {
+          "runIndex": { "type": "integer", "minimum": 0 },
+          "extractionCount": { "type": "integer", "minimum": 0 },
+          "failures": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

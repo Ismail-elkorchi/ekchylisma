@@ -14,6 +14,7 @@
 - Retryable executor from `src/engine/execute.ts`: `executeShardsWithCheckpoint(options)`
 - Provider-backed engine run from `src/engine/run.ts`: `runExtractionWithProvider(options)`, `buildProviderRequest(program, shard, model)`
 - Prompt compiler from `src/engine/promptCompiler.ts`: `compilePrompt(program, shard)`, `compilePromptParts(program, shard)`
+- Eval harness from `src/eval/runSuite.ts`: `runSuite(options)` with deterministic fake-mode and optional real-provider mode
 - JSONL codecs from `src/io/jsonl.ts`: `encodeEvidenceBundlesToJsonl(bundles)`, `decodeJsonlToEvidenceBundles(input)`
 - Visualization from `src/viz/html.ts`: `visualizeEvidenceBundle(bundles, options)`
 - Schema builders from `src/schema/s.ts`: `s.string`, `s.number`, `s.boolean`, `s.literal`, `s.enum`, `s.array`, `s.object`, `s.union`, `s.optional`
@@ -45,6 +46,7 @@
 - `contracts/prompt-compiler.schema.json`
 - `contracts/jsonl-io.schema.json`
 - `contracts/viz-options.schema.json`
+- `contracts/eval-metrics.schema.json`
 
 ## Schema Example
 ```ts

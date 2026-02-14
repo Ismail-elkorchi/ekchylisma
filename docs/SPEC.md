@@ -72,6 +72,13 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Highlights are rendered from grounded span indices.
 - A Node example writes the generated HTML file through node adapter utilities.
 
+## Prompt-11 anti-drift summary (5 bullets)
+- Evaluation harness supports deterministic fake-provider mode for drift detection.
+- Optional real-provider mode is explicitly configured, not implicit.
+- Core metrics include schema validity, quote invariant adherence, and stability across runs.
+- Variance reporting quantifies extraction-count spread between runs.
+- CI always executes deterministic suite paths.
+
 ## Invariants
 - Offsets use UTF-16 code unit indexing with inclusive `charStart` and exclusive `charEnd`.
 - `assertQuoteInvariant` validates integer spans, bounds, and exact quote matching.
@@ -129,3 +136,8 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 ## Visualization Rules
 - `visualizeEvidenceBundle()` output must contain embedded styles, script payload, and rendering logic.
 - Initial server-rendered HTML includes span index markers for basic no-JS inspection.
+
+## Evaluation Rules
+- `runSuite()` must run deterministically in fake-provider mode and report stable metrics.
+- `uniqueExtractionStability` uses run-to-run deduped extraction-key overlap.
+- Variance report includes run count and extraction count distribution stats.

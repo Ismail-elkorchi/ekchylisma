@@ -76,3 +76,10 @@
 - Decision: `visualizeEvidenceBundle()` returns a single HTML string containing CSS, JS, and JSON payload.
 - Rationale: Self-contained artifacts are easier to share and inspect across runtimes/environments.
 - Consequence: Visualization HTML can be written directly to disk by Node example tooling.
+
+## ADR-0012: Evaluation metrics are deterministic-first with optional real-provider mode
+- Date: 2026-02-14
+- Context: Prompt 11 requires drift/variance guardrails that run reliably in CI.
+- Decision: `runSuite()` defaults to deterministic fake-provider mode and exposes optional real-provider mode via explicit provider injection.
+- Rationale: Deterministic mode is required for stable CI signals; real-provider mode remains useful for manual benchmarking.
+- Consequence: CI runs deterministic suite by default while preserving extensibility for external provider experiments.

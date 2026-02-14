@@ -12,6 +12,7 @@
 - `src/engine/execute.ts`: resumable shard executor with checkpoint skip + transient retries.
 - `src/engine/run.ts`: provider-driven end-to-end extraction orchestration.
 - `src/engine/promptCompiler.ts`: deterministic boundary-safe prompt construction.
+- `src/eval/runSuite.ts`: deterministic and variance-aware evaluation harness.
 - `src/io/jsonl.ts`: runtime-agnostic JSONL encode/decode for evidence bundles.
 - `src/viz/html.ts`: self-contained HTML visualization generator for grounded spans.
 - `src/json/extractJson.ts`: deterministic first-JSON extraction and JSON-vs-JSONL detection.
@@ -26,6 +27,7 @@
 - `src/providers/ollama.ts`: Ollama `/api/chat` adapter with JSON/schema format mode.
 - `src-node/fs.ts`: Node-only JSONL file adapter exposed via `ekchylisma/node`.
 - `examples/node/render-viz.ts`: Node example that writes visualization HTML output.
+- `.github/workflows/ci.yml`: deterministic CI checks across Node, Deno, and Bun.
 - `src/schema/s.ts`: dependency-free schema DSL with TypeScript inference.
 - `src/schema/validate.ts`: deterministic validator with JSON pointer errors.
 - `src/schema/toJsonSchema.ts`: limited JSON Schema subset generator.
