@@ -1,0 +1,19 @@
+{
+  "name": "ekchylisma",
+  "version": "0.1.0",
+  "description": "Web-API-first grounded extraction toolkit.",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "node tests/run.ts",
+    "test:deno": "deno run --allow-read tests/run.ts",
+    "test:bun": "bun run tests/run.ts",
+    "orphan-check": "node tools/orphan-check.ts",
+    "check": "npm test && npm run orphan-check"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

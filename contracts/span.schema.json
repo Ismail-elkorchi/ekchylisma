@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/span.schema.json",
+  "title": "Span",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["offsetMode", "charStart", "charEnd"],
+  "properties": {
+    "offsetMode": {
+      "type": "string",
+      "enum": ["utf16_code_unit"]
+    },
+    "charStart": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "charEnd": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

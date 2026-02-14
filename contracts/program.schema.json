@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/program.schema.json",
+  "title": "Program",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["instructions", "examples", "schema", "programHash"],
+  "properties": {
+    "instructions": {
+      "type": "string"
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["input", "output"],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "output": {
+            "type": "array",
+            "items": {
+              "$ref": "./extraction.schema.json"
+            }
+          }
+        }
+      }
+    },
+    "schema": {
+      "type": "object"
+    },
+    "programHash": {
+      "type": "string"
+    }
+  }
+}
