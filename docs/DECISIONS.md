@@ -20,3 +20,10 @@
 - Decision: Generate only a strict subset (`type`, `properties`, `items`, `enum`, `const`, `required`, `additionalProperties`, `anyOf`).
 - Rationale: A subset keeps provider integration deterministic and avoids broad, runtime-specific schema behavior.
 - Consequence: Unsupported keywords are intentionally not generated.
+
+## ADR-0004: JSON repair policy is bounded and allow-listed
+- Date: 2026-02-14
+- Context: Prompt 03 requires deterministic extraction+repair+parse while avoiding unbounded or speculative rewrites.
+- Decision: Repairs are limited to four one-pass transforms in fixed order: `stripBOM`, `removeAsciiControlChars`, `trimOuterJunk`, `fixTrailingCommas`.
+- Rationale: Bounded transforms improve auditability and reduce the risk of hidden semantic mutations.
+- Consequence: Inputs requiring broader mutation fail with structured parse diagnostics instead of silent coercion.

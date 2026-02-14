@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/json-parse-error.schema.json",
+  "title": "JsonParseError",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "message", "position", "line", "column", "snippet", "inputLength"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "const": "JsonParseError"
+    },
+    "message": {
+      "type": "string"
+    },
+    "position": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "line": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "column": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "snippet": {
+      "type": "string"
+    },
+    "inputLength": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
