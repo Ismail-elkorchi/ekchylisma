@@ -86,6 +86,13 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Commands for each runtime are documented in `docs/PORTABILITY.md`.
 - Example outputs are expected to match across runtimes.
 
+## Prompt-13 anti-drift summary (5 bullets)
+- Orphan checks validate contracts, exports-to-doc coverage, and runtime example smoke tests.
+- Coherence checks fail fast when docs or contracts drift from code exports.
+- Roadmap and non-goal docs are explicit and versioned with the codebase.
+- Portability examples are treated as executable artifacts, not prose-only docs.
+- System-wide consistency is enforced as part of default check workflow.
+
 ## Invariants
 - Offsets use UTF-16 code unit indexing with inclusive `charStart` and exclusive `charEnd`.
 - `assertQuoteInvariant` validates integer spans, bounds, and exact quote matching.

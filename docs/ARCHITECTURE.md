@@ -31,6 +31,7 @@
 - `examples/node/basic.ts`, `examples/deno/basic.ts`, `examples/bun/basic.ts`: runtime portability examples.
 - `examples/workers/worker.ts`: minimal Worker handler running fake-provider extraction path.
 - `.github/workflows/ci.yml`: deterministic CI checks across Node, Deno, and Bun.
+- `tools/orphan-check.ts`: coherence guard for docs/contracts/exports and runtime example smoke checks.
 - `src/schema/s.ts`: dependency-free schema DSL with TypeScript inference.
 - `src/schema/validate.ts`: deterministic validator with JSON pointer errors.
 - `src/schema/toJsonSchema.ts`: limited JSON Schema subset generator.

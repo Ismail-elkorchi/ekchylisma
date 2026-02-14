@@ -27,7 +27,9 @@
 - Provider error helpers from `src/providers/errors.ts`: `ProviderError`, `classifyProviderStatus`, `isTransientProviderError`
 - Provider request hash helper from `src/providers/requestHash.ts`: `hashProviderRequest(request)`
 - Fake provider test adapter from `src/providers/fake.ts`: `FakeProvider`
-- Real providers: `OpenAIProvider`, `GeminiProvider`, `OllamaProvider`
+- OpenAI provider from `src/providers/openai.ts`: `OpenAIProvider`
+- Gemini provider from `src/providers/gemini.ts`: `GeminiProvider`
+- Ollama provider from `src/providers/ollama.ts`: `OllamaProvider`
 - Node-only subpath export `ekchylisma/node`: `readEvidenceBundlesFromJsonlFile(path)`, `writeEvidenceBundlesToJsonlFile(path, bundles)`, `writeTextFile(path, content)` from `src-node/fs.ts`
 
 ## Contracts

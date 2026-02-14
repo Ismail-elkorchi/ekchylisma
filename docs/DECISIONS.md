@@ -90,3 +90,10 @@
 - Decision: Implement one shared extraction scenario and expose runtime-specific entrypoints for Node, Deno, Bun, and Workers.
 - Rationale: Shared scenario removes drift between runtime demos and makes behavior directly comparable.
 - Consequence: `docs/PORTABILITY.md` can provide exact commands with a single expected output shape.
+
+## ADR-0014: Orphan-check enforces contract/export/example coherence
+- Date: 2026-02-14
+- Context: Prompt 13 requires stronger coherence enforcement across system artifacts.
+- Decision: Extend `tools/orphan-check.ts` to verify contract references, docs coverage for every `src/index.ts` export, and runtime example smoke runs.
+- Rationale: Coherence failures should be detected automatically before merge.
+- Consequence: Default check workflow now blocks drift in docs/contracts/examples.
