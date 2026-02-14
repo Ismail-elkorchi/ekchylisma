@@ -7,9 +7,27 @@
 - `normalizeText(text, options)` from `src/core/normalize.ts`
 - `assertQuoteInvariant(docText, extraction)` from `src/core/invariants.ts`
 - Types from `src/core/types.ts`: `Span`, `Extraction`, `EvidenceBundle`, `Program`
+- Schema builders from `src/schema/s.ts`: `s.string`, `s.number`, `s.boolean`, `s.literal`, `s.enum`, `s.array`, `s.object`, `s.union`, `s.optional`
+- Schema validator: `validate(schema, value, options)` from `src/schema/validate.ts`
+- JSON Schema generator: `toJsonSchema(schema)` from `src/schema/toJsonSchema.ts`
 
 ## Contracts
 - `contracts/span.schema.json`
 - `contracts/extraction.schema.json`
 - `contracts/program.schema.json`
 - `contracts/evidence-bundle.schema.json`
+- `contracts/json-schema-subset.schema.json`
+
+## Schema Example
+```ts
+import { s, toJsonSchema, validate } from "ekchylisma";
+
+const Ticket = s.object({
+  title: s.string(),
+  priority: s.enum(["low", "high"]),
+  points: s.optional(s.number()),
+});
+
+const result = validate(Ticket, { title: "Bug", priority: "high" });
+const schemaForProvider = toJsonSchema(Ticket);
+```

@@ -13,3 +13,10 @@
 - Decision: `normalizeNewlines` and `trimTrailingWhitespacePerLine` both emit `mappingStrategy: "not_reversible"`.
 - Rationale: This is the smallest compliant implementation while preserving ledger auditability.
 - Consequence: Later prompts can upgrade to reversible mappings without breaking the ledger contract.
+
+## ADR-0003: Schema generator targets a strict JSON Schema subset
+- Date: 2026-02-14
+- Context: Prompt 02 requires a JSON Schema generator without external dependencies while preserving portability.
+- Decision: Generate only a strict subset (`type`, `properties`, `items`, `enum`, `const`, `required`, `additionalProperties`, `anyOf`).
+- Rationale: A subset keeps provider integration deterministic and avoids broad, runtime-specific schema behavior.
+- Consequence: Unsupported keywords are intentionally not generated.

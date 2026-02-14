@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/json-schema-subset.schema.json",
+  "title": "JsonSchemaSubset",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["object", "array", "string", "number", "boolean"]
+    },
+    "properties": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#"
+      }
+    },
+    "items": {
+      "$ref": "#"
+    },
+    "enum": {
+      "type": "array",
+      "items": {
+        "type": ["string", "number", "boolean", "null"]
+      }
+    },
+    "const": {
+      "type": ["string", "number", "boolean", "null"]
+    },
+    "required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": {
+      "type": "boolean"
+    },
+    "anyOf": {
+      "type": "array",
+      "items": {
+        "$ref": "#"
+      }
+    }
+  }
+}
