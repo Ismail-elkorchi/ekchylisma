@@ -83,3 +83,10 @@
 - Decision: `runSuite()` defaults to deterministic fake-provider mode and exposes optional real-provider mode via explicit provider injection.
 - Rationale: Deterministic mode is required for stable CI signals; real-provider mode remains useful for manual benchmarking.
 - Consequence: CI runs deterministic suite by default while preserving extensibility for external provider experiments.
+
+## ADR-0013: Portability proof via shared scenario examples
+- Date: 2026-02-14
+- Context: Prompt 12 requires concrete runtime portability evidence.
+- Decision: Implement one shared extraction scenario and expose runtime-specific entrypoints for Node, Deno, Bun, and Workers.
+- Rationale: Shared scenario removes drift between runtime demos and makes behavior directly comparable.
+- Consequence: `docs/PORTABILITY.md` can provide exact commands with a single expected output shape.

@@ -79,6 +79,13 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Variance reporting quantifies extraction-count spread between runs.
 - CI always executes deterministic suite paths.
 
+## Prompt-12 anti-drift summary (5 bullets)
+- Portability is demonstrated with runnable examples, not only documentation claims.
+- Node/Deno/Bun examples execute the same extraction scenario through core APIs.
+- Workers example runs the same fake-provider path without secrets.
+- Commands for each runtime are documented in `docs/PORTABILITY.md`.
+- Example outputs are expected to match across runtimes.
+
 ## Invariants
 - Offsets use UTF-16 code unit indexing with inclusive `charStart` and exclusive `charEnd`.
 - `assertQuoteInvariant` validates integer spans, bounds, and exact quote matching.

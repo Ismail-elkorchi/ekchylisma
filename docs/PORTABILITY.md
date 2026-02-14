@@ -1,0 +1,25 @@
+# Portability
+
+## Node example
+```bash
+node examples/node/basic.ts
+```
+
+## Deno example
+```bash
+deno run examples/deno/basic.ts
+```
+
+## Bun example
+```bash
+bun run examples/bun/basic.ts
+```
+
+## Workers example (local)
+Use the worker module in `examples/workers/worker.ts` with your preferred worker tooling (Wrangler/Miniflare).
+
+A minimal `wrangler.toml` entrypoint would point to:
+- `main = "examples/workers/worker.ts"`
+
+## Expected output
+Each runtime should emit a single extraction for `"Beta"` with span `[6, 10)`.
