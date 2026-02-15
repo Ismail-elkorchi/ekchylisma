@@ -6,6 +6,7 @@ import type {
   ProgramExample,
   ProgramInput,
 } from "./types.ts";
+import { normalizeSchemaDialect } from "../schema/normalizeDialect.ts";
 
 function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") {
@@ -93,7 +94,7 @@ function normalizeClasses(
       name,
     };
     if (attributesSchema !== undefined) {
-      normalizedEntry.attributesSchema = attributesSchema as ProgramClass["attributesSchema"];
+      normalizedEntry.attributesSchema = normalizeSchemaDialect(attributesSchema);
     }
     if (allowInferred !== undefined) {
       normalizedEntry.allowInferred = allowInferred;
@@ -180,9 +181,7 @@ export async function normalizeProgram(input: ProgramInput): Promise<Program> {
   validateExampleClasses(classes, examples);
   const constraints = normalizeConstraints(input.constraints);
 
-  if (typeof input.schema !== "object" || input.schema === null || Array.isArray(input.schema)) {
-    fail("schema must be an object");
-  }
+  const normalizedSchema = normalizeSchemaDialect(input.schema);
 
   const canonicalPayload = stableStringify({
     instructions,
@@ -190,7 +189,7 @@ export async function normalizeProgram(input: ProgramInput): Promise<Program> {
     classes,
     constraints,
     examples,
-    schema: input.schema,
+    schema: normalizedSchema,
   });
   const computedHash = await sha256Hex(canonicalPayload);
   const providedHash = input.programHash;
@@ -210,7 +209,7 @@ export async function normalizeProgram(input: ProgramInput): Promise<Program> {
     constraints,
     instructions,
     examples,
-    schema: input.schema,
+    schema: normalizedSchema,
     programHash,
   };
 }

@@ -29,3 +29,4 @@ export * from "./providers/ollama.ts";
 export * from "./schema/s.ts";
 export * from "./schema/validate.ts";
 export * from "./schema/toJsonSchema.ts";
+export * from "./schema/normalizeDialect.ts";

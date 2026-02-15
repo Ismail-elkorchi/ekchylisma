@@ -53,6 +53,7 @@
 - Schema builders from `src/schema/s.ts`: `s.string`, `s.number`, `s.boolean`, `s.literal`, `s.enum`, `s.array`, `s.object`, `s.union`, `s.optional`
 - Schema validator: `validate(schema, value, options)` from `src/schema/validate.ts`
 - JSON Schema generator: `toJsonSchema(schema)` from `src/schema/toJsonSchema.ts`
+- Schema dialect normalization: `normalizeSchemaDialect(schema)` from `src/schema/normalizeDialect.ts`
 - JSON extraction helpers from `src/json/extractJson.ts`: `extractFirstJson(text)`, `detectJsonFlavor(text)`
 - JSON repair pipeline from `src/json/repair.ts`: `repairJsonText(input, options)` with `RepairLog` budget metadata (`maxCandidateChars`, `maxRepairChars`, truncation flags)
 - JSON parser from `src/json/parse.ts`: `parseJsonStrict(text)`, `tryParseJsonStrict(text)`, `JsonParseFailure`

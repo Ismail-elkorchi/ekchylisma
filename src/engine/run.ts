@@ -58,6 +58,7 @@ import {
   compileRepairPrompt,
   hashPromptText,
 } from "./promptCompiler.ts";
+import { normalizeSchemaDialect } from "../schema/normalizeDialect.ts";
 
 type ShardRunValue = {
   extractions: Extraction[];
@@ -158,10 +159,11 @@ export function buildProviderRequest(
   shard: DocumentShard,
   model: string,
 ): ProviderRequest {
+  const normalizedSchema = normalizeSchemaDialect(program.schema);
   return {
     model,
     prompt: compilePrompt(program, shard),
-    schema: program.schema,
+    schema: normalizedSchema,
   };
 }
 
@@ -176,6 +178,7 @@ export function buildRepairProviderRequest(
     priorPass: number;
   },
 ): ProviderRequest {
+  const normalizedSchema = normalizeSchemaDialect(program.schema);
   return {
     model,
     prompt: compileRepairPrompt(program, shard, {
@@ -184,7 +187,7 @@ export function buildRepairProviderRequest(
       failureMessage: context.failureMessage,
       priorPass: context.priorPass,
     }),
-    schema: program.schema,
+    schema: normalizedSchema,
   };
 }
 
