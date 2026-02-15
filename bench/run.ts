@@ -67,6 +67,14 @@ type MultiPassScript = {
   failureMessage?: string;
 };
 
+type StructuredSplitScript = {
+  mode: "structured_split_v1";
+  generate: string;
+  generateStructured: string;
+};
+
+type ProviderScript = MultiPassScript | StructuredSplitScript;
+
 function parseArgs(argv: string[]): RunOptions {
   const args = new Map<string, string>();
 
@@ -155,7 +163,7 @@ function defaultFailureMessage(kind: MultiPassScript["failureKind"]): string {
   return "Unexpected non-whitespace character after JSON at position 0";
 }
 
-function parseMultiPassScript(providerResponseText: string): MultiPassScript | null {
+function parseProviderScript(providerResponseText: string): ProviderScript | null {
   let value: unknown;
   try {
     value = JSON.parse(providerResponseText);
@@ -168,31 +176,43 @@ function parseMultiPassScript(providerResponseText: string): MultiPassScript | n
   }
 
   const record = value as Record<string, unknown>;
-  if (record.mode !== "multi_pass_v1") {
-    return null;
-  }
-  if (typeof record.draft !== "string" || typeof record.repair !== "string") {
-    return null;
-  }
-  if (
-    record.failureKind !== "json_pipeline_failure"
-    && record.failureKind !== "payload_shape_failure"
-    && record.failureKind !== "quote_invariant_failure"
-  ) {
-    return null;
+  if (record.mode === "multi_pass_v1") {
+    if (typeof record.draft !== "string" || typeof record.repair !== "string") {
+      return null;
+    }
+    if (
+      record.failureKind !== "json_pipeline_failure"
+      && record.failureKind !== "payload_shape_failure"
+      && record.failureKind !== "quote_invariant_failure"
+    ) {
+      return null;
+    }
+    if (record.failureMessage !== undefined && typeof record.failureMessage !== "string") {
+      return null;
+    }
+
+    return {
+      mode: "multi_pass_v1",
+      draft: record.draft,
+      repair: record.repair,
+      failureKind: record.failureKind,
+      failureMessage: record.failureMessage,
+    };
   }
 
-  if (record.failureMessage !== undefined && typeof record.failureMessage !== "string") {
-    return null;
+  if (record.mode === "structured_split_v1") {
+    if (typeof record.generate !== "string" || typeof record.generateStructured !== "string") {
+      return null;
+    }
+
+    return {
+      mode: "structured_split_v1",
+      generate: record.generate,
+      generateStructured: record.generateStructured,
+    };
   }
 
-  return {
-    mode: "multi_pass_v1",
-    draft: record.draft,
-    repair: record.repair,
-    failureKind: record.failureKind,
-    failureMessage: record.failureMessage,
-  };
+  return null;
 }
 
 async function runCase(
@@ -226,9 +246,16 @@ async function runCase(
     programHash,
   };
 
-  const script = parseMultiPassScript(testCase.providerResponseText);
+  const script = parseProviderScript(testCase.providerResponseText);
   const provider = new FakeProvider({
-    defaultResponse: script?.draft ?? testCase.providerResponseText,
+    defaultResponse: script?.mode === "multi_pass_v1"
+      ? script.draft
+      : script?.mode === "structured_split_v1"
+      ? script.generate
+      : testCase.providerResponseText,
+    structuredDefaultResponse: script?.mode === "structured_split_v1"
+      ? script.generateStructured
+      : undefined,
   });
 
   if (script) {
@@ -242,21 +269,28 @@ async function runCase(
     for (const shard of shards) {
       const draftRequest = buildProviderRequest(program, shard, "fake-model");
       const draftHash = await hashProviderRequest(draftRequest);
-      provider.setResponse(draftHash, script.draft);
+      if (script.mode === "multi_pass_v1") {
+        provider.setResponse(draftHash, script.draft);
+        provider.setStructuredResponse(draftHash, script.draft);
 
-      const repairRequest = buildRepairProviderRequest(
-        program,
-        shard,
-        "fake-model",
-        {
-          previousResponseText: script.draft,
-          failureKind: script.failureKind,
-          failureMessage: script.failureMessage ?? defaultFailureMessage(script.failureKind),
-          priorPass: 1,
-        },
-      );
-      const repairHash = await hashProviderRequest(repairRequest);
-      provider.setResponse(repairHash, script.repair);
+        const repairRequest = buildRepairProviderRequest(
+          program,
+          shard,
+          "fake-model",
+          {
+            previousResponseText: script.draft,
+            failureKind: script.failureKind,
+            failureMessage: script.failureMessage ?? defaultFailureMessage(script.failureKind),
+            priorPass: 1,
+          },
+        );
+        const repairHash = await hashProviderRequest(repairRequest);
+        provider.setResponse(repairHash, script.repair);
+        provider.setStructuredResponse(repairHash, script.repair);
+      } else {
+        provider.setResponse(draftHash, script.generate);
+        provider.setStructuredResponse(draftHash, script.generateStructured);
+      }
     }
   }
 

@@ -35,9 +35,9 @@ function createMockFetch(
   }) as typeof fetch;
 }
 
-test("OpenAIProvider sends structured output payload and parses response", async () => {
+test("OpenAIProvider generateStructured sends structured output payload and parses response", async () => {
   const provider = new OpenAIProvider({ apiKey: "test-key" });
-  const response = await provider.generate(
+  const response = await provider.generateStructured(
     {
       model: "gpt-test",
       prompt: "extract",
@@ -65,9 +65,39 @@ test("OpenAIProvider sends structured output payload and parses response", async
   assertEqual(response.runRecord.provider, "openai");
 });
 
-test("GeminiProvider uses responseSchema when provided", async () => {
-  const provider = new GeminiProvider({ apiKey: "test-key" });
+test("OpenAIProvider generate omits structured response format payload", async () => {
+  const provider = new OpenAIProvider({ apiKey: "test-key" });
   const response = await provider.generate(
+    {
+      model: "gpt-test",
+      prompt: "extract",
+      schema: { type: "object", properties: { value: { type: "string" } } },
+    },
+    {
+      fetchFn: createMockFetch(
+        /\/chat\/completions$/,
+        [
+          (body) => assertEqual(body.model as string, "gpt-test"),
+          (body) => assertEqual("response_format" in body, false),
+        ],
+        {
+          ok: true,
+          status: 200,
+          json: {
+            choices: [{ message: { content: "{\"value\":\"ok\"}" } }],
+          },
+        },
+      ),
+    },
+  );
+
+  assertEqual(response.text, "{\"value\":\"ok\"}");
+  assertEqual(response.runRecord.provider, "openai");
+});
+
+test("GeminiProvider generateStructured uses responseSchema when provided", async () => {
+  const provider = new GeminiProvider({ apiKey: "test-key" });
+  const response = await provider.generateStructured(
     {
       model: "gemini-test",
       prompt: "extract",
@@ -105,9 +135,9 @@ test("GeminiProvider uses responseSchema when provided", async () => {
   assertEqual(response.runRecord.provider, "gemini");
 });
 
-test("OllamaProvider sends /api/chat request and parses content", async () => {
+test("OllamaProvider generateStructured sends /api/chat request and parses content", async () => {
   const provider = new OllamaProvider({ baseUrl: "http://localhost:11434" });
-  const response = await provider.generate(
+  const response = await provider.generateStructured(
     {
       model: "llama-test",
       prompt: "extract",

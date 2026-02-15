@@ -27,4 +27,8 @@ export interface Provider {
     request: ProviderRequest,
     options?: { fetchFn?: typeof fetch },
   ): Promise<ProviderResponse>;
+  generateStructured(
+    request: ProviderRequest,
+    options?: { fetchFn?: typeof fetch },
+  ): Promise<ProviderResponse>;
 }

@@ -40,8 +40,9 @@ export class OllamaProvider implements Provider {
     this.config = config;
   }
 
-  async generate(
+  private async generateInternal(
     request: ProviderRequest,
+    structured: boolean,
     options: { fetchFn?: typeof fetch } = {},
   ): Promise<ProviderResponse> {
     const fetchFn = ensureFetch(options.fetchFn ?? this.config.fetchFn);
@@ -52,7 +53,7 @@ export class OllamaProvider implements Provider {
       model: request.model,
       messages: [{ role: "user", content: request.prompt }],
       stream: false,
-      format: request.schema ?? "json",
+      format: structured ? (request.schema ?? "json") : "json",
     };
 
     const response = await fetchFn(url, {
@@ -86,5 +87,19 @@ export class OllamaProvider implements Provider {
         requestHash,
       },
     };
+  }
+
+  async generate(
+    request: ProviderRequest,
+    options: { fetchFn?: typeof fetch } = {},
+  ): Promise<ProviderResponse> {
+    return this.generateInternal(request, false, options);
+  }
+
+  async generateStructured(
+    request: ProviderRequest,
+    options: { fetchFn?: typeof fetch } = {},
+  ): Promise<ProviderResponse> {
+    return this.generateInternal(request, true, options);
   }
 }
