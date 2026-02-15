@@ -20,6 +20,7 @@
   - `runWithEvidence(options)` normalizes/validates `ProgramInput` into a deterministic structured `Program` shape (`programId`, `description`, `classes`, `constraints`)
   - Final `Extraction` records include top-level `offsetMode`, `charStart`, and `charEnd` (mirrored in `span`) and are validated by `assertQuoteInvariant`
   - Schema-first requests route through provider `generateStructured()`; text-only requests route through `generate()`
+  - Extraction parsing prioritizes tool/function-call payload envelopes before text fallbacks for deterministic structured-output handling
   - `runWithEvidence(options)` diagnostics include:
     - `emptyResultKind`: `non_empty`, `empty_by_evidence`, or `empty_by_failure`
     - `runCompleteness.kind`: `complete_success`, `partial_success`, or `complete_failure`
@@ -58,7 +59,7 @@
 - Streaming frame decoder from `src/json/frameDecoder.ts`: `decodeStreamingJsonFrames(text)`
 - JSON repair pipeline from `src/json/repair.ts`: `repairJsonText(input, options)` with `RepairLog` budget metadata (`maxCandidateChars`, `maxRepairChars`, truncation flags)
 - JSON parser from `src/json/parse.ts`: `parseJsonStrict(text)`, `tryParseJsonStrict(text)`, `JsonParseFailure`
-- Provider contracts from `src/providers/types.ts`: `Provider` (`generate(request)`, `generateStructured(request)`), `ProviderRequest`, `ProviderResponse`
+- Provider contracts from `src/providers/types.ts`: `Provider` (`generate(request)`, `generateStructured(request)`), `ProviderRequest`, `ProviderResponse` (includes `outputChannel`: `text` or `tool_call`)
 - Provider error helpers from `src/providers/errors.ts`: `ProviderError`, `classifyProviderStatus`, `isTransientProviderError`
 - Provider request hash helper from `src/providers/requestHash.ts`: `hashProviderRequest(request)`
 - Fake provider test adapter from `src/providers/fake.ts`: `FakeProvider`

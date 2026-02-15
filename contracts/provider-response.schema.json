@@ -4,10 +4,14 @@
   "title": "ProviderResponse",
   "type": "object",
   "additionalProperties": false,
-  "required": ["text", "runRecord"],
+  "required": ["text", "outputChannel", "runRecord"],
   "properties": {
     "text": {
       "type": "string"
+    },
+    "outputChannel": {
+      "type": "string",
+      "enum": ["text", "tool_call"]
     },
     "runRecord": {
       "type": "object",

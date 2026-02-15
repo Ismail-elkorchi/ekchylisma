@@ -95,6 +95,50 @@ test("OpenAIProvider generate omits structured response format payload", async (
   assertEqual(response.runRecord.provider, "openai");
 });
 
+test("OpenAIProvider prefers tool-call arguments over message content", async () => {
+  const provider = new OpenAIProvider({ apiKey: "test-key" });
+  const response = await provider.generateStructured(
+    {
+      model: "gpt-test",
+      prompt: "extract",
+      schema: { type: "object" },
+    },
+    {
+      fetchFn: createMockFetch(
+        /\/chat\/completions$/,
+        [],
+        {
+          ok: true,
+          status: 200,
+          json: {
+            choices: [
+              {
+                message: {
+                  content: "{\"extractions\":[]}",
+                  tool_calls: [
+                    {
+                      function: {
+                        arguments:
+                          "{\"extractions\":[{\"extractionClass\":\"token\",\"quote\":\"Beta\",\"span\":{\"offsetMode\":\"utf16_code_unit\",\"charStart\":6,\"charEnd\":10},\"grounding\":\"explicit\"}]}",
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ),
+    },
+  );
+
+  assertEqual(response.outputChannel, "tool_call");
+  assert(
+    response.text.includes("\"extractions\""),
+    "tool-call argument payload should be returned",
+  );
+});
+
 test("GeminiProvider generateStructured uses responseSchema when provided", async () => {
   const provider = new GeminiProvider({ apiKey: "test-key" });
   const response = await provider.generateStructured(
@@ -133,6 +177,62 @@ test("GeminiProvider generateStructured uses responseSchema when provided", asyn
 
   assertEqual(response.text, "{\"value\":\"ok\"}");
   assertEqual(response.runRecord.provider, "gemini");
+});
+
+test("GeminiProvider prefers functionCall args over text parts", async () => {
+  const provider = new GeminiProvider({ apiKey: "test-key" });
+  const response = await provider.generateStructured(
+    {
+      model: "gemini-test",
+      prompt: "extract",
+      schema: { type: "object" },
+    },
+    {
+      fetchFn: createMockFetch(
+        /:generateContent\?key=/,
+        [],
+        {
+          ok: true,
+          status: 200,
+          json: {
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    { text: "{\"extractions\":[]}" },
+                    {
+                      functionCall: {
+                        args: {
+                          extractions: [
+                            {
+                              extractionClass: "token",
+                              quote: "Beta",
+                              span: {
+                                offsetMode: "utf16_code_unit",
+                                charStart: 6,
+                                charEnd: 10,
+                              },
+                              grounding: "explicit",
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ),
+    },
+  );
+
+  assertEqual(response.outputChannel, "tool_call");
+  assert(
+    response.text.includes("\"extractions\""),
+    "function-call arguments should be prioritized over plain text parts",
+  );
 });
 
 test("OllamaProvider generateStructured sends /api/chat request and parses content", async () => {

@@ -20,7 +20,31 @@ function ensureFetch(fetchFn: typeof fetch | undefined): typeof fetch {
   return resolved;
 }
 
-function extractText(response: unknown): string {
+function extractContentText(content: unknown): string {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .map((entry) => {
+        if (typeof entry === "string") {
+          return entry;
+        }
+        if (typeof entry === "object" && entry !== null) {
+          const record = entry as { text?: unknown };
+          return typeof record.text === "string" ? record.text : "";
+        }
+        return "";
+      })
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  return "";
+}
+
+function extractPayload(response: unknown): { text: string; outputChannel: "text" | "tool_call" } {
   if (typeof response !== "object" || response === null) {
     throw new ProviderError("permanent", "parse_error", "OpenAI response is not an object.");
   }
@@ -30,18 +54,41 @@ function extractText(response: unknown): string {
     throw new ProviderError("permanent", "parse_error", "OpenAI response missing choices.");
   }
 
-  const message = (choices[0] as { message?: { content?: unknown } }).message;
-  const content = message?.content;
+  const message = (choices[0] as {
+    message?: {
+      content?: unknown;
+      tool_calls?: Array<{
+        function?: {
+          arguments?: unknown;
+        };
+      }>;
+    };
+  }).message;
 
-  if (typeof content === "string") {
-    return content;
+  if (Array.isArray(message?.tool_calls)) {
+    for (const call of message.tool_calls) {
+      const argumentsValue = call?.function?.arguments;
+      if (typeof argumentsValue === "string" && argumentsValue.trim().length > 0) {
+        return {
+          text: argumentsValue,
+          outputChannel: "tool_call",
+        };
+      }
+      if (typeof argumentsValue === "object" && argumentsValue !== null) {
+        return {
+          text: JSON.stringify(argumentsValue),
+          outputChannel: "tool_call",
+        };
+      }
+    }
   }
 
-  if (Array.isArray(content)) {
-    return content
-      .map((entry) => (typeof entry === "object" && entry !== null ? (entry as { text?: string }).text : ""))
-      .filter(Boolean)
-      .join("\n");
+  const content = extractContentText(message?.content);
+  if (content.length > 0) {
+    return {
+      text: content,
+      outputChannel: "text",
+    };
   }
 
   throw new ProviderError("permanent", "parse_error", "OpenAI response missing message content.");
@@ -103,11 +150,12 @@ export class OpenAIProvider implements Provider {
     }
 
     const data = await response.json();
-    const text = extractText(data);
+    const payloadText = extractPayload(data);
     const requestHash = await hashProviderRequest(request);
 
     return {
-      text,
+      text: payloadText.text,
+      outputChannel: payloadText.outputChannel,
       runRecord: {
         provider: this.name,
         model: request.model,
