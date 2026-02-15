@@ -90,6 +90,15 @@ const sampleBundle = {
     ],
     failures: [],
     checkpointHits: 0,
+    promptLog: {
+      programHash: "program-hash",
+      shardPromptHashes: [
+        {
+          shardId: "shard-1",
+          promptHash: "prompt-hash",
+        },
+      ],
+    },
   },
 };
 

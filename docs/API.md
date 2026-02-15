@@ -6,7 +6,7 @@
 - `trimTrailingWhitespacePerLine(text)` from `src/core/normalize.ts`
 - `normalizeText(text, options)` from `src/core/normalize.ts`
 - `assertQuoteInvariant(docText, extraction)` from `src/core/invariants.ts`
-- Types from `src/core/types.ts`: `DocumentInput`, `Span`, `Extraction`, `EvidenceBundle`, `EvidenceAttestation`, `Program`, `ShardOutcome`, `RunDiagnostics`
+- Types from `src/core/types.ts`: `DocumentInput`, `Span`, `Extraction`, `EvidenceBundle`, `EvidenceAttestation`, `Program`, `PromptHashRecord`, `PromptLog`, `ShardOutcome`, `RunDiagnostics`
 - Engine chunking from `src/engine/chunk.ts`: `chunkDocument(normalizedText, programHash, options)`
 - Span mapping from `src/engine/mapSpan.ts`: `mapShardSpanToDocument(shard, shardSpan)`
 - Checkpointing from `src/engine/checkpoint.ts`: `CheckpointStore`, `InMemoryCheckpointStore`, `buildCheckpointKey(runId, shardId)`
@@ -15,11 +15,12 @@
 - Provider-backed engine run from `src/engine/run.ts`:
   - `runExtractionWithProvider(options)` for extraction-first legacy result shape
   - `runWithEvidence(options)` for run-produced `EvidenceBundle` including shard outcomes and explicit failure diagnostics
+  - `runWithEvidence(options)` diagnostics include `promptLog` (`programHash`, per-shard `promptHash` records)
   - `buildProviderRequest(program, shard, model)`
 - Evidence attestation:
   - `attestEvidenceBundle(bundle, options)` from `src/evidence/attest.ts`
   - `verifyEvidenceBundleAttestation(bundle, options)` from `src/evidence/verify.ts`
-- Prompt compiler from `src/engine/promptCompiler.ts`: `compilePrompt(program, shard)`, `compilePromptParts(program, shard)`
+- Prompt compiler from `src/engine/promptCompiler.ts`: `compilePrompt(program, shard)`, `compilePromptParts(program, shard)`, `escapeUntrustedPromptText(text, markers)`, `hashPromptText(prompt)`
 - Eval harness from `src/eval/runSuite.ts`: `runSuite(options)` with deterministic fake-mode and optional real-provider mode
 - JSONL codecs from `src/io/jsonl.ts`: `encodeEvidenceBundlesToJsonl(bundles)`, `decodeJsonlToEvidenceBundles(input)`
 - Visualization from `src/viz/html.ts`: `visualizeEvidenceBundle(bundles, options)`

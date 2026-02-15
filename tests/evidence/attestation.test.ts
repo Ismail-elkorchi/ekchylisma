@@ -85,6 +85,10 @@ function buildSampleBundle(): EvidenceBundle {
       shardOutcomes: [],
       failures: [],
       checkpointHits: 0,
+      promptLog: {
+        programHash: "program-hash-001",
+        shardPromptHashes: [],
+      },
     },
   };
 }
@@ -93,6 +97,7 @@ function buildReorderedBundle(source: EvidenceBundle): EvidenceBundle {
   return {
     diagnostics: {
       checkpointHits: source.diagnostics.checkpointHits,
+      promptLog: source.diagnostics.promptLog,
       failures: source.diagnostics.failures,
       shardOutcomes: source.diagnostics.shardOutcomes,
       emptyResultKind: source.diagnostics.emptyResultKind,

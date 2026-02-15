@@ -164,3 +164,13 @@
   - Keep checks event-aware so non-`pull_request` events skip validation cleanly.
 - Rationale: A deterministic CI check prevents template drift and keeps verification/evidence sections uniform.
 - Consequence: Pull requests missing required headings fail CI until body content is corrected.
+
+## ADR-0022: Add explicit safe prompt interpolation and prompt hash diagnostics
+- Date: 2026-02-15
+- Context: REQ-10.2 requires explicit API support for safe prompt interpolation and prompt hash logging.
+- Decision:
+  - Add `escapeUntrustedPromptText()` and `hashPromptText()` to the prompt compiler API.
+  - Escape marker token collisions in untrusted text before interpolation into bounded prompt sections.
+  - Record `diagnostics.promptLog` in `runWithEvidence()` with `programHash` and per-shard `promptHash` values.
+- Rationale: Explicit marker escaping and prompt hash logs improve boundary safety and post-run auditability.
+- Consequence: Evidence bundle diagnostics and schema include prompt hash records for every shard.

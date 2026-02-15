@@ -175,11 +175,22 @@ export type EmptyResultKind =
   | "empty_by_evidence"
   | "empty_by_failure";
 
+export type PromptHashRecord = {
+  shardId: string;
+  promptHash: string;
+};
+
+export type PromptLog = {
+  programHash: string;
+  shardPromptHashes: PromptHashRecord[];
+};
+
 export type RunDiagnostics = {
   emptyResultKind: EmptyResultKind;
   shardOutcomes: ShardOutcome[];
   failures: ShardFailure[];
   checkpointHits: number;
+  promptLog: PromptLog;
 };
 
 export type EvidenceAttestation = {
