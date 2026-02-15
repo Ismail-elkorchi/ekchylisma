@@ -4,8 +4,59 @@
   "title": "Program",
   "type": "object",
   "additionalProperties": false,
-  "required": ["instructions", "examples", "schema", "programHash"],
+  "required": [
+    "description",
+    "classes",
+    "examples",
+    "constraints",
+    "instructions",
+    "schema",
+    "programHash"
+  ],
   "properties": {
+    "programId": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "classes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "attributesSchema": {
+            "type": "object"
+          },
+          "allowInferred": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requireExactQuote", "forbidOverlap"],
+      "properties": {
+        "requireExactQuote": {
+          "type": "boolean"
+        },
+        "forbidOverlap": {
+          "type": "boolean"
+        },
+        "maxExtractionsPerShard": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
     "instructions": {
       "type": "string"
     },

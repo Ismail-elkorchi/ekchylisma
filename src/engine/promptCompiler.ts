@@ -112,12 +112,28 @@ export function compilePrompt(
   options: PromptCompilerOptions = {},
 ): string {
   const parts = compilePromptParts(program, shard, options);
+  const description = typeof program.description === "string" && program.description.trim().length > 0
+    ? program.description
+    : program.instructions;
+  const classes = Array.isArray(program.classes) && program.classes.length > 0
+    ? program.classes
+    : [{ name: "extraction", allowInferred: false }];
+  const constraints = program.constraints ?? {
+    requireExactQuote: true,
+    forbidOverlap: true,
+  };
 
   return [
     `### ${parts.trustedInstructionsLabel}`,
     `PROGRAM_HASH: ${parts.programHash}`,
     `SHARD_ID: ${parts.shardId}`,
     `SHARD_RANGE: ${parts.shardRange}`,
+    "PROGRAM_DESCRIPTION:",
+    description,
+    "PROGRAM_CLASSES_JSON:",
+    stableStringify(classes),
+    "PROGRAM_CONSTRAINTS_JSON:",
+    stableStringify(constraints),
     "INSTRUCTIONS:",
     program.instructions,
     "SCHEMA_EXCERPT_JSON:",

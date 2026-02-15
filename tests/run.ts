@@ -1,7 +1,9 @@
 import "./core/hash.test.ts";
 import "./core/normalize.test.ts";
 import "./core/invariants.test.ts";
+import "./core/program-shape.test.ts";
 import "./contracts/evidence-bundle-diagnostics-fields.test.ts";
+import "./contracts/program-shape-contract.test.ts";
 import "./bench/regression-identifiers-grammar.test.ts";
 import "./bench/regression-identifiers-no-placeholders.test.ts";
 import "./bench/regression-dataset-schema.test.ts";
@@ -22,6 +24,7 @@ import "./providers/fake-e2e.test.ts";
 import "./providers/real-providers.test.ts";
 import "./regression/semantic-identifiers-and-placeholder-ban.test.ts";
 import "./regression/executor-evidence-classification.test.ts";
+import "./regression/program-shape-alignment.test.ts";
 import "./regression/multi-pass-execution-model.test.ts";
 import "./regression/provider-structured-generate-split.test.ts";
 import "./regression/repair-log-in-diagnostics.test.ts";

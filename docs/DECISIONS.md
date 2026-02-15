@@ -279,3 +279,14 @@
 - Consequence:
   - Evidence bundles expose deterministic, machine-readable partial-success state without collapsing successful shard output.
   - Consumers can safely gate on both `emptyResultKind` and `runCompleteness` without inferring behavior from raw shard arrays.
+
+## ADR-0032: program-shape-alignment
+- Date: 2026-02-15
+- Context: REQ-6.2.1 requires `Program` to be represented as structured intent/configuration data rather than only prompt text, with deterministic validation behavior.
+- Decision:
+  - Introduce `ProgramInput` normalization into a structured `Program` shape containing `programId`, `description`, `classes`, and `constraints`.
+  - Validate and normalize programs in run entrypoints and reject invalid shapes with deterministic error messages.
+  - Update prompt compilation to include structured program fields (`description`, `classes`, `constraints`) and update program contract schema.
+- Consequence:
+  - Callers can provide legacy-compatible inputs, but run artifacts and diagnostics always carry a deterministic structured program model.
+  - Program shape drift is contract-checked and regression-tested.

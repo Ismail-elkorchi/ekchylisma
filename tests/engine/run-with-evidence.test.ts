@@ -7,7 +7,7 @@ import {
   runWithEvidence,
 } from "../../src/engine/run.ts";
 import { FakeProvider, hashProviderRequest } from "../../src/providers/fake.ts";
-import { assert, assertEqual, test } from "../harness.ts";
+import { assert, assertEqual, assertRejects, test } from "../harness.ts";
 
 const documentText = "Alpha Beta";
 
@@ -103,6 +103,52 @@ test("runWithEvidence returns shard outcomes and provenance for successful extra
     bundle.diagnostics.promptLog.shardPromptHashes[0].shardId,
     firstOutcome.shardId,
     "prompt hash log should reference shard id",
+  );
+});
+
+test("runWithEvidence normalizes legacy program input into structured program shape", async () => {
+  const legacyProgram = await buildProgram();
+  const bundle = await runWithEvidence({
+    runId: "bundle-program-shape-normalize",
+    program: legacyProgram,
+    document: {
+      text: documentText,
+    },
+    provider: new FakeProvider({ defaultResponse: "{\"extractions\":[]}" }),
+    model: "fake-model",
+    chunkSize: 64,
+    overlap: 0,
+  });
+
+  assertEqual(bundle.program.description, legacyProgram.instructions);
+  assertEqual(bundle.program.classes.length, 1);
+  assertEqual(bundle.program.classes[0].name, "extraction");
+  assertEqual(bundle.program.constraints.requireExactQuote, true);
+  assertEqual(bundle.program.constraints.forbidOverlap, true);
+  assert(bundle.program.programId.startsWith("program-"), "programId should be generated");
+});
+
+test("runWithEvidence rejects invalid program class declarations deterministically", async () => {
+  await assertRejects(
+    () =>
+      runWithEvidence({
+        runId: "bundle-program-shape-invalid",
+        program: {
+          instructions: "Extract token Beta.",
+          examples: [],
+          schema: { type: "object" },
+          classes: [{ name: "token" }, { name: "token" }],
+        },
+        document: {
+          text: documentText,
+        },
+        provider: new FakeProvider({ defaultResponse: "{\"extractions\":[]}" }),
+        model: "fake-model",
+        chunkSize: 64,
+        overlap: 0,
+      }),
+    (error) => error instanceof Error && error.message.includes("duplicate name"),
+    "duplicate class declarations should fail normalization",
   );
 });
 

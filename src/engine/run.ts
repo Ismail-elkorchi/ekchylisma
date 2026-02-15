@@ -10,6 +10,7 @@ import type {
   MultiPassStageLog,
   PromptLog,
   Program,
+  ProgramInput,
   RunRepairLogEntry,
   RunBudgets,
   RunDiagnostics,
@@ -17,6 +18,7 @@ import type {
   ShardOutcome,
   Span,
 } from "../core/types.ts";
+import { normalizeProgram } from "../core/program.ts";
 import { QuoteInvariantViolation, assertQuoteInvariant } from "../core/invariants.ts";
 import { sha256Hex } from "../core/hash.ts";
 import { normalizeText } from "../core/normalize.ts";
@@ -103,7 +105,7 @@ type RuntimeGlobals = typeof globalThis & {
 
 export type EngineRunOptions = {
   runId: string;
-  program: Program;
+  program: ProgramInput;
   documentText: string;
   documentId?: string;
   provider: Provider;
@@ -129,7 +131,7 @@ export type EngineRunResult = {
 
 export type RunWithEvidenceOptions = {
   runId: string;
-  program: Program;
+  program: ProgramInput;
   document: DocumentInput;
   provider: Provider;
   model: string;
@@ -642,11 +644,12 @@ async function runShardWithProvider(
 export async function runExtractionWithProvider(
   options: EngineRunOptions,
 ): Promise<EngineRunResult> {
+  const program = await normalizeProgram(options.program);
   const documentId = options.documentId
     ?? `doc-${(await sha256Hex(options.documentText)).slice(0, 16)}`;
   const shards = await chunkDocument(
     options.documentText,
-    options.program.programHash,
+    program.programHash,
     {
       documentId,
       chunkSize: options.chunkSize,
@@ -673,7 +676,7 @@ export async function runExtractionWithProvider(
       runShard: async (shard) => {
         try {
           return await runShardWithProvider({
-            program: options.program,
+            program,
             shard,
             model: options.model,
             provider: options.provider,
@@ -706,6 +709,7 @@ export async function runExtractionWithProvider(
 export async function runWithEvidence(
   options: RunWithEvidenceOptions,
 ): Promise<EvidenceBundle> {
+  const program = await normalizeProgram(options.program);
   const normalized = normalizeText(options.document.text, {
     trimTrailingWhitespacePerLine: options.normalize?.trimTrailingWhitespacePerLine,
   });
@@ -775,7 +779,7 @@ export async function runWithEvidence(
 
   const shards = await chunkDocument(
     normalized.text,
-    options.program.programHash,
+    program.programHash,
     {
       documentId,
       chunkSize: options.chunkSize,
@@ -789,12 +793,12 @@ export async function runWithEvidence(
   const multiPassShardLogs: MultiPassShardLog[] = [];
   const repairLogEntries: RunRepairLogEntry[] = [];
   const promptLog: PromptLog = {
-    programHash: options.program.programHash,
+    programHash: program.programHash,
     shardPromptHashes: [],
   };
 
   for (const shard of shards) {
-    const promptHash = await hashPromptText(compilePrompt(options.program, shard));
+    const promptHash = await hashPromptText(compilePrompt(program, shard));
     promptLog.shardPromptHashes.push({
       shardId: shard.shardId,
       promptHash,
@@ -902,7 +906,7 @@ export async function runWithEvidence(
 
       try {
         const shardValue = await runShardWithProvider({
-          program: options.program,
+          program,
           shard,
           model: options.model,
           provider: options.provider,
@@ -1011,14 +1015,14 @@ export async function runWithEvidence(
   return {
     bundleVersion: "1",
     runId: options.runId,
-    program: options.program,
+    program,
     extractions,
     provenance: {
       documentId,
       textHash,
       runtime,
       createdAt: options.now ? options.now() : new Date().toISOString(),
-      programHash: options.program.programHash,
+      programHash: program.programHash,
     },
     normalizationLedger: normalized.ledger,
     shardPlan: {
