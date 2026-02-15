@@ -1,32 +1,45 @@
 # Threat Model
 
 ## Scope
-This project treats all model outputs and document content as untrusted data.
+ekchylisma processes untrusted document text and untrusted model output to produce structured, grounded extraction results.
+
+## Assumptions
+- Provider responses may contain malformed JSON, extra prose, or refusal text.
+- Document text may contain prompt-injection patterns and control characters.
+- Integrations may run in Node, Deno, Bun, Workers, and browser environments.
+- Integrations may use outputs in downstream systems with stricter integrity requirements.
+
+## Non-goals
+- This library does not execute external tools based on model output.
+- This library does not provide authentication, authorization, or key management.
+- This library does not guarantee semantic correctness of model-generated attributes.
+
+## Output Handling Contract
+Treat all model output as untrusted until the following checks pass:
+1. Parse via bounded pipeline (`extractFirstJson -> repairJsonText -> parseJsonStrict`).
+2. Enforce extraction payload shape contract.
+3. Enforce quote invariant (`document.slice(charStart, charEnd) === quote`) for accepted extractions.
+4. Classify run outcome as `non_empty`, `empty_by_evidence`, or `empty_by_failure`.
+
+Integrations should reject or quarantine results when any step fails.
 
 ## OWASP LLM Risk Mapping
 - `LLM01 Prompt Injection`
-  - Mitigation: prompt compiler uses explicit trusted/untrusted boundaries and labels.
+  - Mitigation: trusted/untrusted prompt boundaries and deterministic prompt compiler format.
 - `LLM02 Insecure Output Handling`
-  - Mitigation: JSON parse + validation + quote invariant checks before accepting extractions.
-- `LLM03 Training Data Poisoning`
-  - Mitigation: provider outputs are audited through evidence bundles and repair logs.
+  - Mitigation: bounded JSON pipeline, explicit parse failures, payload-shape checks, quote invariant.
 - `LLM04 Model Denial of Service`
-  - Mitigation: bounded retry policy, bounded repair transforms, and chunking controls.
+  - Mitigation: bounded repair steps, shard-level retries, and checkpointed execution.
 - `LLM05 Supply Chain Vulnerabilities`
-  - Mitigation: zero runtime dependencies in core package.
+  - Mitigation: zero runtime dependencies and pinned CI actions.
 - `LLM06 Sensitive Information Disclosure`
-  - Mitigation: provider config is explicit; no implicit env reads in core/provider code.
-- `LLM07 Insecure Plugin Design`
-  - Mitigation: provider adapters are thin fetch wrappers with typed interfaces.
+  - Mitigation: provider credentials are caller-supplied; no implicit environment-variable reads in adapters.
 - `LLM08 Excessive Agency`
-  - Mitigation: document text is marked as untrusted data and not treated as instructions.
+  - Mitigation: model output is data-only; library does not execute model-generated commands.
 - `LLM09 Overreliance`
-  - Mitigation: quote invariant and deterministic tests guard against silent hallucinated spans.
-- `LLM10 Model Theft`
-  - Mitigation: keep adapter surface minimal and avoid proxying privileged credentials in logs.
+  - Mitigation: deterministic tests, evidence bundles, and explicit failure classification.
 
 ## Prompt Boundary Controls
-- Trusted instructions and schema are emitted ahead of document content.
-- `UNTRUSTED DOCUMENT` is explicitly labeled.
-- Document content is wrapped by `BEGIN_UNTRUSTED_DOCUMENT` / `END_UNTRUSTED_DOCUMENT` markers.
-- Compiler output format is deterministic and test-covered.
+- Trusted instructions and schema appear before document content.
+- Document text is wrapped with `BEGIN_UNTRUSTED_DOCUMENT` and `END_UNTRUSTED_DOCUMENT`.
+- Prompt compiler output is deterministic and test-covered.

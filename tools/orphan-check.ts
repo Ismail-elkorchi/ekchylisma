@@ -14,6 +14,7 @@ const REQUIRED_DOCS = [
   "docs/PORTABILITY.md",
   "docs/EVAL.md",
   "docs/THREAT_MODEL.md",
+  "docs/SECURE_INTEGRATION.md",
   "docs/ROADMAP.md",
   "docs/NON_GOALS.md",
 ];

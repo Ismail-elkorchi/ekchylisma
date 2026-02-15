@@ -87,6 +87,7 @@ All failures are recorded in `EvidenceBundle.diagnostics.failures` and linked to
 - API: `docs/API.md`
 - Portability: `docs/PORTABILITY.md`
 - Threat model: `docs/THREAT_MODEL.md`
+- Secure integration: `docs/SECURE_INTEGRATION.md`
 - Decisions/ADRs: `docs/DECISIONS.md`
 - OSS practices: `docs/OSS_PRACTICES.md`
 - Baseline audit: `docs/BASELINE_AUDIT.md`
