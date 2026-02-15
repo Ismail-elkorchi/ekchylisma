@@ -1,9 +1,9 @@
 import { readFile, writeFile } from "node:fs/promises";
-import type { EvidenceBundle } from "../src/core/types.ts";
+import type { EvidenceBundle } from "../core/types.ts";
 import {
   decodeJsonlToEvidenceBundles,
   encodeEvidenceBundlesToJsonl,
-} from "../src/io/jsonl.ts";
+} from "../io/jsonl.ts";
 
 export async function readEvidenceBundlesFromJsonlFile(
   path: string,

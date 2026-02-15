@@ -67,7 +67,7 @@
 ## ADR-0010: Core JSONL codec with isolated Node file adapter
 - Date: 2026-02-14
 - Context: Prompt 09 requires JSONL IO without introducing filesystem coupling in core.
-- Decision: Implement codec in `src/io/jsonl.ts` and isolate filesystem helpers in `src-node/fs.ts` under `./node` export.
+- Decision: Implement codec in `src/io/jsonl.ts` and isolate filesystem helpers in `src/node/fs.ts` under `./node` export.
 - Rationale: Keeps core portable across Node, Deno, Bun, and Workers while preserving ergonomic Node file utilities.
 - Consequence: Consumers must import `ekchylisma/node` for fs-backed helpers.
 
@@ -160,8 +160,8 @@
 - Date: 2026-02-15
 - Context: Template presence alone does not guarantee consistent PR evidence sections.
 - Decision:
-  - Add `tools/pr-body-check.ts` to validate pull request body headings against `.github/PULL_REQUEST_TEMPLATE.md`.
-  - Run `node tools/pr-body-check.ts` in the CI `node` job.
+  - Add `scripts/pr-body-check.ts` entrypoint to validate pull request body headings against `.github/PULL_REQUEST_TEMPLATE.md`.
+  - Run `node scripts/pr-body-check.ts` in the CI `node` job.
   - Keep checks event-aware so non-`pull_request` events skip validation cleanly.
 - Rationale: A deterministic CI check prevents template drift and keeps verification/evidence sections uniform.
 - Consequence: Pull requests missing required headings fail CI until body content is corrected.
@@ -212,7 +212,7 @@
 - Context: The product repository must remain limited to implementation artifacts and reproducible user-facing evidence.
 - Decision:
   - Add `docs/REPO_SCOPE.md` with explicit allowed/disallowed content classes.
-  - Add `tools/repo-scope-check.ts` to fail when disallowed root paths (`internal/`, `research/`, `signals/`, `plans/`, `projects/`) exist.
+  - Add `scripts/repo-scope-check.ts` entrypoint to fail when disallowed root paths (`internal/`, `research/`, `signals/`, `plans/`, `projects/`) exist.
   - Require `npm run repo-scope-check` in `npm run check` and enforce script wiring via `tools/oss-check.ts`.
 - Consequences:
   - Internal research and planning artifacts are blocked from accidental commit to the product repository.
@@ -227,7 +227,7 @@
 - Context: Regression records and repository artifacts require deterministic grammar and policy enforcement to prevent identifier drift and boundary leakage.
 - Decision:
   - Add `src/core/identifiers.ts` with grammar checks for `packId` and `caseId` plus placeholder marker detection.
-  - Add `tools/repo-text-check.ts` and run it through `npm run check`.
+  - Add `scripts/repo-text-check.ts` entrypoint and run it through `npm run check`.
   - Enforce forbidden path patterns, identifier grammar, and placeholder-token bans without ordinary-word policing.
   - Require `sourceQuote` and strict semantic identifier formats in regression dataset validation.
 - Consequence:
@@ -367,3 +367,14 @@
 - Consequence:
   - REQ-10.1 now has executable evidence across deterministic unit and regression paths.
   - Documented attack classes map to concrete guardrails and tests rather than prose-only guidance.
+
+## ADR-0040: layout-alignment-and-portability
+- Date: 2026-02-15
+- Context: The repository was close to REQ-14.1 but still diverged on canonical directory names (`src-node`, `tools`) versus expected layout (`src/node`, `scripts`).
+- Decision:
+  - Promote `src/node` as the canonical Node-only adapter location and align package subpath exports to the new build output paths.
+  - Introduce canonical `scripts/*` entrypoints for repository checks and CI hooks, forwarding to `tools/*` implementations for compatibility.
+  - Align CI and docs to canonical script/layout paths and add explicit layout-portability tests plus regression grounding.
+- Consequence:
+  - REQ-14.1 is now implemented with concrete layout evidence and runtime matrix continuity.
+  - Portability checks remain unchanged in behavior while path/export organization is clearer for agents and contributors.
