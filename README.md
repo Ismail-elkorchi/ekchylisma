@@ -87,4 +87,15 @@ All failures are recorded in `EvidenceBundle.diagnostics.failures` and linked to
 - Portability: `docs/PORTABILITY.md`
 - Threat model: `docs/THREAT_MODEL.md`
 - Decisions/ADRs: `docs/DECISIONS.md`
+- OSS practices: `docs/OSS_PRACTICES.md`
+- Baseline audit: `docs/BASELINE_AUDIT.md`
 - Master contract: `MASTER_SPEC.md`
+
+## Project Operations
+- Security reporting: `SECURITY.md`
+- Contribution workflow: `CONTRIBUTING.md`
+- Collaboration norms: `CODE_OF_CONDUCT.md`
+- Governance and fork policy: `GOVERNANCE.md`
+- Support channels: `SUPPORT.md`
+- Change history: `CHANGELOG.md`
+- Release procedure: `RELEASE.md`

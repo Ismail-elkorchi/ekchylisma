@@ -9,6 +9,8 @@ const REQUIRED_DOCS = [
   "docs/API.md",
   "docs/ARCHITECTURE.md",
   "docs/DECISIONS.md",
+  "docs/OSS_PRACTICES.md",
+  "docs/BASELINE_AUDIT.md",
   "docs/PORTABILITY.md",
   "docs/EVAL.md",
   "docs/THREAT_MODEL.md",

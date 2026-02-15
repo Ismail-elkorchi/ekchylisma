@@ -15,8 +15,9 @@
     "test:workers": "node tests/workers/harness.test.ts",
     "test:integration": "node tests/providers/integration.test.ts",
     "typecheck": "deno check tests/schema/inference.check.ts",
+    "oss-check": "node tools/oss-check.ts",
     "orphan-check": "node tools/orphan-check.ts",
-    "check": "npm test && npm run typecheck && npm run orphan-check"
+    "check": "npm run oss-check && npm test && npm run typecheck && npm run orphan-check"
   },
   "dependencies": {},
   "devDependencies": {
