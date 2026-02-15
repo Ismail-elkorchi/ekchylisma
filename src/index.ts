@@ -16,6 +16,7 @@ export * from "./evidence/verify.ts";
 export * from "./eval/runSuite.ts";
 export * from "./io/jsonl.ts";
 export * from "./json/extractJson.ts";
+export * from "./json/frameDecoder.ts";
 export * from "./json/repair.ts";
 export * from "./json/parse.ts";
 export * from "./viz/html.ts";

@@ -148,3 +148,66 @@ test("engine pipeline reports refusal-like non-json text as explicit parse failu
     },
   );
 });
+
+test("engine pipeline decodes streamed SSE frames with JSON fragments", async () => {
+  const program = await buildProgram();
+  const provider = new FakeProvider({
+    defaultResponse: [
+      "event: message",
+      "data: {\"choices\":[{\"delta\":{\"content\":\"{\\\"extractions\\\":[\"}}]}",
+      "data: {\"choices\":[{\"delta\":{\"content\":\"{\\\"extractionClass\\\":\\\"token\\\",\\\"quote\\\":\\\"Beta\\\",\\\"span\\\":{\\\"offsetMode\\\":\\\"utf16_code_unit\\\",\\\"charStart\\\":6,\\\"charEnd\\\":10},\\\"grounding\\\":\\\"explicit\\\"}\"}}]}",
+      "data: {\"choices\":[{\"delta\":{\"content\":\"]}\"}}]}",
+      "data: [DONE]",
+    ].join("\n"),
+  });
+
+  const result = await runExtractionWithProvider({
+    runId: "pipeline-streamed-frames",
+    program,
+    documentText,
+    provider,
+    model: "fake-model",
+    chunkSize: 64,
+    overlap: 0,
+  });
+
+  assertEqual(result.extractions.length, 1);
+  assertEqual(result.extractions[0].quote, "Beta");
+  assertEqual(result.jsonPipelineLogs[0].pipeline.extractedJson.found, true);
+  assertEqual(result.jsonPipelineLogs[0].pipeline.parse.ok, true);
+});
+
+test("engine pipeline reports deterministic parse error on malformed streamed frame", async () => {
+  const program = await buildProgram();
+  const provider = new FakeProvider({
+    defaultResponse: [
+      "event: message",
+      "data: {\"choices\":[{\"delta\":{\"content\":\"{\\\"extractions\\\":[\"}}]}",
+      "data: {\"choices\":[{\"delta\":{\"content\":\"broken\"}}",
+    ].join("\n"),
+  });
+
+  await assertRejects(
+    () =>
+      runExtractionWithProvider({
+        runId: "pipeline-streamed-malformed",
+        program,
+        documentText,
+        provider,
+        model: "fake-model",
+        chunkSize: 64,
+        overlap: 0,
+      }),
+    (error) => {
+      if (!(error instanceof JsonPipelineFailure)) {
+        return false;
+      }
+      assertEqual(error.log.parse.ok, false);
+      if (error.log.parse.ok) {
+        return false;
+      }
+      assertEqual(error.log.parse.error.message, "Malformed streamed frame at line 3.");
+      return true;
+    },
+  );
+});

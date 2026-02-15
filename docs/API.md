@@ -55,6 +55,7 @@
 - JSON Schema generator: `toJsonSchema(schema)` from `src/schema/toJsonSchema.ts`
 - Schema dialect normalization: `normalizeSchemaDialect(schema)` from `src/schema/normalizeDialect.ts`
 - JSON extraction helpers from `src/json/extractJson.ts`: `extractFirstJson(text)`, `detectJsonFlavor(text)`
+- Streaming frame decoder from `src/json/frameDecoder.ts`: `decodeStreamingJsonFrames(text)`
 - JSON repair pipeline from `src/json/repair.ts`: `repairJsonText(input, options)` with `RepairLog` budget metadata (`maxCandidateChars`, `maxRepairChars`, truncation flags)
 - JSON parser from `src/json/parse.ts`: `parseJsonStrict(text)`, `tryParseJsonStrict(text)`, `JsonParseFailure`
 - Provider contracts from `src/providers/types.ts`: `Provider` (`generate(request)`, `generateStructured(request)`), `ProviderRequest`, `ProviderResponse`
