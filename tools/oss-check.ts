@@ -21,6 +21,14 @@ const REQUIRED_CONFIG_FILES = [
   ".github/dependabot.yml",
 ];
 
+const REQUIRED_BENCH_FILES = [
+  "bench/README.md",
+  "bench/run.ts",
+  "bench/score.ts",
+  "bench/datasets/smoke.jsonl",
+  "bench/results/.gitkeep",
+];
+
 async function ensureFile(path: string): Promise<void> {
   const fileStat = await stat(path);
   if (!fileStat.isFile()) {
@@ -62,6 +70,9 @@ async function run(): Promise<void> {
   for (const path of REQUIRED_CONFIG_FILES) {
     await ensureFile(path);
   }
+  for (const path of REQUIRED_BENCH_FILES) {
+    await ensureFile(path);
+  }
 
   const packageJson = JSON.parse(await readFile("package.json", "utf8")) as {
     dependencies?: Record<string, string>;
@@ -83,6 +94,9 @@ async function run(): Promise<void> {
   requireScript(scripts, "build");
   requireScript(scripts, "prepack");
   requireScript(scripts, "test:browser");
+  requireScript(scripts, "bench:run");
+  requireScript(scripts, "bench:score");
+  requireScript(scripts, "bench");
   requireScript(scripts, "oss-check");
   const checkScript = requireScript(scripts, "check");
   if (!checkScript.includes("npm run oss-check")) {
@@ -154,9 +168,12 @@ async function run(): Promise<void> {
   if (!ciWorkflow.includes("browser:")) {
     throw new Error("CI workflow must include a browser compatibility job.");
   }
+  if (!ciWorkflow.includes("bench:")) {
+    throw new Error("CI workflow must include a deterministic benchmark job.");
+  }
 
   console.log(
-    `oss-check passed (${REQUIRED_ROOT_DOCS.length} root docs, ${REQUIRED_DOCS.length} docs entries, ${REQUIRED_CONFIG_FILES.length} config files, ${devDeps.length} dev dependencies verified).`,
+    `oss-check passed (${REQUIRED_ROOT_DOCS.length} root docs, ${REQUIRED_DOCS.length} docs entries, ${REQUIRED_CONFIG_FILES.length} config files, ${REQUIRED_BENCH_FILES.length} bench files, ${devDeps.length} dev dependencies verified).`,
   );
 }
 

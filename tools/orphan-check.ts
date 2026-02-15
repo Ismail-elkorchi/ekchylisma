@@ -118,6 +118,11 @@ async function runExampleSmokes(): Promise<void> {
   await ensureFile("examples/workers/worker.ts");
   await ensureFile("examples/browser/index.html");
   await ensureFile("examples/browser/app.ts");
+  await ensureFile("bench/README.md");
+  await ensureFile("bench/run.ts");
+  await ensureFile("bench/score.ts");
+  await ensureFile("bench/datasets/smoke.jsonl");
+  await ensureFile("bench/results/.gitkeep");
 }
 
 async function run(): Promise<void> {

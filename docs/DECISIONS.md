@@ -124,3 +124,13 @@
   - Add `prepack` to enforce build before packaging.
 - Rationale: Publishing runnable JavaScript artifacts avoids runtime dependence on TypeScript execution in consumers.
 - Consequence: Release flow includes build output validation and browser compatibility harness checks.
+
+## ADR-0018: Add deterministic bench harness with CI score gating
+- Date: 2026-02-15
+- Context: Repository quality claims require reproducible evidence, not ad-hoc examples.
+- Decision:
+  - Add `bench/` datasets, deterministic runner, and scorer.
+  - Gate CI with `npm run bench` in a dedicated `bench` job.
+  - Keep default benchmark mode deterministic via `FakeProvider`, with optional multi-trial variance mode.
+- Rationale: Deterministic evidence reduces ambiguity in regression review and keeps benchmark checks fast in CI.
+- Consequence: README/docs claims should reference benchmark outputs under `bench/results/`.
