@@ -1,6 +1,7 @@
 import "./core/hash.test.ts";
 import "./core/normalize.test.ts";
 import "./core/invariants.test.ts";
+import "./core/property-invariants.test.ts";
 import "./core/program-shape.test.ts";
 import "./contracts/evidence-bundle-diagnostics-fields.test.ts";
 import "./contracts/extraction-offsets-contract.test.ts";
@@ -34,6 +35,7 @@ import "./regression/program-shape-alignment.test.ts";
 import "./regression/schema-dialect-normalization.test.ts";
 import "./regression/streaming-frame-decoder.test.ts";
 import "./regression/tool-call-first-parsing.test.ts";
+import "./regression/property-based-core-invariants.test.ts";
 import "./regression/multi-pass-execution-model.test.ts";
 import "./regression/provider-structured-generate-split.test.ts";
 import "./regression/repair-log-in-diagnostics.test.ts";
