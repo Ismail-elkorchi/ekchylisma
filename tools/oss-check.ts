@@ -36,6 +36,14 @@ const REQUIRED_TOOL_FILES = [
   "tools/repo-text-check.ts",
 ];
 
+const REQUIRED_SCRIPT_FILES = [
+  "scripts/pr-body-check.ts",
+  "scripts/repo-scope-check.ts",
+  "scripts/repo-text-check.ts",
+  "scripts/oss-check.ts",
+  "scripts/orphan-check.ts",
+];
+
 async function ensureFile(path: string): Promise<void> {
   const fileStat = await stat(path);
   if (!fileStat.isFile()) {
@@ -81,6 +89,9 @@ async function run(): Promise<void> {
     await ensureFile(path);
   }
   for (const path of REQUIRED_TOOL_FILES) {
+    await ensureFile(path);
+  }
+  for (const path of REQUIRED_SCRIPT_FILES) {
     await ensureFile(path);
   }
 
@@ -215,8 +226,8 @@ async function run(): Promise<void> {
   if (!ciWorkflow.includes("bench:")) {
     throw new Error("CI workflow must include a deterministic benchmark job.");
   }
-  if (!ciWorkflow.includes("node tools/pr-body-check.ts")) {
-    throw new Error("CI workflow must run PR body heading validation: node tools/pr-body-check.ts.");
+  if (!ciWorkflow.includes("node scripts/pr-body-check.ts")) {
+    throw new Error("CI workflow must run PR body heading validation: node scripts/pr-body-check.ts.");
   }
   if (!ciWorkflow.includes("- run: npm run check")) {
     throw new Error("CI workflow must run `npm run check` in the node job.");

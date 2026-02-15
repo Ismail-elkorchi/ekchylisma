@@ -146,7 +146,7 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 
 ## IO Portability Rules
 - Core JSONL codec must not import `node:*` APIs.
-- Node file IO lives only under `src-node/*` and is exposed through `./node` export.
+- Node file IO lives only under `src/node/*` and is exposed through `./node` export.
 - JSONL line type is `EvidenceBundle` and UTF-8 encoded.
 
 ## Visualization Rules

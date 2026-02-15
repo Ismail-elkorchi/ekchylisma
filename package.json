@@ -12,8 +12,8 @@
       "default": "./dist/esm/src/index.js"
     },
     "./node": {
-      "types": "./dist/types/src-node/fs.d.ts",
-      "default": "./dist/esm/src-node/fs.js"
+      "types": "./dist/types/src/node/fs.d.ts",
+      "default": "./dist/esm/src/node/fs.js"
     }
   },
   "files": [
@@ -38,10 +38,10 @@
     "bench:score": "node bench/score.ts",
     "bench": "npm run bench:run && npm run bench:score",
     "typecheck": "deno check tests/schema/inference.check.ts",
-    "repo-scope-check": "node tools/repo-scope-check.ts",
-    "repo-text-check": "node tools/repo-text-check.ts",
-    "oss-check": "node tools/oss-check.ts",
-    "orphan-check": "node tools/orphan-check.ts",
+    "repo-scope-check": "node scripts/repo-scope-check.ts",
+    "repo-text-check": "node scripts/repo-text-check.ts",
+    "oss-check": "node scripts/oss-check.ts",
+    "orphan-check": "node scripts/orphan-check.ts",
     "check": "npm run repo-scope-check && npm run repo-text-check && npm run oss-check && npm test && npm run typecheck && npm run orphan-check"
   },
   "dependencies": {},

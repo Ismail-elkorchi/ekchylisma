@@ -67,7 +67,7 @@
 - OpenAI provider from `src/providers/openai.ts`: `OpenAIProvider`
 - Gemini provider from `src/providers/gemini.ts`: `GeminiProvider`
 - Ollama provider from `src/providers/ollama.ts`: `OllamaProvider`
-- Node-only subpath export `ekchylisma/node`: `readEvidenceBundlesFromJsonlFile(path)`, `writeEvidenceBundlesToJsonlFile(path, bundles)`, `writeTextFile(path, content)` from `src-node/fs.ts`
+- Node-only subpath export `ekchylisma/node`: `readEvidenceBundlesFromJsonlFile(path)`, `writeEvidenceBundlesToJsonlFile(path, bundles)`, `writeTextFile(path, content)` from `src/node/fs.ts`
 
 ## Contracts
 - `contracts/span.schema.json`

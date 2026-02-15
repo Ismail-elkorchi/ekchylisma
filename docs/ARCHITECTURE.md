@@ -25,20 +25,26 @@
 - `src/providers/openai.ts`: OpenAI Chat Completions adapter with optional structured output mode.
 - `src/providers/gemini.ts`: Gemini `generateContent` adapter with optional response schema.
 - `src/providers/ollama.ts`: Ollama `/api/chat` adapter with JSON/schema format mode.
-- `src-node/fs.ts`: Node-only JSONL file adapter exposed via `ekchylisma/node`.
+- `src/node/fs.ts`: Node-only JSONL file adapter exposed via `ekchylisma/node`.
 - `examples/node/render-viz.ts`: Node example that writes visualization HTML output.
 - `examples/shared/scenario.ts`: shared portability scenario used by Node/Deno/Bun/Workers.
 - `examples/node/basic.ts`, `examples/deno/basic.ts`, `examples/bun/basic.ts`: runtime portability examples.
 - `examples/workers/worker.ts`: minimal Worker handler running fake-provider extraction path.
 - `.github/workflows/ci.yml`: deterministic CI checks across Node, Deno, and Bun.
-- `tools/orphan-check.ts`: coherence guard for docs/contracts/exports and runtime example smoke checks.
+- `scripts/orphan-check.ts`: repository-check entrypoint for docs/contracts/exports coherence and runtime example smoke checks.
 - `src/schema/s.ts`: dependency-free schema DSL with TypeScript inference.
 - `src/schema/validate.ts`: deterministic validator with JSON pointer errors.
 - `src/schema/toJsonSchema.ts`: limited JSON Schema subset generator.
 - `contracts/`: JSON Schema representations of external contracts.
-- `tools/orphan-check.ts`: verifies docs/contracts wiring is not orphaned.
+- `scripts/*`: canonical script entrypoints; each forwards to `tools/*` implementation modules for backward compatibility.
 
 ## Boundary Rules
 - Core modules are runtime-agnostic and web-API-first.
 - Node-specific APIs are not used in core.
 - External docs and contract schemas are versioned with code.
+
+## Canonical Layout
+- `src/core`, `src/engine`, `src/json`, `src/providers`, `src/schema`, `src/eval`, `src/evidence`, `src/io`, `src/viz`: runtime-agnostic library modules.
+- `src/node`: Node-only adapters exposed through `ekchylisma/node`.
+- `scripts`: canonical repository check entrypoints used by `package.json` scripts and CI.
+- `tools`: implementation modules used by script entrypoints for compatibility and test reuse.

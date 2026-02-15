@@ -20,7 +20,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "src-node/**/*.ts",
-    "src-node/**/*.d.ts"
+    "src/node/**/*.ts",
+    "src/node/**/*.d.ts"
   ]
 }

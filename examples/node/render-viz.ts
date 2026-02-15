@@ -4,7 +4,7 @@ import {
   sha256Hex,
   visualizeEvidenceBundle,
 } from "../../src/index.ts";
-import { writeTextFile } from "../../src-node/fs.ts";
+import { writeTextFile } from "../../src/node/fs.ts";
 
 const documentText = "Alpha Beta";
 const program = {
