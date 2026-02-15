@@ -154,3 +154,13 @@
   - Keep schedule and ecosystem configuration so security-related configuration remains explicit.
 - Rationale: This keeps update work inside reviewed maintainer PRs that follow the repository template, pinned-SHA checks, and full runtime matrix verification.
 - Consequence: Dependency and workflow updates are applied through maintainer-authored PRs instead of unattended version-update PR streams.
+
+## ADR-0021: Enforce pull request template headings in CI
+- Date: 2026-02-15
+- Context: Template presence alone does not guarantee consistent PR evidence sections.
+- Decision:
+  - Add `tools/pr-body-check.ts` to validate pull request body headings against `.github/PULL_REQUEST_TEMPLATE.md`.
+  - Run `node tools/pr-body-check.ts` in the CI `node` job.
+  - Keep checks event-aware so non-`pull_request` events skip validation cleanly.
+- Rationale: A deterministic CI check prevents template drift and keeps verification/evidence sections uniform.
+- Consequence: Pull requests missing required headings fail CI until body content is corrected.
