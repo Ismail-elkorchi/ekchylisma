@@ -104,3 +104,13 @@
 - Decision: Add `miniflare` as a `devDependency` and create `tests/workers/harness.test.ts`, runnable via `npm run test:workers`.
 - Rationale: Miniflare pays the specific debt of verifiable Workers runtime behavior in CI without introducing runtime/package dependencies.
 - Consequence: `package.json.dependencies` remains `{}` while CI gains a dedicated workers compatibility signal.
+
+## ADR-0016: Pin CI actions by commit and enable weekly dependency automation
+- Date: 2026-02-15
+- Context: CI supply-chain hardening requires deterministic workflow execution and timely dependency updates.
+- Decision:
+  - Pin all GitHub Actions in CI workflows to full commit SHAs.
+  - Add explicit least-privilege workflow permissions (`contents: read`).
+  - Add `.github/dependabot.yml` for weekly updates of GitHub Actions and npm devDependencies.
+- Rationale: Commit pinning and constrained permissions reduce workflow tampering risk; Dependabot provides controlled update cadence.
+- Consequence: CI workflow maintenance requires SHA refreshes through reviewed PRs, with Dependabot generating update PRs on schedule.
