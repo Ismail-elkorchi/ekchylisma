@@ -7,7 +7,8 @@ import { assert, test } from "../harness.ts";
 const execFileAsync = promisify(execFile);
 
 test("bench runner exits non-zero on malformed regression record", async () => {
-  if (typeof (globalThis as { Deno?: unknown }).Deno !== "undefined") {
+  const runtimeGlobals = globalThis as { Deno?: unknown; Bun?: unknown };
+  if (runtimeGlobals.Deno !== undefined || runtimeGlobals.Bun !== undefined) {
     return;
   }
 
