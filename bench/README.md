@@ -5,6 +5,7 @@ Provide reproducible, evidence-oriented measurements for extraction behavior wit
 
 ## Dataset Format
 Datasets are JSONL files under `bench/datasets/`.
+Current smoke dataset includes short token cases and one deterministic long-text token case.
 
 Each record includes:
 - `caseId`

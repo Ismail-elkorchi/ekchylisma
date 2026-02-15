@@ -41,7 +41,7 @@ Legend:
 | REQ-10.3 | `src/viz/html.ts` | `tests/viz/html.test.ts` | `node`, `deno`, `bun` | implemented | HTML escaping is default behavior. |
 | REQ-11.1.1 | `src/core/*`, `src/engine/*`, `src/json/*`, `src/providers/*` | `tests/core/*`, `tests/engine/*`, `tests/json/*`, `tests/providers/*` | `node`, `deno`, `bun` | partial | Model-id opacity and parser tolerance covered; property tests not yet present. |
 | REQ-11.2.1 | `src/eval/runSuite.ts`, `bench/run.ts`, `bench/score.ts`, `bench/datasets/smoke.jsonl` | `tests/eval/run-suite.test.ts`, `npm run bench` | `node`, `bench` | partial | Deterministic and trial-based variance metrics are implemented; provider/temperature/prompt-variant breadth remains limited. |
-| REQ-11.3.1 | n/a | n/a | n/a | gap | Long-text fixture suite absent. |
+| REQ-11.3.1 | `tests/fixtures/long-document.txt`, `tests/engine/long-text-fixture.test.ts`, `bench/datasets/smoke.jsonl` | `tests/engine/long-text-fixture.test.ts`, `npm run bench` | `node`, `deno`, `bun`, `bench` | implemented | Deterministic long-text fixtures validate chunking stability, span mapping stability, quote invariant enforcement, and bench scoring. |
 | REQ-12.1 | GitHub PR workflow + branch protections (process) | n/a | `pull_request` workflows | implemented | Enforced by process in this repository workflow. |
 | REQ-12.2 | `.github/workflows/ci.yml`, `.github/dependabot.yml`, `tools/oss-check.ts`, `tools/pr-body-check.ts` | CI status checks, `npm run oss-check` | `node`, `deno`, `bun`, `workers`, `browser`, `bench` | implemented | CI runs on `pull_request`, uses least-privilege permissions, pins actions by SHA, enforces Dependabot `open-pull-requests-limit: 0`, and validates pull request body headings in the `node` job. |
 | REQ-12.3 | `tools/orphan-check.ts`, `tools/oss-check.ts`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/OSS_PRACTICES.md`, `package.json` (`check`) | `npm run orphan-check`, `npm run oss-check` | `node` | implemented | Export/contract/doc coherence and OSS operations checks are enforced in default validation, including PR template presence. |
@@ -51,4 +51,4 @@ Legend:
 ## Explicit Known Gaps
 
 These gaps are intentionally tracked and should be resolved in follow-up implementation work:
-- REQ-11.3.1 long-text regression fixtures.
+- REQ-8.2.1 multi-pass execution model.

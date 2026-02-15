@@ -185,3 +185,13 @@
   - Propagate `documentId`/`offsetMode` through run and evaluation call sites.
 - Rationale: Including document/shard parameters prevents cross-document and cross-configuration shard identity collisions.
 - Consequence: Existing chunking call sites must provide the expanded option set and tests must validate shard-id divergence across documents/parameters.
+
+## ADR-0024: Add deterministic long-text fixture coverage
+- Date: 2026-02-15
+- Context: REQ-11.3.1 requires explicit long-text fixture coverage for chunking, span mapping, and quote invariant behavior.
+- Decision:
+  - Add `tests/fixtures/long-document.txt` as a deterministic long-text source.
+  - Add `tests/engine/long-text-fixture.test.ts` covering chunking stability, span mapping stability, and quote invariant enforcement.
+  - Extend `bench/datasets/smoke.jsonl` with a deterministic long-text case (`caseId=long-token`).
+- Rationale: Long-input coverage must be a direct regression signal in the default runtime matrix and benchmark protocol.
+- Consequence: Test and benchmark suites include long-text workload checks without introducing runtime dependencies.
