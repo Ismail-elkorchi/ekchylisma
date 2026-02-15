@@ -226,9 +226,9 @@
 - Date: 2026-02-15
 - Context: Regression records and repository artifacts require deterministic grammar and policy enforcement to prevent identifier drift and boundary leakage.
 - Decision:
-  - Add `src/core/identifiers.ts` with semantic grammar checks for `packId` and `caseId` plus placeholder token detection.
-  - Add `tools/semantic-cage-check.ts` and run it through `npm run check`.
-  - Enforce forbidden path patterns, identifier grammar, placeholder-token bans, and disallowed terminology in docs.
+  - Add `src/core/identifiers.ts` with grammar checks for `packId` and `caseId` plus placeholder marker detection.
+  - Add `tools/repo-text-check.ts` and run it through `npm run check`.
+  - Enforce forbidden path patterns, identifier grammar, and placeholder-token bans without ordinary-word policing.
   - Require `sourceQuote` and strict semantic identifier formats in regression dataset validation.
 - Consequence:
   - CI blocks merges that violate semantic identifier grammar or boundary policy.

@@ -9,7 +9,8 @@ import {
 const FORBIDDEN_DOC_PATTERNS = [
   /^docs\/PROGRAM_.*\.md$/,
   /^docs\/COMPETITION_.*\.md$/,
-  /^docs\/.*SIGNAL.*\.md$/,
+  /^docs\/.*PLAN.*\.md$/,
+  /^docs\/.*MATRIX.*\.md$/,
   /^docs\/.*WORKBENCH.*\.md$/,
 ];
 
@@ -68,30 +69,6 @@ async function verifyForbiddenPaths(): Promise<void> {
   }
 }
 
-function hasDisallowedPublicWord(line: string): boolean {
-  const matches = [...line.matchAll(/\bpublic\b/gi)];
-  if (matches.length === 0) {
-    return false;
-  }
-
-  let normalized = line;
-  normalized = normalized.replace(/public API/g, "");
-  return /\bpublic\b/i.test(normalized);
-}
-
-async function verifyDocsVocabulary(): Promise<void> {
-  const docsFiles = await walkFiles("docs");
-  for (const file of docsFiles) {
-    const content = await readFile(file, "utf8");
-    const lines = content.split(/\r?\n/);
-    for (let index = 0; index < lines.length; index += 1) {
-      if (hasDisallowedPublicWord(lines[index])) {
-        fail(`${file}:${index + 1} contains disallowed term`);
-      }
-    }
-  }
-}
-
 async function verifyPlaceholderTokens(): Promise<void> {
   const files = await walkFiles(".");
   for (const file of files) {
@@ -113,11 +90,6 @@ async function verifyPlaceholderTokens(): Promise<void> {
       }
     }
 
-    const header = lines.slice(0, 200).join("\n").toLowerCase();
-    const forbiddenPhrase = ["competition", "scan"].join(" ");
-    if (header.includes(forbiddenPhrase)) {
-      fail(`${file}: contains forbidden phrase in first 200 lines`);
-    }
   }
 }
 
@@ -149,13 +121,12 @@ async function verifyRegressionGrammar(): Promise<void> {
 
 async function main(): Promise<void> {
   await verifyForbiddenPaths();
-  await verifyDocsVocabulary();
   await verifyPlaceholderTokens();
   await verifyRegressionGrammar();
-  console.log("semantic-cage-check passed");
+  console.log("repo-text-check passed");
 }
 
 main().catch((error) => {
-  console.error(`semantic-cage-check failed: ${error instanceof Error ? error.message : String(error)}`);
+  console.error(`repo-text-check failed: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 });

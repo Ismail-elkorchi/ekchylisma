@@ -10,7 +10,7 @@ This document defines operational checks used to keep the repository forkable, r
 | Dev dependency debt ledger | Every `devDependency` must be listed in `docs/DEVDEPS.md` with explicit debt rationale | `npm run oss-check` |
 | OSS check enforced in default validation | `npm run check` must execute `npm run oss-check` | `npm run oss-check` |
 | Repository scope enforcement | Disallowed internal-only path roots must not exist in this repository | `npm run repo-scope-check` |
-| Semantic cage policy enforcement | Forbidden path patterns, placeholder tokens, identifier grammar, and disallowed terminology must fail validation | `npm run semantic-cage-check` |
+| Repo text policy enforcement | Forbidden path patterns, placeholder tokens, and identifier grammar must fail validation | `npm run repo-text-check` |
 | CI least-privilege permissions | CI workflow must set explicit minimum permissions (`contents: read`) | `npm run oss-check` |
 | CI action pinning | Every workflow `uses:` step must be pinned to a full commit SHA | `npm run oss-check` |
 | Dependabot churn control | Dependabot config must exist and every ecosystem must set `open-pull-requests-limit: 0` | `npm run oss-check` |

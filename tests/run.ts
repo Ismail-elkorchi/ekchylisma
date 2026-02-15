@@ -1,6 +1,8 @@
 import "./core/hash.test.ts";
 import "./core/normalize.test.ts";
 import "./core/invariants.test.ts";
+import "./bench/regression-identifiers-grammar.test.ts";
+import "./bench/regression-identifiers-no-placeholders.test.ts";
 import "./bench/regression-dataset-schema.test.ts";
 import "./bench/bench-run-malformed-regression.test.ts";
 import "./engine/chunk-map-span.test.ts";
@@ -23,6 +25,8 @@ import "./regression/provider-structured-generate-split.test.ts";
 import "./regression/repair-log-in-diagnostics.test.ts";
 import "./schema/validate.test.ts";
 import "./schema/to-json-schema.test.ts";
+import "./tools/repo-scope-check.test.ts";
+import "./tools/repo-text-check-placeholders.test.ts";
 import "./viz/html.test.ts";
 import { run } from "./harness.ts";
 

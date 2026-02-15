@@ -44,11 +44,10 @@ Legend:
 | REQ-11.3.1 | `tests/fixtures/long-document.txt`, `tests/engine/long-text-fixture.test.ts`, `bench/datasets/smoke.jsonl` | `tests/engine/long-text-fixture.test.ts`, `npm run bench` | `node`, `deno`, `bun`, `bench` | implemented | Deterministic long-text fixtures validate chunking stability, span mapping stability, quote invariant enforcement, and bench scoring. |
 | REQ-12.1 | GitHub PR workflow + branch protections (process) | n/a | `pull_request` workflows | implemented | Enforced by process in this repository workflow. |
 | REQ-12.2 | `.github/workflows/ci.yml`, `.github/dependabot.yml`, `tools/oss-check.ts`, `tools/pr-body-check.ts` | CI status checks, `npm run oss-check` | `node`, `deno`, `bun`, `workers`, `browser`, `bench` | implemented | CI runs on `pull_request`, uses least-privilege permissions, pins actions by SHA, enforces Dependabot `open-pull-requests-limit: 0`, and validates pull request body headings in the `node` job. |
-| REQ-12.3 | `tools/orphan-check.ts`, `tools/oss-check.ts`, `tools/repo-scope-check.ts`, `tools/semantic-cage-check.ts`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/OSS_PRACTICES.md`, `docs/REPO_SCOPE.md`, `package.json` (`check`) | `npm run repo-scope-check`, `npm run semantic-cage-check`, `npm run orphan-check`, `npm run oss-check` | `node` | implemented | Export/contract/doc coherence, repository scope controls, and semantic identifier policy checks are enforced in default validation, including PR template presence. |
+| REQ-12.3 | `tools/orphan-check.ts`, `tools/oss-check.ts`, `tools/repo-scope-check.ts`, `tools/repo-text-check.ts`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/OSS_PRACTICES.md`, `docs/REPO_SCOPE.md`, `package.json` (`check`) | `npm run repo-scope-check`, `npm run repo-text-check`, `npm run orphan-check`, `npm run oss-check` | `node` | implemented | Export/contract/doc coherence, repository scope controls, and semantic identifier policy checks are enforced in default validation, including PR template presence. |
 | REQ-13.1 | `LICENSE`, `NOTICE` | n/a | n/a | implemented | Apache-2.0 license text and project notice are present at repo root. |
 | REQ-14.1 | `src/*`, `src-node/*`, `contracts/*`, `docs/*`, `tests/*`, `tools/*` | `npm run orphan-check` | `node` | partial | Layout is close; differs from exact `/src/node` and `/scripts` naming convention. |
 
 ## Explicit Known Gaps
 
 These gaps are intentionally tracked and should be resolved in follow-up implementation work:
-- REQ-8.2.1 multi-pass execution model.

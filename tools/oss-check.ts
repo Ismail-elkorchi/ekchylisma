@@ -33,7 +33,7 @@ const REQUIRED_BENCH_FILES = [
 const REQUIRED_TOOL_FILES = [
   "tools/pr-body-check.ts",
   "tools/repo-scope-check.ts",
-  "tools/semantic-cage-check.ts",
+  "tools/repo-text-check.ts",
 ];
 
 async function ensureFile(path: string): Promise<void> {
@@ -108,14 +108,14 @@ async function run(): Promise<void> {
   requireScript(scripts, "bench:score");
   requireScript(scripts, "bench");
   requireScript(scripts, "repo-scope-check");
-  requireScript(scripts, "semantic-cage-check");
+  requireScript(scripts, "repo-text-check");
   requireScript(scripts, "oss-check");
   const checkScript = requireScript(scripts, "check");
   if (!checkScript.includes("npm run repo-scope-check")) {
     throw new Error("`npm run check` must include `npm run repo-scope-check`.");
   }
-  if (!checkScript.includes("npm run semantic-cage-check")) {
-    throw new Error("`npm run check` must include `npm run semantic-cage-check`.");
+  if (!checkScript.includes("npm run repo-text-check")) {
+    throw new Error("`npm run check` must include `npm run repo-text-check`.");
   }
   if (!checkScript.includes("npm run oss-check")) {
     throw new Error("`npm run check` must include `npm run oss-check`.");
@@ -217,6 +217,9 @@ async function run(): Promise<void> {
   }
   if (!ciWorkflow.includes("node tools/pr-body-check.ts")) {
     throw new Error("CI workflow must run PR body heading validation: node tools/pr-body-check.ts.");
+  }
+  if (!ciWorkflow.includes("- run: npm run check")) {
+    throw new Error("CI workflow must run `npm run check` in the node job.");
   }
 
   console.log(
