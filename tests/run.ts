@@ -1,6 +1,8 @@
 import "./core/hash.test.ts";
 import "./core/normalize.test.ts";
 import "./core/invariants.test.ts";
+import "./bench/regression-dataset-schema.test.ts";
+import "./bench/bench-run-malformed-regression.test.ts";
 import "./engine/chunk-map-span.test.ts";
 import "./engine/checkpoint-retry-executor.test.ts";
 import "./engine/json-pipeline-run.test.ts";
