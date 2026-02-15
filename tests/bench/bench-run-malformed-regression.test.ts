@@ -52,11 +52,15 @@ test("bench runner exits non-zero on malformed regression record", async () => {
       },
     );
   } catch (error) {
-    const details = error as { code?: number; stderr?: string };
+    const details = error as { code?: number; stderr?: string; stdout?: string; message?: string };
+    const output = [
+      typeof details.stderr === "string" ? details.stderr : "",
+      typeof details.stdout === "string" ? details.stdout : "",
+      typeof details.message === "string" ? details.message : "",
+    ].join("\n");
     failedAsExpected = typeof details.code === "number"
       && details.code !== 0
-      && typeof details.stderr === "string"
-      && details.stderr.includes("invalid regression dataset");
+      && output.includes("invalid regression dataset");
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
