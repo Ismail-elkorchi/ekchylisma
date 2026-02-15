@@ -61,6 +61,9 @@ test("long-text fixture enforces quote invariant on grounded token spans", async
   const extraction = {
     extractionClass: "token",
     quote: LONG_TOKEN,
+    offsetMode: "utf16_code_unit" as const,
+    charStart: tokenStart,
+    charEnd: tokenStart + LONG_TOKEN.length,
     span: {
       offsetMode: "utf16_code_unit" as const,
       charStart: tokenStart,
@@ -76,6 +79,7 @@ test("long-text fixture enforces quote invariant on grounded token spans", async
       Promise.resolve(
         assertQuoteInvariant(longText, {
           ...extraction,
+          charEnd: extraction.charEnd - 1,
           span: {
             ...extraction.span,
             charEnd: extraction.span.charEnd - 1,

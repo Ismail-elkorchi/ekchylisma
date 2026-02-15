@@ -95,7 +95,8 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 
 ## Invariants
 - Offsets use UTF-16 code unit indexing with inclusive `charStart` and exclusive `charEnd`.
-- `assertQuoteInvariant` validates integer spans, bounds, and exact quote matching.
+- Final extraction records must include top-level `offsetMode`, `charStart`, and `charEnd` fields and a mirrored `span` view.
+- `assertQuoteInvariant` validates supported offset mode, top-level/span consistency, bounds, and exact quote matching.
 - Normalization emits a ledger entry per step with explicit mapping strategy.
 
 ## Portability Constraints

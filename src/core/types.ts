@@ -9,6 +9,9 @@ export type Span = {
 export type Extraction = {
   extractionClass: string;
   quote: string;
+  offsetMode: OffsetMode;
+  charStart: number;
+  charEnd: number;
   span: Span;
   attributes?: Record<string, unknown>;
   grounding: "explicit" | "inferred";

@@ -18,6 +18,7 @@
   - `runExtractionWithProvider(options)` for extraction-first legacy result shape
   - `runWithEvidence(options)` for run-produced `EvidenceBundle` including shard outcomes and explicit failure diagnostics
   - `runWithEvidence(options)` normalizes/validates `ProgramInput` into a deterministic structured `Program` shape (`programId`, `description`, `classes`, `constraints`)
+  - Final `Extraction` records include top-level `offsetMode`, `charStart`, and `charEnd` (mirrored in `span`) and are validated by `assertQuoteInvariant`
   - Schema-first requests route through provider `generateStructured()`; text-only requests route through `generate()`
   - `runWithEvidence(options)` diagnostics include:
     - `emptyResultKind`: `non_empty`, `empty_by_evidence`, or `empty_by_failure`

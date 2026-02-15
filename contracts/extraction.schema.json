@@ -4,13 +4,33 @@
   "title": "Extraction",
   "type": "object",
   "additionalProperties": false,
-  "required": ["extractionClass", "quote", "span", "grounding"],
+  "required": [
+    "extractionClass",
+    "quote",
+    "offsetMode",
+    "charStart",
+    "charEnd",
+    "span",
+    "grounding"
+  ],
   "properties": {
     "extractionClass": {
       "type": "string"
     },
     "quote": {
       "type": "string"
+    },
+    "offsetMode": {
+      "type": "string",
+      "enum": ["utf16_code_unit"]
+    },
+    "charStart": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "charEnd": {
+      "type": "integer",
+      "minimum": 0
     },
     "span": {
       "$ref": "./span.schema.json"

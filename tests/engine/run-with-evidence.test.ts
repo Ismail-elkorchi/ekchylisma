@@ -564,3 +564,84 @@ test("runWithEvidence repairs quote mismatch failure on second pass and finalize
     true,
   );
 });
+
+test("runWithEvidence maps top-level extraction offsets and mirrors span fields", async () => {
+  const program = await buildProgram();
+  const provider = new FakeProvider({
+    defaultResponse: JSON.stringify({
+      extractions: [
+        {
+          extractionClass: "token",
+          quote: "Beta",
+          offsetMode: "utf16_code_unit",
+          charStart: 6,
+          charEnd: 10,
+          grounding: "explicit",
+        },
+      ],
+    }),
+  });
+
+  const bundle = await runWithEvidence({
+    runId: "bundle-top-level-offsets",
+    program,
+    document: {
+      text: documentText,
+    },
+    provider,
+    model: "fake-model",
+    chunkSize: 64,
+    overlap: 0,
+  });
+
+  assertEqual(bundle.extractions.length, 1);
+  assertEqual(bundle.extractions[0].offsetMode, "utf16_code_unit");
+  assertEqual(bundle.extractions[0].charStart, 6);
+  assertEqual(bundle.extractions[0].charEnd, 10);
+  assertEqual(bundle.extractions[0].span.charStart, 6);
+  assertEqual(bundle.extractions[0].span.charEnd, 10);
+});
+
+test("runWithEvidence rejects mismatched top-level and span extraction offsets", async () => {
+  const program = await buildProgram();
+  const provider = new FakeProvider({
+    defaultResponse: JSON.stringify({
+      extractions: [
+        {
+          extractionClass: "token",
+          quote: "Beta",
+          offsetMode: "utf16_code_unit",
+          charStart: 6,
+          charEnd: 10,
+          span: {
+            offsetMode: "utf16_code_unit",
+            charStart: 0,
+            charEnd: 4,
+          },
+          grounding: "explicit",
+        },
+      ],
+    }),
+  });
+
+  const bundle = await runWithEvidence({
+    runId: "bundle-mismatch-offsets",
+    program,
+    document: {
+      text: documentText,
+    },
+    provider,
+    model: "fake-model",
+    chunkSize: 64,
+    overlap: 0,
+  });
+
+  assertEqual(bundle.extractions.length, 0);
+  assertEqual(bundle.diagnostics.emptyResultKind, "empty_by_failure");
+  assertEqual(bundle.diagnostics.failures.length, 1);
+  assertEqual(bundle.diagnostics.failures[0].kind, "payload_shape_failure");
+  assertEqual(
+    bundle.diagnostics.failures[0].message,
+    "Extraction offset fields must match between top-level and span.",
+  );
+});
