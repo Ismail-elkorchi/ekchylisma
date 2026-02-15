@@ -1,3 +1,8 @@
+import {
+  containsPlaceholderToken,
+  isValidCaseId,
+  isValidPackId,
+} from "../src/core/identifiers.ts";
 import { readFile } from "node:fs/promises";
 
 export type RegressionExpected = {
@@ -15,6 +20,7 @@ export type RegressionDatasetCase = {
   providerResponseText: string;
   expected: RegressionExpected;
   sourceUrl: string;
+  sourceQuote: string;
   packId: string;
 };
 
@@ -55,6 +61,7 @@ export function validateRegressionDatasetRecords(records: unknown[]): Regression
     "providerResponseText",
     "expected",
     "sourceUrl",
+    "sourceQuote",
     "packId",
   ];
   const requiredFieldSet = new Set(requiredFields);
@@ -84,6 +91,12 @@ export function validateRegressionDatasetRecords(records: unknown[]): Regression
     if (typeof record.caseId !== "string" || record.caseId.length === 0) {
       throw new Error(`line ${line}: caseId must be a non-empty string`);
     }
+    if (!isValidCaseId(record.caseId)) {
+      throw new Error(`line ${line}: caseId does not match semantic identifier grammar`);
+    }
+    if (containsPlaceholderToken(record.caseId)) {
+      throw new Error(`line ${line}: caseId contains a placeholder token`);
+    }
     if (caseIds.has(record.caseId)) {
       throw new Error(`line ${line}: duplicate caseId ${record.caseId}`);
     }
@@ -107,8 +120,20 @@ export function validateRegressionDatasetRecords(records: unknown[]): Regression
     if (typeof record.sourceUrl !== "string" || !isUrl(record.sourceUrl)) {
       throw new Error(`line ${line}: sourceUrl must be a valid URL`);
     }
+    if (typeof record.sourceQuote !== "string" || record.sourceQuote.length === 0) {
+      throw new Error(`line ${line}: sourceQuote must be a non-empty string`);
+    }
+    if (record.sourceQuote.length > 280) {
+      throw new Error(`line ${line}: sourceQuote must be <= 280 characters`);
+    }
     if (typeof record.packId !== "string" || record.packId.length === 0) {
       throw new Error(`line ${line}: packId must be a non-empty string`);
+    }
+    if (!isValidPackId(record.packId)) {
+      throw new Error(`line ${line}: packId does not match semantic identifier grammar`);
+    }
+    if (containsPlaceholderToken(record.packId)) {
+      throw new Error(`line ${line}: packId contains a placeholder token`);
     }
 
     if (!isPlainObject(record.expected)) {

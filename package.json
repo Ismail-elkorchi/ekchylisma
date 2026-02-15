@@ -39,9 +39,10 @@
     "bench": "npm run bench:run && npm run bench:score",
     "typecheck": "deno check tests/schema/inference.check.ts",
     "repo-scope-check": "node tools/repo-scope-check.ts",
+    "semantic-cage-check": "node tools/semantic-cage-check.ts",
     "oss-check": "node tools/oss-check.ts",
     "orphan-check": "node tools/orphan-check.ts",
-    "check": "npm run repo-scope-check && npm run oss-check && npm test && npm run typecheck && npm run orphan-check"
+    "check": "npm run repo-scope-check && npm run semantic-cage-check && npm run oss-check && npm test && npm run typecheck && npm run orphan-check"
   },
   "dependencies": {},
   "devDependencies": {

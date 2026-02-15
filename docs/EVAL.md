@@ -11,7 +11,7 @@
 ## Bench harness
 - Dataset files live under `bench/datasets/`.
 - `bench/datasets/smoke.jsonl` includes deterministic short-text and long-text cases.
-- `bench/datasets/regression.jsonl` stores committed regression records from validated public packs.
+- `bench/datasets/regression.jsonl` stores committed regression records from validated workbench packs.
 - Deterministic benchmark run:
   - `npm run bench:run`
   - `npm run bench:score`
@@ -37,7 +37,7 @@ Each line in `bench/datasets/regression.jsonl` is one JSON object with:
 The bench runner validates every regression record before trials execute and exits non-zero if any record is malformed.
 
 ## Contributor workflow for regression records
-1. Prepare a public pack in the workbench and validate it with workbench validators.
+1. Prepare a pack in the workbench and validate it with workbench validators.
 2. Append the pack's `regressions.jsonl` records to `bench/datasets/regression.jsonl`.
 3. Run:
    - `npm run bench:run`

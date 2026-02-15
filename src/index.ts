@@ -2,6 +2,7 @@ export * from "./core/types.ts";
 export * from "./core/hash.ts";
 export * from "./core/normalize.ts";
 export * from "./core/invariants.ts";
+export * from "./core/identifiers.ts";
 export * from "./engine/chunk.ts";
 export * from "./engine/mapSpan.ts";
 export * from "./engine/checkpoint.ts";

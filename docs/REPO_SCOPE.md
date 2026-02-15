@@ -1,6 +1,6 @@
 # Repository Scope
 
-This repository is a public product repository. Committed content must be limited to:
+This repository is a product repository. Committed content must be limited to:
 
 - source code
 - tests
