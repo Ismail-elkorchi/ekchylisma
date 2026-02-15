@@ -42,6 +42,12 @@ const sampleBundle = {
   },
   diagnostics: {
     emptyResultKind: "non_empty" as const,
+    runCompleteness: {
+      kind: "complete_success" as const,
+      totalShards: 1,
+      successfulShards: 1,
+      failedShards: 0,
+    },
     shardOutcomes: [
       {
         shardId: "shard-1",

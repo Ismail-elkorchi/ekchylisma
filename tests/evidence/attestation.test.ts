@@ -82,6 +82,12 @@ function buildSampleBundle(): EvidenceBundle {
     },
     diagnostics: {
       emptyResultKind: "non_empty",
+      runCompleteness: {
+        kind: "complete_success",
+        totalShards: 1,
+        successfulShards: 1,
+        failedShards: 0,
+      },
       shardOutcomes: [],
       failures: [],
       checkpointHits: 0,
@@ -132,6 +138,7 @@ function buildReorderedBundle(source: EvidenceBundle): EvidenceBundle {
       failures: source.diagnostics.failures,
       shardOutcomes: source.diagnostics.shardOutcomes,
       emptyResultKind: source.diagnostics.emptyResultKind,
+      runCompleteness: source.diagnostics.runCompleteness,
     },
     shardPlan: {
       shardCount: source.shardPlan.shardCount,

@@ -182,6 +182,18 @@ export type EmptyResultKind =
   | "empty_by_evidence"
   | "empty_by_failure";
 
+export type RunCompletenessKind =
+  | "complete_success"
+  | "partial_success"
+  | "complete_failure";
+
+export type RunCompleteness = {
+  kind: RunCompletenessKind;
+  totalShards: number;
+  successfulShards: number;
+  failedShards: number;
+};
+
 export type PromptHashRecord = {
   shardId: string;
   promptHash: string;
@@ -272,6 +284,7 @@ export type RunRepairLog = {
 
 export type RunDiagnostics = {
   emptyResultKind: EmptyResultKind;
+  runCompleteness: RunCompleteness;
   shardOutcomes: ShardOutcome[];
   failures: ShardFailure[];
   checkpointHits: number;

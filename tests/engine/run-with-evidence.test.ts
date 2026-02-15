@@ -64,6 +64,10 @@ test("runWithEvidence returns shard outcomes and provenance for successful extra
   assertEqual(bundle.provenance.documentId, "doc-success");
   assertEqual(bundle.extractions.length, 1);
   assertEqual(bundle.diagnostics.emptyResultKind, "non_empty");
+  assertEqual(bundle.diagnostics.runCompleteness.kind, "complete_success");
+  assertEqual(bundle.diagnostics.runCompleteness.totalShards, 1);
+  assertEqual(bundle.diagnostics.runCompleteness.successfulShards, 1);
+  assertEqual(bundle.diagnostics.runCompleteness.failedShards, 0);
   assertEqual(bundle.diagnostics.failures.length, 0);
   assertEqual(bundle.diagnostics.shardOutcomes.length, 1);
   assertEqual(bundle.diagnostics.shardOutcomes[0].status, "success");
@@ -122,6 +126,7 @@ test("runWithEvidence classifies valid empty output as empty_by_evidence", async
 
   assertEqual(bundle.extractions.length, 0);
   assertEqual(bundle.diagnostics.emptyResultKind, "empty_by_evidence");
+  assertEqual(bundle.diagnostics.runCompleteness.kind, "complete_success");
   assertEqual(bundle.diagnostics.failures.length, 0);
   assertEqual(bundle.diagnostics.shardOutcomes[0].status, "success");
 });
@@ -146,6 +151,7 @@ test("runWithEvidence classifies parse failures as empty_by_failure with explici
 
   assertEqual(bundle.extractions.length, 0);
   assertEqual(bundle.diagnostics.emptyResultKind, "empty_by_failure");
+  assertEqual(bundle.diagnostics.runCompleteness.kind, "complete_failure");
   assertEqual(bundle.diagnostics.failures.length, 1);
   assertEqual(bundle.diagnostics.failures[0].kind, "json_pipeline_failure");
   assertEqual(bundle.diagnostics.repairLog.entries.length, 1);
@@ -156,6 +162,107 @@ test("runWithEvidence classifies parse failures as empty_by_failure with explici
       || bundle.diagnostics.shardOutcomes[0].failure.kind === "json_pipeline_failure",
     "failure outcome should retain explicit failure kind",
   );
+});
+
+test("runWithEvidence reports partial_success and preserves successful shard extractions", async () => {
+  const program = await buildProgram();
+  const multiShardText = "Alpha Beta";
+  const shards = await chunkDocument(multiShardText, program.programHash, {
+    documentId: "doc-partial-success",
+    chunkSize: 6,
+    overlap: 0,
+    offsetMode: "utf16_code_unit",
+  });
+
+  const responses: Record<string, string> = {};
+  for (let index = 0; index < shards.length; index += 1) {
+    const request = buildProviderRequest(program, shards[index], "fake-model");
+    const requestHash = await hashProviderRequest(request);
+    if (index === 1) {
+      responses[requestHash] = JSON.stringify({
+        extractions: [
+          {
+            extractionClass: "token",
+            quote: "Beta",
+            span: {
+              offsetMode: "utf16_code_unit",
+              charStart: 0,
+              charEnd: 4,
+            },
+            grounding: "explicit",
+          },
+        ],
+      });
+    }
+  }
+
+  const bundle = await runWithEvidence({
+    runId: "bundle-partial-success",
+    program,
+    document: {
+      documentId: "doc-partial-success",
+      text: multiShardText,
+    },
+    provider: new FakeProvider({
+      responses,
+      defaultResponse: "I cannot provide JSON for this request.",
+    }),
+    model: "fake-model",
+    chunkSize: 6,
+    overlap: 0,
+  });
+
+  assertEqual(bundle.extractions.length, 1);
+  assertEqual(bundle.diagnostics.emptyResultKind, "non_empty");
+  assertEqual(bundle.diagnostics.runCompleteness.kind, "partial_success");
+  assertEqual(bundle.diagnostics.runCompleteness.totalShards, 2);
+  assertEqual(bundle.diagnostics.runCompleteness.successfulShards, 1);
+  assertEqual(bundle.diagnostics.runCompleteness.failedShards, 1);
+  assertEqual(bundle.diagnostics.failures.length, 1);
+});
+
+test("runWithEvidence classifies empty partial runs as empty_by_failure", async () => {
+  const program = await buildProgram();
+  const multiShardText = "Alpha Beta";
+  const shards = await chunkDocument(multiShardText, program.programHash, {
+    documentId: "doc-partial-empty-failure",
+    chunkSize: 6,
+    overlap: 0,
+    offsetMode: "utf16_code_unit",
+  });
+
+  const responses: Record<string, string> = {};
+  for (let index = 0; index < shards.length; index += 1) {
+    const request = buildProviderRequest(program, shards[index], "fake-model");
+    const requestHash = await hashProviderRequest(request);
+    if (index === 0) {
+      responses[requestHash] = "{\"extractions\":[]}";
+    }
+  }
+
+  const bundle = await runWithEvidence({
+    runId: "bundle-partial-empty-failure",
+    program,
+    document: {
+      documentId: "doc-partial-empty-failure",
+      text: multiShardText,
+    },
+    provider: new FakeProvider({
+      responses,
+      defaultResponse: "I cannot provide JSON for this request.",
+    }),
+    model: "fake-model",
+    chunkSize: 6,
+    overlap: 0,
+  });
+
+  assertEqual(bundle.extractions.length, 0);
+  assertEqual(bundle.diagnostics.emptyResultKind, "empty_by_failure");
+  assertEqual(bundle.diagnostics.runCompleteness.kind, "partial_success");
+  assertEqual(bundle.diagnostics.runCompleteness.totalShards, 2);
+  assertEqual(bundle.diagnostics.runCompleteness.successfulShards, 1);
+  assertEqual(bundle.diagnostics.runCompleteness.failedShards, 1);
+  assertEqual(bundle.diagnostics.failures.length, 1);
 });
 
 test("runWithEvidence enforces timeBudgetMs and surfaces budget_exhausted failures", async () => {

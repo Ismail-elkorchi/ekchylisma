@@ -1,4 +1,5 @@
 import type { DocumentShard } from "./chunk.ts";
+import type { RunCompleteness } from "../core/types.ts";
 import {
   buildCheckpointKey,
   type CheckpointStore,
@@ -39,6 +40,42 @@ function defaultSleep(milliseconds: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, milliseconds);
   });
+}
+
+export function classifyRunCompleteness(
+  totalShards: number,
+  failedShards: number,
+): RunCompleteness {
+  if (!Number.isInteger(totalShards) || totalShards < 0) {
+    throw new Error("totalShards must be a non-negative integer.");
+  }
+  if (!Number.isInteger(failedShards) || failedShards < 0 || failedShards > totalShards) {
+    throw new Error("failedShards must be a non-negative integer <= totalShards.");
+  }
+
+  const successfulShards = totalShards - failedShards;
+  if (failedShards === 0) {
+    return {
+      kind: "complete_success",
+      totalShards,
+      successfulShards,
+      failedShards,
+    };
+  }
+  if (successfulShards > 0) {
+    return {
+      kind: "partial_success",
+      totalShards,
+      successfulShards,
+      failedShards,
+    };
+  }
+  return {
+    kind: "complete_failure",
+    totalShards,
+    successfulShards,
+    failedShards,
+  };
 }
 
 export async function executeShardsWithCheckpoint<TValue>(
