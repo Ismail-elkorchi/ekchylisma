@@ -3,6 +3,11 @@
 ## Deterministic suite
 - `npm test` already includes deterministic eval tests.
 - Explicit run command: `node tests/run.ts`.
+- Seeded property invariants are included in `tests/core/property-invariants.test.ts`:
+  - hash determinism over generated corpora,
+  - quote/offset invariant stability over generated spans,
+  - span mapping stability over generated shards.
+- Property runs use fixed seed labels (`property-core-invariants-seed-01..03`) through `createDeterministicPrng(seed)` from `src/core/prng.ts`, so reruns in Node/Deno/Bun produce identical sequences.
 
 ## Optional real-provider eval mode
 - Use `runSuite({ providerMode: "real", realProvider })` with configured provider instances.

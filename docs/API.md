@@ -2,6 +2,7 @@
 
 ## Root Exports (`src/index.ts`)
 - `sha256Hex(input)` from `src/core/hash.ts`
+- Deterministic PRNG helper from `src/core/prng.ts`: `createDeterministicPrng(seed)`
 - Identifier helpers from `src/core/identifiers.ts`: `isValidPackId(value)`, `isValidCaseId(value)`, `containsPlaceholderToken(value)`
 - Program normalization/validation from `src/core/program.ts`: `normalizeProgram(programInput)`
 - `normalizeNewlines(text)` from `src/core/normalize.ts`

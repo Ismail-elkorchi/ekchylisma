@@ -334,3 +334,14 @@
 - Consequence:
   - Structured arguments are parsed first when present, reducing silent structured-output loss.
   - Error surfaces remain deterministic when tool-call arguments are malformed or missing extraction payloads.
+
+## ADR-0037: property-based-core-invariants
+- Date: 2026-02-15
+- Context: Unit tests covered selected deterministic cases, but REQ-11.1.1 requires seeded property coverage for stability-sensitive invariants.
+- Decision:
+  - Add a runtime-agnostic deterministic PRNG helper (`createDeterministicPrng`) to generate reproducible property corpora.
+  - Add seeded property tests for hash determinism, quote invariant stability, shard-ID determinism, and shard-span mapping stability.
+  - Keep seeds fixed and documented so CI and local reruns produce identical generated inputs across Node, Deno, and Bun.
+- Consequence:
+  - Core invariants are stress-tested across broader input surfaces without introducing nondeterminism.
+  - Regressions now fail with reproducible seed-driven cases instead of one-off fixture-only behavior.
