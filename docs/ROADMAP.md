@@ -12,5 +12,5 @@
 
 ## Long term
 - Add browser-focused packaging path once dist strategy is finalized.
-- Provide curated benchmark datasets for reproducible public performance baselines.
+- Provide curated benchmark datasets for reproducible external performance baselines.
 - Support opt-in advanced schema features while preserving dependency-free core.

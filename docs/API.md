@@ -1,7 +1,8 @@
-# Public API
+# public API
 
 ## Root Exports (`src/index.ts`)
 - `sha256Hex(input)` from `src/core/hash.ts`
+- Identifier helpers from `src/core/identifiers.ts`: `isValidPackId(value)`, `isValidCaseId(value)`, `containsPlaceholderToken(value)`
 - `normalizeNewlines(text)` from `src/core/normalize.ts`
 - `trimTrailingWhitespacePerLine(text)` from `src/core/normalize.ts`
 - `normalizeText(text, options)` from `src/core/normalize.ts`
