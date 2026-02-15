@@ -182,6 +182,16 @@ export type RunDiagnostics = {
   checkpointHits: number;
 };
 
+export type EvidenceAttestation = {
+  version: "1";
+  canonicalization: "ekchylisma-json-c14n-v1";
+  algorithm: "HMAC-SHA-256";
+  keyId?: string;
+  payloadHash: string;
+  signature: string;
+  signedAt: string;
+};
+
 export type EvidenceBundle = {
   bundleVersion: "1";
   runId: string;
@@ -191,4 +201,5 @@ export type EvidenceBundle = {
   normalizationLedger: NormalizationLedger;
   shardPlan: ShardPlan;
   diagnostics: RunDiagnostics;
+  attestation?: EvidenceAttestation;
 };

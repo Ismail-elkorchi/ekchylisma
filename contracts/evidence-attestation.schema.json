@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/evidence-attestation.schema.json",
+  "title": "EvidenceAttestation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "canonicalization",
+    "algorithm",
+    "payloadHash",
+    "signature",
+    "signedAt"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1"
+    },
+    "canonicalization": {
+      "type": "string",
+      "const": "ekchylisma-json-c14n-v1"
+    },
+    "algorithm": {
+      "type": "string",
+      "const": "HMAC-SHA-256"
+    },
+    "keyId": {
+      "type": "string"
+    },
+    "payloadHash": {
+      "type": "string"
+    },
+    "signature": {
+      "type": "string"
+    },
+    "signedAt": {
+      "type": "string"
+    }
+  }
+}

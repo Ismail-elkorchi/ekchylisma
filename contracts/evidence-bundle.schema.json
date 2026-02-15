@@ -152,6 +152,9 @@
           }
         }
       }
+    },
+    "attestation": {
+      "$ref": "./evidence-attestation.schema.json"
     }
   },
   "$defs": {
