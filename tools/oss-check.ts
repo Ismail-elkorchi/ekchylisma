@@ -39,6 +39,22 @@ function requireScript(
   return value;
 }
 
+function collectStringValues(value: unknown): string[] {
+  if (typeof value === "string") {
+    return [value];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap((entry) => collectStringValues(entry));
+  }
+
+  if (typeof value === "object" && value !== null) {
+    return Object.values(value).flatMap((entry) => collectStringValues(entry));
+  }
+
+  return [];
+}
+
 async function run(): Promise<void> {
   for (const path of [...REQUIRED_ROOT_DOCS, ...REQUIRED_DOCS]) {
     await ensureFile(path);
@@ -51,6 +67,10 @@ async function run(): Promise<void> {
     dependencies?: Record<string, string>;
     devDependencies?: Record<string, string>;
     scripts?: Record<string, string>;
+    main?: string;
+    types?: string;
+    files?: string[];
+    exports?: Record<string, unknown>;
   };
 
   const dependencies = packageJson.dependencies ?? {};
@@ -59,10 +79,35 @@ async function run(): Promise<void> {
   }
 
   const scripts = packageJson.scripts ?? {};
+  requireScript(scripts, "clean");
+  requireScript(scripts, "build");
+  requireScript(scripts, "prepack");
+  requireScript(scripts, "test:browser");
   requireScript(scripts, "oss-check");
   const checkScript = requireScript(scripts, "check");
   if (!checkScript.includes("npm run oss-check")) {
     throw new Error("`npm run check` must include `npm run oss-check`.");
+  }
+
+  if (typeof packageJson.main !== "string" || !packageJson.main.startsWith("./dist/")) {
+    throw new Error("package.json.main must point to dist output.");
+  }
+  if (typeof packageJson.types !== "string" || !packageJson.types.startsWith("./dist/")) {
+    throw new Error("package.json.types must point to dist type declarations.");
+  }
+
+  const files = packageJson.files ?? [];
+  if (!files.includes("dist")) {
+    throw new Error("package.json.files must include `dist` for publishable artifacts.");
+  }
+
+  const exportsField = packageJson.exports ?? {};
+  const exportPaths = collectStringValues(exportsField);
+  if (exportPaths.some((path) => path.endsWith(".ts") && !path.endsWith(".d.ts"))) {
+    throw new Error("package exports must not point to TypeScript source files.");
+  }
+  if (!exportPaths.some((path) => path.includes("dist/"))) {
+    throw new Error("package exports must point to dist output paths.");
   }
 
   const devDeps = Object.keys(packageJson.devDependencies ?? {});
@@ -104,6 +149,10 @@ async function run(): Promise<void> {
         `Workflow action step must be pinned to a full commit SHA: ${line}`,
       );
     }
+  }
+
+  if (!ciWorkflow.includes("browser:")) {
+    throw new Error("CI workflow must include a browser compatibility job.");
   }
 
   console.log(

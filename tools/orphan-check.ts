@@ -115,6 +115,8 @@ async function runExampleSmokes(): Promise<void> {
   }
 
   await ensureFile("examples/workers/worker.ts");
+  await ensureFile("examples/browser/index.html");
+  await ensureFile("examples/browser/app.ts");
 }
 
 async function run(): Promise<void> {

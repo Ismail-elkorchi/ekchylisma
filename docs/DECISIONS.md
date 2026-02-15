@@ -114,3 +114,13 @@
   - Add `.github/dependabot.yml` for weekly updates of GitHub Actions and npm devDependencies.
 - Rationale: Commit pinning and constrained permissions reduce workflow tampering risk; Dependabot provides controlled update cadence.
 - Consequence: CI workflow maintenance requires SHA refreshes through reviewed PRs, with Dependabot generating update PRs on schedule.
+
+## ADR-0017: Build distribution to dist/ with TypeScript compiler
+- Date: 2026-02-15
+- Context: Package exports pointing to `.ts` source are not a publishable Node distribution.
+- Decision:
+  - Add `tsconfig.build.json` and `npm run build` to emit ESM JavaScript + declaration files under `dist/`.
+  - Update package exports to target `dist/esm/*` and `dist/types/*`.
+  - Add `prepack` to enforce build before packaging.
+- Rationale: Publishing runnable JavaScript artifacts avoids runtime dependence on TypeScript execution in consumers.
+- Consequence: Release flow includes build output validation and browser compatibility harness checks.

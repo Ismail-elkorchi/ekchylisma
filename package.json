@@ -4,14 +4,34 @@
   "description": "Web-API-first grounded extraction toolkit.",
   "type": "module",
   "private": true,
+  "main": "./dist/esm/src/index.js",
+  "types": "./dist/types/src/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./node": "./src-node/fs.ts"
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/esm/src/index.js"
+    },
+    "./node": {
+      "types": "./dist/types/src-node/fs.d.ts",
+      "default": "./dist/esm/src-node/fs.js"
+    }
   },
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "SECURITY.md",
+    "CHANGELOG.md"
+  ],
   "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
     "test": "node tests/run.ts",
     "test:deno": "deno run --allow-read tests/run.ts",
     "test:bun": "bun run tests/run.ts",
+    "test:browser": "node tests/browser/harness.test.ts",
     "test:workers": "node tests/workers/harness.test.ts",
     "test:integration": "node tests/providers/integration.test.ts",
     "typecheck": "deno check tests/schema/inference.check.ts",
@@ -21,6 +41,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "miniflare": "^3.20250718.3"
+    "miniflare": "^3.20250718.3",
+    "typescript": "^5.9.2"
   }
 }

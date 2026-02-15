@@ -10,6 +10,7 @@ Primary output is an auditable `EvidenceBundle` with grounded spans, shard outco
 npm test
 npm run test:deno
 npm run test:bun
+npm run test:browser
 npm run test:workers
 ```
 
@@ -69,7 +70,7 @@ All failures are recorded in `EvidenceBundle.diagnostics.failures` and linked to
 | Deno stable | Required | `deno run examples/deno/basic.ts` |
 | Bun stable | Required | `bun run examples/bun/basic.ts` |
 | Cloudflare Workers | Required | `npm run test:workers` |
-| Browser | Best effort | Not yet CI-gated |
+| Browser | Supported (bundling harness) | `npm run test:browser` |
 
 ## Debug with EvidenceBundle
 1. Check `diagnostics.emptyResultKind` first.

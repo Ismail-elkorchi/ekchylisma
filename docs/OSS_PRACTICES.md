@@ -14,6 +14,7 @@ This document defines operational checks used to keep the repository forkable, r
 | Dependency update automation | Dependabot config must exist for GitHub Actions and npm devDependencies | `npm run oss-check` |
 | API/docs/contracts coherence | Export paths and contract files must be referenced and examples must run | `npm run orphan-check` |
 | Cross-runtime regression matrix | Node, Deno, Bun, Workers tests must pass | CI jobs `node`, `deno`, `bun`, `workers` |
+| Browser compatibility harness | Browser example must bundle against published distribution output | `npm run test:browser` and CI job `browser` |
 | PR-only integration workflow | CI must run on pull requests and gate merges | `.github/workflows/ci.yml` + branch policy |
 | Requirement evidence mapping | Every `REQ-*` in `MASTER_SPEC.md` must map to code/tests/CI or explicit gap rationale | `SPEC_TRACEABILITY.md` review in PR |
 | Baseline reproducibility snapshot | Baseline command matrix and environment notes tracked | `docs/BASELINE_AUDIT.md` |
