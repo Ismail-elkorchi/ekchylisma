@@ -34,9 +34,15 @@ export const PROMPT_DOCUMENT_START_MARKER: CompiledPromptParts["documentStartMar
   "BEGIN_UNTRUSTED_DOCUMENT";
 export const PROMPT_DOCUMENT_END_MARKER: CompiledPromptParts["documentEndMarker"] =
   "END_UNTRUSTED_DOCUMENT";
+export const PROMPT_REPAIR_RESPONSE_START_MARKER = "PREVIOUS_RESPONSE_TEXT_BEGIN";
+export const PROMPT_REPAIR_RESPONSE_END_MARKER = "PREVIOUS_RESPONSE_TEXT_END";
 
 function neutralizeMarker(marker: string): string {
   return marker.split("").join(" ");
+}
+
+function escapePromptBoundaryTokens(text: string, markers: string[]): string {
+  return markers.reduce((value, marker) => value.replaceAll(marker, neutralizeMarker(marker)), text);
 }
 
 export function escapeUntrustedPromptText(
@@ -46,9 +52,7 @@ export function escapeUntrustedPromptText(
     documentEndMarker: PROMPT_DOCUMENT_END_MARKER,
   },
 ): string {
-  return text
-    .replaceAll(markers.documentStartMarker, neutralizeMarker(markers.documentStartMarker))
-    .replaceAll(markers.documentEndMarker, neutralizeMarker(markers.documentEndMarker));
+  return escapePromptBoundaryTokens(text, [markers.documentStartMarker, markers.documentEndMarker]);
 }
 
 export async function hashPromptText(prompt: string): Promise<string> {
@@ -156,15 +160,27 @@ export function compileRepairPrompt(
   options: PromptCompilerOptions = {},
 ): string {
   const basePrompt = compilePrompt(program, shard, options);
+  const escapedPreviousResponseText = escapePromptBoundaryTokens(context.previousResponseText, [
+    PROMPT_REPAIR_RESPONSE_START_MARKER,
+    PROMPT_REPAIR_RESPONSE_END_MARKER,
+    PROMPT_DOCUMENT_START_MARKER,
+    PROMPT_DOCUMENT_END_MARKER,
+  ]);
+  const escapedFailureMessage = escapePromptBoundaryTokens(context.failureMessage, [
+    PROMPT_REPAIR_RESPONSE_START_MARKER,
+    PROMPT_REPAIR_RESPONSE_END_MARKER,
+    PROMPT_DOCUMENT_START_MARKER,
+    PROMPT_DOCUMENT_END_MARKER,
+  ]);
 
   return [
     "### REPAIR PASS CONTEXT",
     `PRIOR_PASS: ${context.priorPass}`,
     `FAILURE_KIND: ${context.failureKind}`,
-    `FAILURE_MESSAGE: ${context.failureMessage}`,
-    "PREVIOUS_RESPONSE_TEXT_BEGIN",
-    context.previousResponseText,
-    "PREVIOUS_RESPONSE_TEXT_END",
+    `FAILURE_MESSAGE: ${escapedFailureMessage}`,
+    PROMPT_REPAIR_RESPONSE_START_MARKER,
+    escapedPreviousResponseText,
+    PROMPT_REPAIR_RESPONSE_END_MARKER,
     "",
     basePrompt,
     "",
