@@ -345,3 +345,14 @@
 - Consequence:
   - Core invariants are stress-tested across broader input surfaces without introducing nondeterminism.
   - Regressions now fail with reproducible seed-driven cases instead of one-off fixture-only behavior.
+
+## ADR-0038: eval-suite-breadth-and-variance
+- Date: 2026-02-15
+- Context: Deterministic aggregate scores existed, but they under-specified breadth and did not expose per-case outcome drift across repeated trials.
+- Decision:
+  - Extend `runSuite` with explicit breadth metadata (case, provider-label, prompt-variant, and seed coverage) and variance drift reporting.
+  - Extend bench outputs with `successRateStdDev`, `extractionCountStdDev`, and `caseOutcomeDriftRate`.
+  - Extend bench scoring with configurable ceilings/floors for variance and breadth to flag regressions without overfitting to exact extraction text.
+- Consequence:
+  - Eval regressions can now be detected from instability and breadth erosion, not just single aggregate pass/fail rates.
+  - CI remains deterministic in fake-provider mode while preserving configurable tolerance controls for broader trial modes.

@@ -33,15 +33,18 @@ Result file:
 - `quoteInvariantPassRate`: quote/span invariant pass rate.
 - `coverageRate`: matched gold spans / total gold spans.
 - `extractionCountMean` and `extractionCountVariance`.
+- `extractionCountStdDev` and `successRateStdDev` across trials.
+- `caseOutcomeDriftRate`: fraction of case signatures that change across trials.
+- `breadth.totalCaseCount` and `breadth.regressionCategoryCount`.
 
 ## Variance-aware Mode
 Run multiple trials:
 ```bash
 npm run bench:run -- --mode variance --trials 5
-npm run bench:score -- --result bench/results/latest.json
+npm run bench:score -- --result bench/results/latest.json --max-case-outcome-drift-rate 0.1
 ```
 
-Variance mode aggregates metrics across trials and reports extraction-count variance.
+Variance mode aggregates metrics across trials and reports extraction-count variance, success-rate variability, and per-case drift signatures.
 
 ## Limitations
 - Deterministic mode does not measure provider/model stochastic variance.

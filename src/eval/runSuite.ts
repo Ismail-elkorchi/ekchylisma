@@ -9,6 +9,7 @@ export type EvalDatasetCase = {
   caseId: string;
   documentText: string;
   providerResponseText: string;
+  providerLabel?: string;
 };
 
 export type EvalSuiteOptions = {
@@ -20,6 +21,8 @@ export type EvalSuiteOptions = {
   overlap?: number;
   providerMode?: "fake" | "real";
   realProvider?: Provider;
+  promptVariants?: string[];
+  seedLabels?: Array<string | number>;
 };
 
 export type VarianceReport = {
@@ -29,6 +32,16 @@ export type VarianceReport = {
   max: number;
   mean: number;
   stability: number;
+  stdDev: number;
+  caseOutcomeDriftRate: number;
+};
+
+export type BreadthReport = {
+  datasetCaseCount: number;
+  uniqueCaseIdCount: number;
+  providerLabelCount: number;
+  promptVariantCount: number;
+  seedCount: number;
 };
 
 export type EvalSuiteResult = {
@@ -36,10 +49,14 @@ export type EvalSuiteResult = {
   quoteInvariantRate: number;
   uniqueExtractionStability: number;
   variance: VarianceReport;
+  breadth: BreadthReport;
   runSummaries: Array<{
     runIndex: number;
     extractionCount: number;
     failures: number;
+    promptVariant: string;
+    seedLabel: string;
+    providerLabel: string;
   }>;
 };
 
@@ -76,6 +93,16 @@ function average(values: number[]): number {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function standardDeviation(values: number[]): number {
+  if (values.length <= 1) {
+    return 0;
+  }
+
+  const mean = average(values);
+  const variance = average(values.map((value) => (value - mean) ** 2));
+  return Math.sqrt(variance);
+}
+
 function shapeIsValid(extraction: Extraction): boolean {
   return typeof extraction.extractionClass === "string"
     && typeof extraction.quote === "string"
@@ -85,6 +112,51 @@ function shapeIsValid(extraction: Extraction): boolean {
     && extraction.span.charStart === extraction.charStart
     && extraction.span.charEnd === extraction.charEnd
     && extraction.span.offsetMode === extraction.offsetMode;
+}
+
+function normalizeScheduleLabel(
+  labels: Array<string | number> | undefined,
+  runIndex: number,
+  fallbackPrefix: string,
+): string {
+  if (!labels || labels.length === 0) {
+    return `${fallbackPrefix}-${runIndex}`;
+  }
+
+  return String(labels[runIndex % labels.length]);
+}
+
+function computeCaseOutcomeDriftRate(caseOutcomesByRun: Array<Map<string, string>>): number {
+  if (caseOutcomesByRun.length <= 1) {
+    return 0;
+  }
+
+  const caseIds = new Set<string>();
+  for (const runMap of caseOutcomesByRun) {
+    for (const caseId of runMap.keys()) {
+      caseIds.add(caseId);
+    }
+  }
+
+  if (caseIds.size === 0) {
+    return 0;
+  }
+
+  let drifted = 0;
+  for (const caseId of caseIds) {
+    const signatures = new Set<string>();
+
+    for (const runMap of caseOutcomesByRun) {
+      const signature = runMap.get(caseId) ?? "missing";
+      signatures.add(signature);
+    }
+
+    if (signatures.size > 1) {
+      drifted += 1;
+    }
+  }
+
+  return drifted / caseIds.size;
 }
 
 async function buildFakeProvider(
@@ -129,12 +201,16 @@ export async function runSuite(
   const extractionSets: Set<string>[] = [];
   const extractionCounts: number[] = [];
   const runSummaries: EvalSuiteResult["runSummaries"] = [];
+  const caseOutcomesByRun: Array<Map<string, string>> = [];
 
   let validShapeCount = 0;
   let validQuoteCount = 0;
   let totalExtractions = 0;
 
   for (let runIndex = 0; runIndex < runs; runIndex += 1) {
+    const promptVariant = normalizeScheduleLabel(options.promptVariants, runIndex, "default");
+    const seedLabel = normalizeScheduleLabel(options.seedLabels, runIndex, "seed");
+
     const provider =
       providerMode === "fake"
         ? await buildFakeProvider(
@@ -152,6 +228,7 @@ export async function runSuite(
 
     let failures = 0;
     const runKeys = new Set<string>();
+    const caseOutcomeMap = new Map<string, string>();
     let extractionCount = 0;
 
     for (const testCase of options.dataset) {
@@ -168,6 +245,7 @@ export async function runSuite(
         });
 
         extractionCount += runResult.extractions.length;
+
         for (const extraction of runResult.extractions) {
           totalExtractions += 1;
           if (shapeIsValid(extraction)) {
@@ -183,17 +261,32 @@ export async function runSuite(
 
           runKeys.add(extractionKey(extraction));
         }
+
+        const caseSignature = runResult.extractions
+          .map((extraction) => extractionKey(extraction))
+          .sort()
+          .join(";");
+        caseOutcomeMap.set(
+          testCase.caseId,
+          `ok|${runResult.extractions.length}|${caseSignature}`,
+        );
       } catch {
         failures += 1;
+        caseOutcomeMap.set(testCase.caseId, "error");
       }
     }
 
     extractionSets.push(runKeys);
     extractionCounts.push(extractionCount);
+    caseOutcomesByRun.push(caseOutcomeMap);
+
     runSummaries.push({
       runIndex,
       extractionCount,
       failures,
+      promptVariant,
+      seedLabel,
+      providerLabel: providerMode === "fake" ? "fake" : "real",
     });
   }
 
@@ -205,6 +298,18 @@ export async function runSuite(
   }
 
   const stability = pairwiseScores.length === 0 ? 1 : average(pairwiseScores);
+  const caseOutcomeDriftRate = computeCaseOutcomeDriftRate(caseOutcomesByRun);
+
+  const promptVariantsUsed = new Set(runSummaries.map((summary) => summary.promptVariant));
+  const seedsUsed = new Set(runSummaries.map((summary) => summary.seedLabel));
+  const providerLabels = new Set(
+    options.dataset
+      .map((entry) => entry.providerLabel)
+      .filter((value): value is string => typeof value === "string" && value.length > 0),
+  );
+  if (providerLabels.size === 0) {
+    providerLabels.add(providerMode === "fake" ? "fake" : "real");
+  }
 
   return {
     schemaValidRate: totalExtractions === 0 ? 1 : validShapeCount / totalExtractions,
@@ -217,6 +322,15 @@ export async function runSuite(
       max: Math.max(...extractionCounts),
       mean: average(extractionCounts),
       stability,
+      stdDev: standardDeviation(extractionCounts),
+      caseOutcomeDriftRate,
+    },
+    breadth: {
+      datasetCaseCount: options.dataset.length,
+      uniqueCaseIdCount: new Set(options.dataset.map((entry) => entry.caseId)).size,
+      providerLabelCount: providerLabels.size,
+      promptVariantCount: promptVariantsUsed.size,
+      seedCount: seedsUsed.size,
     },
     runSummaries,
   };

@@ -22,6 +22,7 @@
   - `npm run bench:score`
 - Variance-aware run:
   - `npm run bench:run -- --mode variance --trials 5`
+  - `npm run bench:score -- --max-case-outcome-drift-rate 0.1 --max-success-rate-stddev 0.05`
 
 ## Regression dataset format
 Each line in `bench/datasets/regression.jsonl` is one JSON object with:
@@ -54,8 +55,17 @@ The bench runner validates every regression record before trials execute and exi
 - `quoteInvariantRate`: fraction of extracted records that satisfy quote/offset invariant.
 - `uniqueExtractionStability`: pairwise Jaccard stability of unique extraction keys across runs.
 - `variance`: run-level extraction count statistics (`min`, `max`, `mean`, `stability`).
+- Bench aggregate variance diagnostics:
+  - `extractionCountVariance` and `extractionCountStdDev`
+  - `successRateStdDev`
+  - `caseOutcomeDriftRate` (fraction of cases whose result signature changes across trials)
+- Bench breadth diagnostics:
+  - `breadth.totalCaseCount`
+  - `breadth.regressionCategoryCount`
 
 ## Interpretation
 - Deterministic fake-mode suite should remain at `1.0` for schema/quote/stability.
 - Drops in `quoteInvariantRate` indicate grounding regressions.
 - Drops in `uniqueExtractionStability` indicate output drift across repeated runs.
+- Increases in `caseOutcomeDriftRate` indicate unstable trial outcomes.
+- Low `breadth.regressionCategoryCount` indicates eval breadth erosion even when headline rates stay high.
