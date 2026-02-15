@@ -1,7 +1,12 @@
 import { sha256Hex } from "../../src/core/hash.ts";
 import { compilePrompt, hashPromptText } from "../../src/engine/promptCompiler.ts";
-import { runWithEvidence } from "../../src/engine/run.ts";
-import { FakeProvider } from "../../src/providers/fake.ts";
+import { chunkDocument } from "../../src/engine/chunk.ts";
+import {
+  buildProviderRequest,
+  buildRepairProviderRequest,
+  runWithEvidence,
+} from "../../src/engine/run.ts";
+import { FakeProvider, hashProviderRequest } from "../../src/providers/fake.ts";
 import { assert, assertEqual, test } from "../harness.ts";
 
 const documentText = "Alpha Beta";
@@ -70,6 +75,10 @@ test("runWithEvidence returns shard outcomes and provenance for successful extra
   assertEqual(bundle.diagnostics.budgetLog.repair.maxRepairChars, null);
   assertEqual(bundle.diagnostics.budgetLog.repair.candidateCharsTruncatedCount, 0);
   assertEqual(bundle.diagnostics.budgetLog.repair.repairCharsTruncatedCount, 0);
+  assertEqual(bundle.diagnostics.multiPassLog.mode, "draft_validate_repair_finalize");
+  assertEqual(bundle.diagnostics.multiPassLog.maxPasses, 2);
+  assertEqual(bundle.diagnostics.multiPassLog.shards.length, 1);
+  assertEqual(bundle.diagnostics.multiPassLog.shards[0].finalPass, 1);
 
   const firstOutcome = bundle.diagnostics.shardOutcomes[0];
   const shardPrompt = compilePrompt(program, {
@@ -179,6 +188,8 @@ test("runWithEvidence enforces timeBudgetMs and surfaces budget_exhausted failur
   assertEqual(bundle.diagnostics.budgetLog.time.startedAtMs, 0);
   assertEqual(bundle.diagnostics.budgetLog.time.deadlineAtMs, 0);
   assertEqual(bundle.diagnostics.budgetLog.time.deadlineReached, true);
+  assertEqual(bundle.diagnostics.multiPassLog.shards.length, 1);
+  assertEqual(bundle.diagnostics.multiPassLog.shards[0].finalPass, 0);
   assertEqual(bundle.diagnostics.shardOutcomes[0].status, "failure");
   assert(
     bundle.diagnostics.shardOutcomes[0].status !== "failure"
@@ -242,5 +253,151 @@ test("runWithEvidence records repair cap diagnostics and deterministic failure s
     first.diagnostics.failures[0].message,
     second.diagnostics.failures[0].message,
     "repair cap failures should be deterministic for identical inputs",
+  );
+});
+
+test("runWithEvidence repairs payload shape failure on second pass and finalizes extraction", async () => {
+  const program = await buildProgram();
+  const badDraft = "{\"items\":[]}";
+  const repaired = JSON.stringify({
+    extractions: [
+      {
+        extractionClass: "token",
+        quote: "Beta",
+        span: {
+          offsetMode: "utf16_code_unit",
+          charStart: 6,
+          charEnd: 10,
+        },
+        grounding: "explicit",
+      },
+    ],
+  });
+
+  const shard = (await chunkDocument(documentText, program.programHash, {
+    documentId: "doc-multi-pass-shape",
+    chunkSize: 64,
+    overlap: 0,
+    offsetMode: "utf16_code_unit",
+  }))[0];
+  const draftRequest = buildProviderRequest(program, shard, "fake-model");
+  const draftHash = await hashProviderRequest(draftRequest);
+  const repairRequest = buildRepairProviderRequest(program, shard, "fake-model", {
+    previousResponseText: badDraft,
+    failureKind: "payload_shape_failure",
+    failureMessage: "Provider response must be an array or object with `extractions` array.",
+    priorPass: 1,
+  });
+  const repairHash = await hashProviderRequest(repairRequest);
+
+  const provider = new FakeProvider({
+    defaultResponse: badDraft,
+    responses: {
+      [draftHash]: badDraft,
+      [repairHash]: repaired,
+    },
+  });
+
+  const bundle = await runWithEvidence({
+    runId: "bundle-multi-pass-shape",
+    program,
+    document: {
+      documentId: "doc-multi-pass-shape",
+      text: documentText,
+    },
+    provider,
+    model: "fake-model",
+    chunkSize: 64,
+    overlap: 0,
+  });
+
+  assertEqual(bundle.extractions.length, 1);
+  assertEqual(bundle.diagnostics.failures.length, 0);
+  assertEqual(bundle.diagnostics.multiPassLog.shards.length, 1);
+  assertEqual(bundle.diagnostics.multiPassLog.shards[0].finalPass, 2);
+  assertEqual(
+    bundle.diagnostics.multiPassLog.shards[0].stages.some((stage) =>
+      stage.stage === "repair" && stage.failureKind === "payload_shape_failure"
+    ),
+    true,
+  );
+});
+
+test("runWithEvidence repairs quote mismatch failure on second pass and finalizes extraction", async () => {
+  const program = await buildProgram();
+  const badDraft = JSON.stringify({
+    extractions: [
+      {
+        extractionClass: "token",
+        quote: "Gamma",
+        span: {
+          offsetMode: "utf16_code_unit",
+          charStart: 6,
+          charEnd: 10,
+        },
+        grounding: "explicit",
+      },
+    ],
+  });
+  const repaired = JSON.stringify({
+    extractions: [
+      {
+        extractionClass: "token",
+        quote: "Beta",
+        span: {
+          offsetMode: "utf16_code_unit",
+          charStart: 6,
+          charEnd: 10,
+        },
+        grounding: "explicit",
+      },
+    ],
+  });
+
+  const shard = (await chunkDocument(documentText, program.programHash, {
+    documentId: "doc-multi-pass-quote",
+    chunkSize: 64,
+    overlap: 0,
+    offsetMode: "utf16_code_unit",
+  }))[0];
+  const draftRequest = buildProviderRequest(program, shard, "fake-model");
+  const draftHash = await hashProviderRequest(draftRequest);
+  const repairRequest = buildRepairProviderRequest(program, shard, "fake-model", {
+    previousResponseText: badDraft,
+    failureKind: "quote_invariant_failure",
+    failureMessage: "Extraction quote does not match the document slice at span.",
+    priorPass: 1,
+  });
+  const repairHash = await hashProviderRequest(repairRequest);
+
+  const provider = new FakeProvider({
+    defaultResponse: badDraft,
+    responses: {
+      [draftHash]: badDraft,
+      [repairHash]: repaired,
+    },
+  });
+
+  const bundle = await runWithEvidence({
+    runId: "bundle-multi-pass-quote",
+    program,
+    document: {
+      documentId: "doc-multi-pass-quote",
+      text: documentText,
+    },
+    provider,
+    model: "fake-model",
+    chunkSize: 64,
+    overlap: 0,
+  });
+
+  assertEqual(bundle.extractions.length, 1);
+  assertEqual(bundle.diagnostics.failures.length, 0);
+  assertEqual(bundle.diagnostics.multiPassLog.shards[0].finalPass, 2);
+  assertEqual(
+    bundle.diagnostics.multiPassLog.shards[0].stages.some((stage) =>
+      stage.stage === "repair" && stage.failureKind === "quote_invariant_failure"
+    ),
+    true,
   );
 });

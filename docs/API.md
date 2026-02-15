@@ -20,16 +20,22 @@
   - `runWithEvidence(options)` supports explicit budget controls:
     - `timeBudgetMs` (non-negative integer): run deadline for scheduling provider attempts
     - `repairBudgets.maxCandidateChars` and `repairBudgets.maxRepairChars` (positive integers)
+    - `multiPassMaxPasses` (positive integer, default `2`): bounded draft→validate→repair→finalize pass count per shard
     - `nowMs` override for deterministic time-budget tests and replay
   - `runWithEvidence(options)` diagnostics include `budgetLog`:
     - `budgetLog.time`: effective `timeBudgetMs`, `startedAtMs`, `deadlineAtMs`, `deadlineReached`
     - `budgetLog.retry`: effective retry policy values
     - `budgetLog.repair`: effective repair caps and cap-hit counters
+  - `runWithEvidence(options)` diagnostics include `multiPassLog`:
+    - `multiPassLog.mode`: `draft_validate_repair_finalize`
+    - `multiPassLog.maxPasses`: configured per-shard pass cap
+    - `multiPassLog.shards[*]`: deterministic stage log with pass number, stage, status, and typed failure metadata
   - `buildProviderRequest(program, shard, model)`
+  - `buildRepairProviderRequest(program, shard, model, context)`
 - Evidence attestation:
   - `attestEvidenceBundle(bundle, options)` from `src/evidence/attest.ts`
   - `verifyEvidenceBundleAttestation(bundle, options)` from `src/evidence/verify.ts`
-- Prompt compiler from `src/engine/promptCompiler.ts`: `compilePrompt(program, shard)`, `compilePromptParts(program, shard)`, `escapeUntrustedPromptText(text, markers)`, `hashPromptText(prompt)`
+- Prompt compiler from `src/engine/promptCompiler.ts`: `compilePrompt(program, shard)`, `compileRepairPrompt(program, shard, context)`, `compilePromptParts(program, shard)`, `escapeUntrustedPromptText(text, markers)`, `hashPromptText(prompt)`
 - Eval harness from `src/eval/runSuite.ts`: `runSuite(options)` with deterministic fake-mode and optional real-provider mode
 - JSONL codecs from `src/io/jsonl.ts`: `encodeEvidenceBundlesToJsonl(bundles)`, `decodeJsonlToEvidenceBundles(input)`
 - Visualization from `src/viz/html.ts`: `visualizeEvidenceBundle(bundles, options)`

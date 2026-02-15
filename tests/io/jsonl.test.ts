@@ -107,6 +107,11 @@ function sampleBundle(runId: string) {
           repairCharsTruncatedCount: 0,
         },
       },
+      multiPassLog: {
+        mode: "draft_validate_repair_finalize" as const,
+        maxPasses: 2,
+        shards: [],
+      },
     },
   };
 }

@@ -1,8 +1,13 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { assertQuoteInvariant } from "../src/core/invariants.ts";
 import { sha256Hex } from "../src/core/hash.ts";
-import { runWithEvidence } from "../src/engine/run.ts";
-import { FakeProvider } from "../src/providers/fake.ts";
+import {
+  buildProviderRequest,
+  buildRepairProviderRequest,
+  runWithEvidence,
+} from "../src/engine/run.ts";
+import { chunkDocument } from "../src/engine/chunk.ts";
+import { FakeProvider, hashProviderRequest } from "../src/providers/fake.ts";
 import {
   loadRegressionDataset,
   type RegressionDatasetCase,
@@ -52,6 +57,14 @@ type TrialResult = {
   quoteInvariantPassRate: number;
   coverageRate: number;
   extractionCount: number;
+};
+
+type MultiPassScript = {
+  mode: "multi_pass_v1";
+  draft: string;
+  repair: string;
+  failureKind: "json_pipeline_failure" | "payload_shape_failure" | "quote_invariant_failure";
+  failureMessage?: string;
 };
 
 function parseArgs(argv: string[]): RunOptions {
@@ -130,6 +143,58 @@ function shapeIsValid(extraction: {
     && typeof extraction.span?.charEnd === "number";
 }
 
+function defaultFailureMessage(kind: MultiPassScript["failureKind"]): string {
+  if (kind === "payload_shape_failure") {
+    return "Provider response must be an array or object with `extractions` array.";
+  }
+
+  if (kind === "quote_invariant_failure") {
+    return "Extraction quote does not match the document slice at span.";
+  }
+
+  return "Unexpected non-whitespace character after JSON at position 0";
+}
+
+function parseMultiPassScript(providerResponseText: string): MultiPassScript | null {
+  let value: unknown;
+  try {
+    value = JSON.parse(providerResponseText);
+  } catch {
+    return null;
+  }
+
+  if (typeof value !== "object" || value === null) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  if (record.mode !== "multi_pass_v1") {
+    return null;
+  }
+  if (typeof record.draft !== "string" || typeof record.repair !== "string") {
+    return null;
+  }
+  if (
+    record.failureKind !== "json_pipeline_failure"
+    && record.failureKind !== "payload_shape_failure"
+    && record.failureKind !== "quote_invariant_failure"
+  ) {
+    return null;
+  }
+
+  if (record.failureMessage !== undefined && typeof record.failureMessage !== "string") {
+    return null;
+  }
+
+  return {
+    mode: "multi_pass_v1",
+    draft: record.draft,
+    repair: record.repair,
+    failureKind: record.failureKind,
+    failureMessage: record.failureMessage,
+  };
+}
+
 async function runCase(
   testCase: {
     caseId: string;
@@ -151,22 +216,53 @@ async function runCase(
     span: { charStart: number; charEnd: number };
   }[];
 }> {
-  const provider = new FakeProvider({
-    defaultResponse: testCase.providerResponseText,
-  });
-
   const programHash = await sha256Hex(
     `${testCase.instructions}:${JSON.stringify(testCase.targetSchema)}`,
   );
+  const program = {
+    instructions: testCase.instructions,
+    examples: [],
+    schema: testCase.targetSchema,
+    programHash,
+  };
+
+  const script = parseMultiPassScript(testCase.providerResponseText);
+  const provider = new FakeProvider({
+    defaultResponse: script?.draft ?? testCase.providerResponseText,
+  });
+
+  if (script) {
+    const shards = await chunkDocument(testCase.documentText, programHash, {
+      documentId: testCase.caseId,
+      chunkSize: 8192,
+      overlap: 0,
+      offsetMode: "utf16_code_unit",
+    });
+
+    for (const shard of shards) {
+      const draftRequest = buildProviderRequest(program, shard, "fake-model");
+      const draftHash = await hashProviderRequest(draftRequest);
+      provider.setResponse(draftHash, script.draft);
+
+      const repairRequest = buildRepairProviderRequest(
+        program,
+        shard,
+        "fake-model",
+        {
+          previousResponseText: script.draft,
+          failureKind: script.failureKind,
+          failureMessage: script.failureMessage ?? defaultFailureMessage(script.failureKind),
+          priorPass: 1,
+        },
+      );
+      const repairHash = await hashProviderRequest(repairRequest);
+      provider.setResponse(repairHash, script.repair);
+    }
+  }
 
   const bundle = await runWithEvidence({
     runId: `bench-${testCase.caseId}-${trialIndex}`,
-    program: {
-      instructions: testCase.instructions,
-      examples: [],
-      schema: testCase.targetSchema,
-      programHash,
-    },
+    program,
     document: {
       documentId: testCase.caseId,
       text: testCase.documentText,
