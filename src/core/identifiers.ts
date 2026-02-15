@@ -5,7 +5,7 @@ export const CASE_ID_PATTERN =
   /^[a-z0-9]+(?:-[a-z0-9]+)*--[a-z0-9]+(?:-[a-z0-9]+)*--[0-9]+--[0-9a-f]{8}$/;
 
 const PLACEHOLDER_TOKEN_PATTERN =
-  /\b(?:[Pp][Rr][-_ ]?\d+|[Pp][Rr]\d+|[Tt][Oo][Dd][Oo]|[Tt][Bb][Dd]|[Ww][Ii][Pp])\b/;
+  /\b(?:[Tt][Oo][Dd][Oo]|[Tt][Bb][Dd]|[Ww][Ii][Pp])\b/;
 
 export function isValidPackId(value: string): boolean {
   return PACK_ID_PATTERN.test(value);
