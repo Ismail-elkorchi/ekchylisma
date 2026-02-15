@@ -206,3 +206,18 @@
   - Extend JSON repair diagnostics with cap metadata (`maxCandidateChars`, `maxRepairChars`, truncation flags).
 - Rationale: Explicit budget surfaces convert hidden control flow limits into auditable, typed diagnostics with deterministic test hooks.
 - Consequence: Evidence bundle contract and fixture payloads include budget metadata; tests assert deadline and repair-cap behavior.
+
+## ADR-0026: Separate internal research and enforce public repo scope
+- Date: 2026-02-15
+- Context: The public product repository must remain limited to implementation artifacts and reproducible user-facing evidence.
+- Decision:
+  - Add `docs/REPO_SCOPE.md` with explicit allowed/disallowed content classes.
+  - Add `tools/repo-scope-check.ts` to fail when disallowed root paths (`internal/`, `research/`, `signals/`, `plans/`, `projects/`) exist.
+  - Require `npm run repo-scope-check` in `npm run check` and enforce script wiring via `tools/oss-check.ts`.
+- Consequences:
+  - Internal research and planning artifacts are blocked from accidental commit to the public repository.
+  - Scope policy violations become deterministic CI/local check failures.
+- Verification commands:
+  - `npm run repo-scope-check`
+  - `npm run oss-check`
+  - `npm run check`
