@@ -49,7 +49,7 @@
   - `attestEvidenceBundle(bundle, options)` from `src/evidence/attest.ts`
   - `verifyEvidenceBundleAttestation(bundle, options)` from `src/evidence/verify.ts`
 - Prompt compiler from `src/engine/promptCompiler.ts`: `compilePrompt(program, shard)`, `compileRepairPrompt(program, shard, context)`, `compilePromptParts(program, shard)`, `escapeUntrustedPromptText(text, markers)`, `hashPromptText(prompt)`
-- Eval harness from `src/eval/runSuite.ts`: `runSuite(options)` with deterministic fake-mode and optional real-provider mode
+- Eval harness from `src/eval/runSuite.ts`: `runSuite(options)` with deterministic fake-mode and optional real-provider mode, including `variance` (`stdDev`, `caseOutcomeDriftRate`) and `breadth` coverage metadata
 - JSONL codecs from `src/io/jsonl.ts`: `encodeEvidenceBundlesToJsonl(bundles)`, `decodeJsonlToEvidenceBundles(input)`
 - Visualization from `src/viz/html.ts`: `visualizeEvidenceBundle(bundles, options)`
 - Schema builders from `src/schema/s.ts`: `s.string`, `s.number`, `s.boolean`, `s.literal`, `s.enum`, `s.array`, `s.object`, `s.union`, `s.optional`

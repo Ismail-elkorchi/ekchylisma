@@ -6,6 +6,15 @@ type BenchResult = {
     schemaValidityRate: number;
     quoteInvariantPassRate: number;
     coverageRate: number;
+    extractionCountVariance: number;
+    successRateStdDev: number;
+    caseOutcomeDriftRate: number;
+    breadth: {
+      smokeCaseCount: number;
+      regressionCaseCount: number;
+      totalCaseCount: number;
+      regressionCategoryCount: number;
+    };
   };
 };
 
@@ -15,6 +24,11 @@ function parseArgs(argv: string[]): {
   minSchemaValidityRate: number;
   minQuoteInvariantPassRate: number;
   minCoverageRate: number;
+  maxExtractionCountVariance: number;
+  maxSuccessRateStdDev: number;
+  maxCaseOutcomeDriftRate: number;
+  minRegressionCategoryCount: number;
+  minTotalCaseCount: number;
 } {
   const args = new Map<string, string>();
 
@@ -48,6 +62,11 @@ function parseArgs(argv: string[]): {
     minSchemaValidityRate: numeric("--min-schema-validity-rate", 1),
     minQuoteInvariantPassRate: numeric("--min-quote-invariant-pass-rate", 1),
     minCoverageRate: numeric("--min-coverage-rate", 1),
+    maxExtractionCountVariance: numeric("--max-extraction-count-variance", 0.25),
+    maxSuccessRateStdDev: numeric("--max-success-rate-stddev", 0.05),
+    maxCaseOutcomeDriftRate: numeric("--max-case-outcome-drift-rate", 0.05),
+    minRegressionCategoryCount: numeric("--min-regression-category-count", 1),
+    minTotalCaseCount: numeric("--min-total-case-count", 1),
   };
 }
 
@@ -58,6 +77,16 @@ function assertThreshold(
 ): void {
   if (value < minimum) {
     throw new Error(`${label} below threshold: ${value.toFixed(4)} < ${minimum.toFixed(4)}`);
+  }
+}
+
+function assertCeiling(
+  label: string,
+  value: number,
+  maximum: number,
+): void {
+  if (value > maximum) {
+    throw new Error(`${label} above threshold: ${value.toFixed(4)} > ${maximum.toFixed(4)}`);
   }
 }
 
@@ -86,6 +115,31 @@ async function main(): Promise<void> {
     result.aggregate.coverageRate,
     options.minCoverageRate,
   );
+  assertCeiling(
+    "extractionCountVariance",
+    result.aggregate.extractionCountVariance,
+    options.maxExtractionCountVariance,
+  );
+  assertCeiling(
+    "successRateStdDev",
+    result.aggregate.successRateStdDev,
+    options.maxSuccessRateStdDev,
+  );
+  assertCeiling(
+    "caseOutcomeDriftRate",
+    result.aggregate.caseOutcomeDriftRate,
+    options.maxCaseOutcomeDriftRate,
+  );
+  assertThreshold(
+    "breadth.totalCaseCount",
+    result.aggregate.breadth.totalCaseCount,
+    options.minTotalCaseCount,
+  );
+  assertThreshold(
+    "breadth.regressionCategoryCount",
+    result.aggregate.breadth.regressionCategoryCount,
+    options.minRegressionCategoryCount,
+  );
 
   console.log(
     [
@@ -94,6 +148,11 @@ async function main(): Promise<void> {
       `schemaValidityRate=${result.aggregate.schemaValidityRate.toFixed(4)}`,
       `quoteInvariantPassRate=${result.aggregate.quoteInvariantPassRate.toFixed(4)}`,
       `coverageRate=${result.aggregate.coverageRate.toFixed(4)}`,
+      `extractionCountVariance=${result.aggregate.extractionCountVariance.toFixed(4)}`,
+      `successRateStdDev=${result.aggregate.successRateStdDev.toFixed(4)}`,
+      `caseOutcomeDriftRate=${result.aggregate.caseOutcomeDriftRate.toFixed(4)}`,
+      `breadth.totalCaseCount=${result.aggregate.breadth.totalCaseCount}`,
+      `breadth.regressionCategoryCount=${result.aggregate.breadth.regressionCategoryCount}`,
     ].join(" | "),
   );
 }

@@ -140,6 +140,58 @@ function computeVariance(values: number[]): number {
   return average(values.map((value) => (value - mean) ** 2));
 }
 
+function computeStdDev(values: number[]): number {
+  return Math.sqrt(computeVariance(values));
+}
+
+function computeCaseOutcomeDriftRate(trials: TrialResult[]): number {
+  if (trials.length <= 1) {
+    return 0;
+  }
+
+  const trialMaps = trials.map((trial) =>
+    new Map(trial.cases.map((entry) => [entry.caseId, entry] as const))
+  );
+
+  const caseIds = new Set<string>();
+  for (const trial of trialMaps) {
+    for (const entry of trial.keys()) {
+      caseIds.add(entry);
+    }
+  }
+
+  if (caseIds.size === 0) {
+    return 0;
+  }
+
+  let driftedCaseCount = 0;
+  for (const caseId of caseIds) {
+    const signatures = new Set<string>();
+
+    for (const trialMap of trialMaps) {
+      const entry = trialMap.get(caseId);
+      if (!entry) {
+        signatures.add("missing");
+        continue;
+      }
+      signatures.add(
+        [
+          entry.success ? "1" : "0",
+          entry.extractionCount,
+          entry.emptyResultKind,
+          entry.failures,
+        ].join("|"),
+      );
+    }
+
+    if (signatures.size > 1) {
+      driftedCaseCount += 1;
+    }
+  }
+
+  return driftedCaseCount / caseIds.size;
+}
+
 function shapeIsValid(extraction: {
   extractionClass: unknown;
   quote: unknown;
@@ -480,6 +532,19 @@ async function main(): Promise<void> {
       extractionCountVariance: computeVariance(
         trialResults.map((entry) => entry.extractionCount),
       ),
+      extractionCountStdDev: computeStdDev(
+        trialResults.map((entry) => entry.extractionCount),
+      ),
+      successRateStdDev: computeStdDev(
+        trialResults.map((entry) => entry.successRate),
+      ),
+      caseOutcomeDriftRate: computeCaseOutcomeDriftRate(trialResults),
+      breadth: {
+        smokeCaseCount: smokeDataset.length,
+        regressionCaseCount: regressionDataset.length,
+        totalCaseCount: smokeDataset.length + regressionDataset.length,
+        regressionCategoryCount: new Set(regressionDataset.map((entry) => entry.category)).size,
+      },
     },
     trialsResult: trialResults,
   };

@@ -9,6 +9,7 @@
     "quoteInvariantRate",
     "uniqueExtractionStability",
     "variance",
+    "breadth",
     "runSummaries"
   ],
   "properties": {
@@ -30,7 +31,16 @@
     "variance": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["runCount", "extractionCounts", "min", "max", "mean", "stability"],
+      "required": [
+        "runCount",
+        "extractionCounts",
+        "min",
+        "max",
+        "mean",
+        "stability",
+        "stdDev",
+        "caseOutcomeDriftRate"
+      ],
       "properties": {
         "runCount": { "type": "integer", "minimum": 1 },
         "extractionCounts": {
@@ -40,7 +50,27 @@
         "min": { "type": "number" },
         "max": { "type": "number" },
         "mean": { "type": "number" },
-        "stability": { "type": "number" }
+        "stability": { "type": "number" },
+        "stdDev": { "type": "number", "minimum": 0 },
+        "caseOutcomeDriftRate": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "breadth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "datasetCaseCount",
+        "uniqueCaseIdCount",
+        "providerLabelCount",
+        "promptVariantCount",
+        "seedCount"
+      ],
+      "properties": {
+        "datasetCaseCount": { "type": "integer", "minimum": 0 },
+        "uniqueCaseIdCount": { "type": "integer", "minimum": 0 },
+        "providerLabelCount": { "type": "integer", "minimum": 1 },
+        "promptVariantCount": { "type": "integer", "minimum": 1 },
+        "seedCount": { "type": "integer", "minimum": 1 }
       }
     },
     "runSummaries": {
@@ -48,11 +78,21 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["runIndex", "extractionCount", "failures"],
+        "required": [
+          "runIndex",
+          "extractionCount",
+          "failures",
+          "promptVariant",
+          "seedLabel",
+          "providerLabel"
+        ],
         "properties": {
           "runIndex": { "type": "integer", "minimum": 0 },
           "extractionCount": { "type": "integer", "minimum": 0 },
-          "failures": { "type": "integer", "minimum": 0 }
+          "failures": { "type": "integer", "minimum": 0 },
+          "promptVariant": { "type": "string", "minLength": 1 },
+          "seedLabel": { "type": "string", "minLength": 1 },
+          "providerLabel": { "type": "string", "minLength": 1 }
         }
       }
     }
