@@ -26,7 +26,7 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 ## Prompt-04 anti-drift summary (5 bullets)
 - Chunking is char-based and overlap-aware to preserve deterministic shard boundaries.
 - Shards carry `start`/`end` offsets and text slices for global mapping.
-- `shardId` is derived from `sha256(programHash + normalizedTextSlice)`.
+- `shardId` is derived from hash material containing `programHash`, `documentId`, shard parameters, shard range, and shard text slice.
 - Shard-local spans must map back to global document offsets without ambiguity.
 - Overlap tradeoffs are documented for recall-vs-cost behavior.
 

@@ -28,8 +28,10 @@ test("retry helpers compute deterministic backoff and jitter", () => {
 
 test("executeShardsWithCheckpoint retries transient failures and completes run", async () => {
   const shards = await chunkDocument("abcdefghij", "p-hash", {
+    documentId: "doc-1",
     chunkSize: 4,
     overlap: 1,
+    offsetMode: "utf16_code_unit",
   });
 
   const store = new InMemoryCheckpointStore<string>();
@@ -74,8 +76,10 @@ test("executeShardsWithCheckpoint retries transient failures and completes run",
 
 test("executeShardsWithCheckpoint skips completed shards on rerun", async () => {
   const shards = await chunkDocument("abcdef", "p-hash", {
+    documentId: "doc-1",
     chunkSize: 3,
     overlap: 1,
+    offsetMode: "utf16_code_unit",
   });
 
   const store = new InMemoryCheckpointStore<string>();
