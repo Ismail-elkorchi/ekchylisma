@@ -109,6 +109,11 @@ function buildSampleBundle(): EvidenceBundle {
           repairCharsTruncatedCount: 0,
         },
       },
+      multiPassLog: {
+        mode: "draft_validate_repair_finalize",
+        maxPasses: 2,
+        shards: [],
+      },
     },
   };
 }
@@ -119,6 +124,7 @@ function buildReorderedBundle(source: EvidenceBundle): EvidenceBundle {
       checkpointHits: source.diagnostics.checkpointHits,
       promptLog: source.diagnostics.promptLog,
       budgetLog: source.diagnostics.budgetLog,
+      multiPassLog: source.diagnostics.multiPassLog,
       failures: source.diagnostics.failures,
       shardOutcomes: source.diagnostics.shardOutcomes,
       emptyResultKind: source.diagnostics.emptyResultKind,

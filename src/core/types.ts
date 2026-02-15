@@ -221,6 +221,37 @@ export type BudgetLog = {
   };
 };
 
+export type MultiPassStageName =
+  | "draft"
+  | "validate"
+  | "repair"
+  | "finalize";
+
+export type MultiPassStageStatus =
+  | "ok"
+  | "error";
+
+export type MultiPassStageLog = {
+  pass: number;
+  stage: MultiPassStageName;
+  status: MultiPassStageStatus;
+  failureKind: ShardFailureKind | null;
+  message: string | null;
+};
+
+export type MultiPassShardLog = {
+  shardId: string;
+  maxPasses: number;
+  finalPass: number;
+  stages: MultiPassStageLog[];
+};
+
+export type MultiPassLog = {
+  mode: "draft_validate_repair_finalize";
+  maxPasses: number;
+  shards: MultiPassShardLog[];
+};
+
 export type RunDiagnostics = {
   emptyResultKind: EmptyResultKind;
   shardOutcomes: ShardOutcome[];
@@ -228,6 +259,7 @@ export type RunDiagnostics = {
   checkpointHits: number;
   promptLog: PromptLog;
   budgetLog: BudgetLog;
+  multiPassLog: MultiPassLog;
 };
 
 export type EvidenceAttestation = {

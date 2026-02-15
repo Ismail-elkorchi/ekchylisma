@@ -5,6 +5,9 @@ import type {
   EvidenceProvenance,
   Extraction,
   JsonPipelineDiagnostic,
+  MultiPassLog,
+  MultiPassShardLog,
+  MultiPassStageLog,
   PromptLog,
   Program,
   RunBudgets,
@@ -46,12 +49,17 @@ import {
   ProviderError,
   isTransientProviderError,
 } from "../providers/errors.ts";
-import { compilePrompt, hashPromptText } from "./promptCompiler.ts";
+import {
+  compilePrompt,
+  compileRepairPrompt,
+  hashPromptText,
+} from "./promptCompiler.ts";
 
 type ShardRunValue = {
   extractions: Extraction[];
   jsonPipelineLog: JsonPipelineDiagnostic;
   providerRunRecord: ProviderRunRecord;
+  multiPassShardLog: MultiPassShardLog;
 };
 
 type RunShardOptions = {
@@ -61,6 +69,7 @@ type RunShardOptions = {
   provider: Provider;
   documentText: string;
   repairBudgets?: RunBudgets["repair"];
+  multiPassMaxPasses: number;
 };
 
 const DEFAULT_RETRY_POLICY: RetryPolicy = {
@@ -137,6 +146,7 @@ export type RunWithEvidenceOptions = {
   nowMs?: () => number;
   timeBudgetMs?: number;
   repairBudgets?: RunBudgets["repair"];
+  multiPassMaxPasses?: number;
 };
 
 export function buildProviderRequest(
@@ -147,6 +157,29 @@ export function buildProviderRequest(
   return {
     model,
     prompt: compilePrompt(program, shard),
+    schema: program.schema,
+  };
+}
+
+export function buildRepairProviderRequest(
+  program: Program,
+  shard: DocumentShard,
+  model: string,
+  context: {
+    previousResponseText: string;
+    failureKind: ShardFailure["kind"];
+    failureMessage: string;
+    priorPass: number;
+  },
+): ProviderRequest {
+  return {
+    model,
+    prompt: compileRepairPrompt(program, shard, {
+      previousResponseText: context.previousResponseText,
+      failureKind: context.failureKind,
+      failureMessage: context.failureMessage,
+      priorPass: context.priorPass,
+    }),
     schema: program.schema,
   };
 }
@@ -163,6 +196,32 @@ type RawExtraction = {
   grounding?: Extraction["grounding"];
 };
 
+class PayloadShapeFailure extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PayloadShapeFailure";
+  }
+}
+
+class ShardValidationFailure extends Error {
+  readonly causeError: unknown;
+  readonly multiPassShardLog: MultiPassShardLog;
+  readonly jsonPipelineLog: JsonPipelineDiagnostic | null;
+
+  constructor(
+    causeError: unknown,
+    multiPassShardLog: MultiPassShardLog,
+    jsonPipelineLog: JsonPipelineDiagnostic | null,
+  ) {
+    const message = causeError instanceof Error ? causeError.message : String(causeError);
+    super(message);
+    this.name = "ShardValidationFailure";
+    this.causeError = causeError;
+    this.multiPassShardLog = multiPassShardLog;
+    this.jsonPipelineLog = jsonPipelineLog;
+  }
+}
+
 function parseExtractions(payload: unknown): RawExtraction[] {
   if (Array.isArray(payload)) {
     return payload as RawExtraction[];
@@ -175,7 +234,44 @@ function parseExtractions(payload: unknown): RawExtraction[] {
     }
   }
 
-  throw new Error("Provider response must be an array or object with `extractions` array.");
+  throw new PayloadShapeFailure(
+    "Provider response must be an array or object with `extractions` array.",
+  );
+}
+
+function classifyValidationFailureKind(error: unknown): ShardFailure["kind"] {
+  if (error instanceof JsonPipelineFailure) {
+    return "json_pipeline_failure";
+  }
+
+  if (error instanceof PayloadShapeFailure) {
+    return "payload_shape_failure";
+  }
+
+  if (error instanceof QuoteInvariantViolation) {
+    return "quote_invariant_failure";
+  }
+
+  return "unknown_failure";
+}
+
+function normalizeMultiPassMaxPasses(value: number | undefined): number {
+  if (value === undefined) {
+    return 2;
+  }
+
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error("multiPassMaxPasses must be a positive integer.");
+  }
+
+  return value;
+}
+
+function isRepairableValidationFailure(error: unknown): boolean {
+  const kind = classifyValidationFailureKind(error);
+  return kind === "json_pipeline_failure"
+    || kind === "payload_shape_failure"
+    || kind === "quote_invariant_failure";
 }
 
 function defaultSleep(milliseconds: number): Promise<void> {
@@ -271,52 +367,56 @@ function classifyShardFailure(
   shardId: string,
   error: unknown,
 ): ShardFailure {
-  if (error instanceof ProviderError) {
+  const unwrappedError = error instanceof ShardValidationFailure
+    ? error.causeError
+    : error;
+
+  if (unwrappedError instanceof ProviderError) {
     return {
       shardId,
       kind: "provider_error",
-      message: error.message,
-      retryable: error.kind === "transient",
-      errorName: error.name,
+      message: unwrappedError.message,
+      retryable: unwrappedError.kind === "transient",
+      errorName: unwrappedError.name,
     };
   }
 
-  if (error instanceof JsonPipelineFailure) {
+  if (unwrappedError instanceof JsonPipelineFailure) {
     return {
       shardId,
       kind: "json_pipeline_failure",
-      message: error.message,
+      message: unwrappedError.message,
       retryable: false,
-      errorName: error.name,
+      errorName: unwrappedError.name,
     };
   }
 
-  if (error instanceof QuoteInvariantViolation) {
-    return {
-      shardId,
-      kind: "quote_invariant_failure",
-      message: error.message,
-      retryable: false,
-      errorName: error.name,
-    };
-  }
-
-  if (error instanceof Error && error.message.includes("Provider response must be an array")) {
+  if (unwrappedError instanceof PayloadShapeFailure) {
     return {
       shardId,
       kind: "payload_shape_failure",
-      message: error.message,
+      message: unwrappedError.message,
       retryable: false,
-      errorName: error.name,
+      errorName: unwrappedError.name,
+    };
+  }
+
+  if (unwrappedError instanceof QuoteInvariantViolation) {
+    return {
+      shardId,
+      kind: "quote_invariant_failure",
+      message: unwrappedError.message,
+      retryable: false,
+      errorName: unwrappedError.name,
     };
   }
 
   return {
     shardId,
     kind: "unknown_failure",
-    message: error instanceof Error ? error.message : String(error),
+    message: unwrappedError instanceof Error ? unwrappedError.message : String(unwrappedError),
     retryable: false,
-    errorName: error instanceof Error ? error.name : "Error",
+    errorName: unwrappedError instanceof Error ? unwrappedError.name : "Error",
   };
 }
 
@@ -366,45 +466,153 @@ function determineEmptyResultKind(
 async function runShardWithProvider(
   options: RunShardOptions,
 ): Promise<ShardRunValue> {
-  const request = buildProviderRequest(
-    options.program,
-    options.shard,
-    options.model,
-  );
-  const response = await options.provider.generate(request);
-  const parsed = parseJsonWithRepairPipeline(response.text, {
-    repair: options.repairBudgets,
-  });
-  if (!parsed.ok) {
-    throw new JsonPipelineFailure(parsed.error, parsed.log);
+  const stages: MultiPassStageLog[] = [];
+  let lastFailureKind: ShardFailure["kind"] = "unknown_failure";
+  let lastFailureMessage = "Unknown validation failure.";
+  let previousResponseText = "";
+  let lastJsonPipelineLog: JsonPipelineDiagnostic | null = null;
+  let lastError: unknown = new Error("multi-pass execution failed");
+
+  for (let pass = 1; pass <= options.multiPassMaxPasses; pass += 1) {
+    const request = pass === 1
+      ? buildProviderRequest(
+        options.program,
+        options.shard,
+        options.model,
+      )
+      : buildRepairProviderRequest(
+        options.program,
+        options.shard,
+        options.model,
+        {
+          previousResponseText,
+          failureKind: lastFailureKind,
+          failureMessage: lastFailureMessage,
+          priorPass: pass - 1,
+        },
+      );
+
+    let response: Awaited<ReturnType<Provider["generate"]>>;
+    try {
+      response = await options.provider.generate(request);
+      stages.push({
+        pass,
+        stage: "draft",
+        status: "ok",
+        failureKind: null,
+        message: null,
+      });
+    } catch (error) {
+      stages.push({
+        pass,
+        stage: "draft",
+        status: "error",
+        failureKind: "provider_error",
+        message: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+
+    previousResponseText = response.text;
+
+    try {
+      const parsed = parseJsonWithRepairPipeline(response.text, {
+        repair: options.repairBudgets,
+      });
+      if (!parsed.ok) {
+        throw new JsonPipelineFailure(parsed.error, parsed.log);
+      }
+
+      const rawExtractions = parseExtractions(parsed.value);
+      const extractions = rawExtractions.map((raw) => {
+        const localSpan: Span = {
+          offsetMode: raw.span.offsetMode ?? "utf16_code_unit",
+          charStart: raw.span.charStart,
+          charEnd: raw.span.charEnd,
+        };
+
+        const globalSpan = mapShardSpanToDocument(options.shard, localSpan);
+        const extraction: Extraction = {
+          extractionClass: raw.extractionClass,
+          quote: raw.quote,
+          span: globalSpan,
+          attributes: raw.attributes,
+          grounding: raw.grounding ?? "explicit",
+        };
+
+        assertQuoteInvariant(options.documentText, extraction);
+        return extraction;
+      });
+
+      stages.push({
+        pass,
+        stage: "validate",
+        status: "ok",
+        failureKind: null,
+        message: null,
+      });
+      stages.push({
+        pass,
+        stage: "finalize",
+        status: "ok",
+        failureKind: null,
+        message: null,
+      });
+
+      return {
+        extractions,
+        jsonPipelineLog: parsed.log,
+        providerRunRecord: response.runRecord,
+        multiPassShardLog: {
+          shardId: options.shard.shardId,
+          maxPasses: options.multiPassMaxPasses,
+          finalPass: pass,
+          stages,
+        },
+      };
+    } catch (error) {
+      lastError = error;
+      lastFailureKind = classifyValidationFailureKind(error);
+      lastFailureMessage = error instanceof Error ? error.message : String(error);
+      if (error instanceof JsonPipelineFailure) {
+        lastJsonPipelineLog = error.log;
+      }
+
+      stages.push({
+        pass,
+        stage: "validate",
+        status: "error",
+        failureKind: lastFailureKind,
+        message: lastFailureMessage,
+      });
+
+      const canRepair = pass < options.multiPassMaxPasses
+        && isRepairableValidationFailure(error);
+      if (canRepair) {
+        stages.push({
+          pass,
+          stage: "repair",
+          status: "ok",
+          failureKind: lastFailureKind,
+          message: "Repair pass scheduled.",
+        });
+        continue;
+      }
+
+      break;
+    }
   }
 
-  const rawExtractions = parseExtractions(parsed.value);
-  const extractions = rawExtractions.map((raw) => {
-    const localSpan: Span = {
-      offsetMode: raw.span.offsetMode ?? "utf16_code_unit",
-      charStart: raw.span.charStart,
-      charEnd: raw.span.charEnd,
-    };
-
-    const globalSpan = mapShardSpanToDocument(options.shard, localSpan);
-    const extraction: Extraction = {
-      extractionClass: raw.extractionClass,
-      quote: raw.quote,
-      span: globalSpan,
-      attributes: raw.attributes,
-      grounding: raw.grounding ?? "explicit",
-    };
-
-    assertQuoteInvariant(options.documentText, extraction);
-    return extraction;
-  });
-
-  return {
-    extractions,
-    jsonPipelineLog: parsed.log,
-    providerRunRecord: response.runRecord,
-  };
+  throw new ShardValidationFailure(
+    lastError,
+    {
+      shardId: options.shard.shardId,
+      maxPasses: options.multiPassMaxPasses,
+      finalPass: options.multiPassMaxPasses,
+      stages,
+    },
+    lastJsonPipelineLog,
+  );
 }
 
 export async function runExtractionWithProvider(
@@ -429,6 +637,7 @@ export async function runExtractionWithProvider(
   const retryPolicy: RetryPolicy = normalizeRetryPolicy(
     options.retryPolicy ?? DEFAULT_RETRY_POLICY,
   );
+  const multiPassMaxPasses = normalizeMultiPassMaxPasses(undefined);
 
   const shardResults: ExecuteShardResult<ShardRunValue> =
     await executeShardsWithCheckpoint({
@@ -437,14 +646,23 @@ export async function runExtractionWithProvider(
       checkpointStore,
       retryPolicy,
       isTransientError: isTransientProviderError,
-      runShard: (shard) =>
-        runShardWithProvider({
-          program: options.program,
-          shard,
-          model: options.model,
-          provider: options.provider,
-          documentText: options.documentText,
-        }),
+      runShard: async (shard) => {
+        try {
+          return await runShardWithProvider({
+            program: options.program,
+            shard,
+            model: options.model,
+            provider: options.provider,
+            documentText: options.documentText,
+            multiPassMaxPasses,
+          });
+        } catch (error) {
+          if (error instanceof ShardValidationFailure) {
+            throw error.causeError;
+          }
+          throw error;
+        }
+      },
     });
 
   const jsonPipelineLogs: JsonPipelineShardLog[] = shardResults.map((entry) => ({
@@ -476,6 +694,7 @@ export async function runWithEvidence(
   const random = options.random ?? Math.random;
   const sleep = options.sleep ?? defaultSleep;
   const nowMs = options.nowMs ?? Date.now;
+  const multiPassMaxPasses = normalizeMultiPassMaxPasses(options.multiPassMaxPasses);
 
   const startedAtMs = readClockMs(nowMs);
   const timeBudgetMs = normalizeTimeBudgetMs(options.timeBudgetMs);
@@ -543,6 +762,7 @@ export async function runWithEvidence(
 
   const shardOutcomes: ShardOutcome[] = [];
   const failures: ShardFailure[] = [];
+  const multiPassShardLogs: MultiPassShardLog[] = [];
   const promptLog: PromptLog = {
     programHash: options.program.programHash,
     shardPromptHashes: [],
@@ -574,6 +794,7 @@ export async function runWithEvidence(
         providerRunRecord: checkpointValue.providerRunRecord,
         jsonPipelineLog: checkpointValue.jsonPipelineLog,
       });
+      multiPassShardLogs.push(checkpointValue.multiPassShardLog);
       continue;
     }
 
@@ -593,6 +814,20 @@ export async function runWithEvidence(
         attempts: 0,
         extractions: [],
         failure,
+      });
+      multiPassShardLogs.push({
+        shardId: shard.shardId,
+        maxPasses: multiPassMaxPasses,
+        finalPass: 0,
+        stages: [
+          {
+            pass: 0,
+            stage: "draft",
+            status: "error",
+            failureKind: "budget_exhausted",
+            message: "Run time budget exhausted before shard execution.",
+          },
+        ],
       });
       continue;
     }
@@ -616,6 +851,20 @@ export async function runWithEvidence(
           extractions: [],
           failure,
         });
+        multiPassShardLogs.push({
+          shardId: shard.shardId,
+          maxPasses: multiPassMaxPasses,
+          finalPass: Math.max(0, attempt - 1),
+          stages: [
+            {
+              pass: Math.max(0, attempt - 1),
+              stage: "draft",
+              status: "error",
+              failureKind: "budget_exhausted",
+              message: "Run time budget exhausted before provider attempt.",
+            },
+          ],
+        });
         break;
       }
 
@@ -627,6 +876,7 @@ export async function runWithEvidence(
           provider: options.provider,
           documentText: normalized.text,
           repairBudgets: normalizedRepairBudgets,
+          multiPassMaxPasses,
         });
 
         aggregateRepairBudgetHits(shardValue.jsonPipelineLog, repairBudgetHitCounters);
@@ -642,6 +892,7 @@ export async function runWithEvidence(
           providerRunRecord: shardValue.providerRunRecord,
           jsonPipelineLog: shardValue.jsonPipelineLog,
         });
+        multiPassShardLogs.push(shardValue.multiPassShardLog);
         break;
       } catch (error) {
         if (shouldRetry(error, attempt, retryPolicy, isTransientProviderError)) {
@@ -653,7 +904,12 @@ export async function runWithEvidence(
           continue;
         }
 
-        if (error instanceof JsonPipelineFailure) {
+        if (error instanceof ShardValidationFailure) {
+          multiPassShardLogs.push(error.multiPassShardLog);
+          if (error.jsonPipelineLog !== null) {
+            aggregateRepairBudgetHits(error.jsonPipelineLog, repairBudgetHitCounters);
+          }
+        } else if (error instanceof JsonPipelineFailure) {
           aggregateRepairBudgetHits(error.log, repairBudgetHitCounters);
         }
         const failure = classifyShardFailure(shard.shardId, error);
@@ -691,6 +947,11 @@ export async function runWithEvidence(
     checkpointHits: shardOutcomes.filter((outcome) => outcome.fromCheckpoint).length,
     promptLog,
     budgetLog,
+    multiPassLog: {
+      mode: "draft_validate_repair_finalize",
+      maxPasses: multiPassMaxPasses,
+      shards: multiPassShardLogs,
+    },
   };
 
   return {

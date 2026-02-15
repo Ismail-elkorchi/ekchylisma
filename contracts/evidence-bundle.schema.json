@@ -128,7 +128,8 @@
         "failures",
         "checkpointHits",
         "promptLog",
-        "budgetLog"
+        "budgetLog",
+        "multiPassLog"
       ],
       "properties": {
         "emptyResultKind": {
@@ -260,6 +261,79 @@
                 "repairCharsTruncatedCount": {
                   "type": "integer",
                   "minimum": 0
+                }
+              }
+            }
+          }
+        },
+        "multiPassLog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "maxPasses", "shards"],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "const": "draft_validate_repair_finalize"
+            },
+            "maxPasses": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "shards": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["shardId", "maxPasses", "finalPass", "stages"],
+                "properties": {
+                  "shardId": {
+                    "type": "string"
+                  },
+                  "maxPasses": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "finalPass": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "stages": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["pass", "stage", "status", "failureKind", "message"],
+                      "properties": {
+                        "pass": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "stage": {
+                          "type": "string",
+                          "enum": ["draft", "validate", "repair", "finalize"]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["ok", "error"]
+                        },
+                        "failureKind": {
+                          "type": ["string", "null"],
+                          "enum": [
+                            "provider_error",
+                            "json_pipeline_failure",
+                            "payload_shape_failure",
+                            "quote_invariant_failure",
+                            "budget_exhausted",
+                            "unknown_failure",
+                            null
+                          ]
+                        },
+                        "message": {
+                          "type": ["string", "null"]
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }

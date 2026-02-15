@@ -233,3 +233,15 @@
 - Consequence:
   - CI blocks merges that violate semantic identifier grammar or boundary policy.
   - Regression records require source-linked quote evidence and deterministic identifiers.
+
+## ADR-0028: multi-pass-execution-model
+- Date: 2026-02-15
+- Context: REQ-8.2.1 required a deterministic multi-pass execution pipeline. Single-pass shard processing converted first-pass parse/shape/quote errors into terminal failures even when a corrected response was available.
+- Decision:
+  - Add bounded shard pass execution with fixed stage sequence: `draft -> validate -> repair -> finalize`.
+  - Add `buildRepairProviderRequest()` and `compileRepairPrompt()` for deterministic repair-pass prompt construction.
+  - Add `diagnostics.multiPassLog` with per-shard stage entries including pass index, stage, status, failure kind, and failure message.
+  - Add regression harness support for scripted `multi_pass_v1` provider responses in benchmark and runtime tests.
+- Consequence:
+  - First-pass payload-shape and quote-invariant failures can converge on pass two without changing retry semantics for provider transport failures.
+  - Evidence bundles include deterministic stage logs for pass-by-pass execution review.

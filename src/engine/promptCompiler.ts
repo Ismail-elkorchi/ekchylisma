@@ -23,6 +23,13 @@ export type PromptBoundaryMarkers = {
   documentEndMarker: CompiledPromptParts["documentEndMarker"];
 };
 
+export type RepairPromptContext = {
+  previousResponseText: string;
+  failureKind: string;
+  failureMessage: string;
+  priorPass: number;
+};
+
 export const PROMPT_DOCUMENT_START_MARKER: CompiledPromptParts["documentStartMarker"] =
   "BEGIN_UNTRUSTED_DOCUMENT";
 export const PROMPT_DOCUMENT_END_MARKER: CompiledPromptParts["documentEndMarker"] =
@@ -123,5 +130,29 @@ export function compilePrompt(
     "",
     "### REQUIRED OUTPUT",
     "Return JSON only. Do not include markdown fences.",
+  ].join("\n");
+}
+
+export function compileRepairPrompt(
+  program: Program,
+  shard: DocumentShard,
+  context: RepairPromptContext,
+  options: PromptCompilerOptions = {},
+): string {
+  const basePrompt = compilePrompt(program, shard, options);
+
+  return [
+    "### REPAIR PASS CONTEXT",
+    `PRIOR_PASS: ${context.priorPass}`,
+    `FAILURE_KIND: ${context.failureKind}`,
+    `FAILURE_MESSAGE: ${context.failureMessage}`,
+    "PREVIOUS_RESPONSE_TEXT_BEGIN",
+    context.previousResponseText,
+    "PREVIOUS_RESPONSE_TEXT_END",
+    "",
+    basePrompt,
+    "",
+    "### REPAIR REQUIREMENTS",
+    "Repair the previous response and return valid JSON only.",
   ].join("\n");
 }
