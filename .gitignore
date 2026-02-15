@@ -2,3 +2,5 @@
 /.codex/
 /node_modules/
 /dist/
+/bench/results/*.json
+!/bench/results/.gitkeep
