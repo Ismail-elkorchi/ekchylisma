@@ -142,6 +142,32 @@ async function run(): Promise<void> {
     }
   }
 
+  const dependabotConfig = await readFile(".github/dependabot.yml", "utf8");
+  const dependabotEcosystems = dependabotConfig.match(
+    /^\s*-\s*package-ecosystem:\s*["'][^"']+["']\s*$/gm,
+  ) ?? [];
+  if (dependabotEcosystems.length === 0) {
+    throw new Error("Dependabot config must define at least one package ecosystem.");
+  }
+
+  const dependabotLimitLines = dependabotConfig
+    .split("\n")
+    .filter((line) => line.includes("open-pull-requests-limit:"));
+  if (dependabotLimitLines.length !== dependabotEcosystems.length) {
+    throw new Error(
+      `Dependabot config must define open-pull-requests-limit for every ecosystem (${dependabotEcosystems.length} expected, ${dependabotLimitLines.length} found).`,
+    );
+  }
+
+  const invalidDependabotLimitLines = dependabotLimitLines.filter(
+    (line) => !/^\s*open-pull-requests-limit:\s*0\s*$/.test(line),
+  );
+  if (invalidDependabotLimitLines.length > 0) {
+    throw new Error(
+      `Dependabot open-pull-requests-limit must be 0 for every ecosystem. Invalid line(s): ${invalidDependabotLimitLines.map((line) => line.trim()).join(" | ")}`,
+    );
+  }
+
   const ciWorkflow = await readFile(".github/workflows/ci.yml", "utf8");
   if (!ciWorkflow.includes("permissions:")) {
     throw new Error("CI workflow must declare explicit permissions.");

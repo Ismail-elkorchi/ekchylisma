@@ -144,3 +144,13 @@
   - Use deterministic canonicalization (`ekchylisma-json-c14n-v1`) and `HMAC-SHA-256` with JWK `kty=oct`.
 - Rationale: A dependency-free integrity check improves evidence transport safety across runtimes.
 - Consequence: Integrators must manage key distribution and trust policy outside the library.
+
+## ADR-0020: Disable Dependabot version-update PRs; keep config for security-update customization
+- Date: 2026-02-15
+- Context: Scheduled version-update PRs can accumulate open PRs and bypass repository-specific verification discipline.
+- Decision:
+  - Keep `.github/dependabot.yml` in the repository.
+  - Set `open-pull-requests-limit: 0` for each configured ecosystem.
+  - Keep schedule and ecosystem configuration so security-related configuration remains explicit.
+- Rationale: This keeps update work inside reviewed maintainer PRs that follow the repository template, pinned-SHA checks, and full runtime matrix verification.
+- Consequence: Dependency and workflow updates are applied through maintainer-authored PRs instead of unattended version-update PR streams.
