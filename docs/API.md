@@ -7,7 +7,7 @@
 - `trimTrailingWhitespacePerLine(text)` from `src/core/normalize.ts`
 - `normalizeText(text, options)` from `src/core/normalize.ts`
 - `assertQuoteInvariant(docText, extraction)` from `src/core/invariants.ts`
-- Types from `src/core/types.ts`: `DocumentInput`, `Span`, `Extraction`, `EvidenceBundle`, `EvidenceAttestation`, `Program`, `PromptHashRecord`, `PromptLog`, `RunBudgets`, `BudgetLog`, `ShardOutcome`, `RunDiagnostics`
+- Types from `src/core/types.ts`: `DocumentInput`, `Span`, `Extraction`, `EvidenceBundle`, `EvidenceAttestation`, `Program`, `PromptHashRecord`, `PromptLog`, `RunBudgets`, `BudgetLog`, `MultiPassLog`, `RunRepairLog`, `ShardOutcome`, `RunDiagnostics`
 - Engine chunking from `src/engine/chunk.ts`: `chunkDocument(normalizedText, programHash, options)` where `options` include `documentId`, `chunkSize`, `overlap`, `offsetMode`
 - Span mapping from `src/engine/mapSpan.ts`: `mapShardSpanToDocument(shard, shardSpan)`
 - Checkpointing from `src/engine/checkpoint.ts`: `CheckpointStore`, `InMemoryCheckpointStore`, `buildCheckpointKey(runId, shardId)`
@@ -31,6 +31,9 @@
     - `multiPassLog.mode`: `draft_validate_repair_finalize`
     - `multiPassLog.maxPasses`: configured per-shard pass cap
     - `multiPassLog.shards[*]`: deterministic stage log with pass number, stage, status, and typed failure metadata
+  - `runWithEvidence(options)` diagnostics include `repairLog`:
+    - `repairLog.entries[*]`: shard-level typed repair metadata (`parseOk`, `changed`, applied step names, and repair budget truncation flags)
+    - Repair log entries are redacted metadata only and contain no raw provider text
   - `buildProviderRequest(program, shard, model)`
   - `buildRepairProviderRequest(program, shard, model, context)`
 - Evidence attestation:

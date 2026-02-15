@@ -20,6 +20,7 @@ import "./providers/real-providers.test.ts";
 import "./regression/semantic-identifiers-and-placeholder-ban.test.ts";
 import "./regression/multi-pass-execution-model.test.ts";
 import "./regression/provider-structured-generate-split.test.ts";
+import "./regression/repair-log-in-diagnostics.test.ts";
 import "./schema/validate.test.ts";
 import "./schema/to-json-schema.test.ts";
 import "./viz/html.test.ts";

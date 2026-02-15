@@ -112,6 +112,9 @@ function sampleBundle(runId: string) {
         maxPasses: 2,
         shards: [],
       },
+      repairLog: {
+        entries: [],
+      },
     },
   };
 }

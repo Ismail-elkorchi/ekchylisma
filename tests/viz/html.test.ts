@@ -130,6 +130,9 @@ const sampleBundle = {
       maxPasses: 2,
       shards: [],
     },
+    repairLog: {
+      entries: [],
+    },
   },
 };
 

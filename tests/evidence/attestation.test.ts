@@ -114,6 +114,9 @@ function buildSampleBundle(): EvidenceBundle {
         maxPasses: 2,
         shards: [],
       },
+      repairLog: {
+        entries: [],
+      },
     },
   };
 }
@@ -125,6 +128,7 @@ function buildReorderedBundle(source: EvidenceBundle): EvidenceBundle {
       promptLog: source.diagnostics.promptLog,
       budgetLog: source.diagnostics.budgetLog,
       multiPassLog: source.diagnostics.multiPassLog,
+      repairLog: source.diagnostics.repairLog,
       failures: source.diagnostics.failures,
       shardOutcomes: source.diagnostics.shardOutcomes,
       emptyResultKind: source.diagnostics.emptyResultKind,

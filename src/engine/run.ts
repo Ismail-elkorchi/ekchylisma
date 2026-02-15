@@ -10,6 +10,7 @@ import type {
   MultiPassStageLog,
   PromptLog,
   Program,
+  RunRepairLogEntry,
   RunBudgets,
   RunDiagnostics,
   ShardFailure,
@@ -448,6 +449,26 @@ function aggregateRepairBudgetHits(
   }
 }
 
+function toRunRepairLogEntry(
+  shardId: string,
+  pass: number,
+  diagnostic: JsonPipelineDiagnostic,
+): RunRepairLogEntry {
+  return {
+    shardId,
+    pass,
+    parseOk: diagnostic.parse.ok,
+    changed: diagnostic.repair.changed,
+    appliedSteps: diagnostic.repair.steps.filter((step) => step.applied).map((step) => step.step),
+    budget: {
+      maxCandidateChars: diagnostic.repair.budget.maxCandidateChars,
+      maxRepairChars: diagnostic.repair.budget.maxRepairChars,
+      candidateCharsTruncated: diagnostic.repair.budget.candidateCharsTruncated,
+      repairCharsTruncated: diagnostic.repair.budget.repairCharsTruncated,
+    },
+  };
+}
+
 function determineEmptyResultKind(
   extractions: Extraction[],
   failures: ShardFailure[],
@@ -765,6 +786,7 @@ export async function runWithEvidence(
   const shardOutcomes: ShardOutcome[] = [];
   const failures: ShardFailure[] = [];
   const multiPassShardLogs: MultiPassShardLog[] = [];
+  const repairLogEntries: RunRepairLogEntry[] = [];
   const promptLog: PromptLog = {
     programHash: options.program.programHash,
     shardPromptHashes: [],
@@ -797,6 +819,13 @@ export async function runWithEvidence(
         jsonPipelineLog: checkpointValue.jsonPipelineLog,
       });
       multiPassShardLogs.push(checkpointValue.multiPassShardLog);
+      repairLogEntries.push(
+        toRunRepairLogEntry(
+          shard.shardId,
+          checkpointValue.multiPassShardLog.finalPass,
+          checkpointValue.jsonPipelineLog,
+        ),
+      );
       continue;
     }
 
@@ -895,6 +924,13 @@ export async function runWithEvidence(
           jsonPipelineLog: shardValue.jsonPipelineLog,
         });
         multiPassShardLogs.push(shardValue.multiPassShardLog);
+        repairLogEntries.push(
+          toRunRepairLogEntry(
+            shard.shardId,
+            shardValue.multiPassShardLog.finalPass,
+            shardValue.jsonPipelineLog,
+          ),
+        );
         break;
       } catch (error) {
         if (shouldRetry(error, attempt, retryPolicy, isTransientProviderError)) {
@@ -910,9 +946,19 @@ export async function runWithEvidence(
           multiPassShardLogs.push(error.multiPassShardLog);
           if (error.jsonPipelineLog !== null) {
             aggregateRepairBudgetHits(error.jsonPipelineLog, repairBudgetHitCounters);
+            repairLogEntries.push(
+              toRunRepairLogEntry(
+                shard.shardId,
+                error.multiPassShardLog.finalPass,
+                error.jsonPipelineLog,
+              ),
+            );
           }
         } else if (error instanceof JsonPipelineFailure) {
           aggregateRepairBudgetHits(error.log, repairBudgetHitCounters);
+          repairLogEntries.push(
+            toRunRepairLogEntry(shard.shardId, attempt, error.log),
+          );
         }
         const failure = classifyShardFailure(shard.shardId, error);
         failures.push(failure);
@@ -953,6 +999,9 @@ export async function runWithEvidence(
       mode: "draft_validate_repair_finalize",
       maxPasses: multiPassMaxPasses,
       shards: multiPassShardLogs,
+    },
+    repairLog: {
+      entries: repairLogEntries,
     },
   };
 

@@ -252,6 +252,24 @@ export type MultiPassLog = {
   shards: MultiPassShardLog[];
 };
 
+export type RunRepairLogEntry = {
+  shardId: string;
+  pass: number;
+  parseOk: boolean;
+  changed: boolean;
+  appliedSteps: JsonRepairStepName[];
+  budget: {
+    maxCandidateChars: number | null;
+    maxRepairChars: number | null;
+    candidateCharsTruncated: boolean;
+    repairCharsTruncated: boolean;
+  };
+};
+
+export type RunRepairLog = {
+  entries: RunRepairLogEntry[];
+};
+
 export type RunDiagnostics = {
   emptyResultKind: EmptyResultKind;
   shardOutcomes: ShardOutcome[];
@@ -260,6 +278,7 @@ export type RunDiagnostics = {
   promptLog: PromptLog;
   budgetLog: BudgetLog;
   multiPassLog: MultiPassLog;
+  repairLog: RunRepairLog;
 };
 
 export type EvidenceAttestation = {
