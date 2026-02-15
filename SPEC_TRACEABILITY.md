@@ -10,13 +10,13 @@ Legend:
 | REQ | Code Location(s) | Test(s) | CI Job(s) | Status | Gap / Rationale |
 | --- | --- | --- | --- | --- | --- |
 | REQ-2.3.1 | `package.json` | `tools/orphan-check.ts` | `node` | implemented | `dependencies` is `{}`. |
-| REQ-2.3.2 | `docs/DEVDEPS.md`, `docs/DECISIONS.md`, `package.json` (`devDependencies.miniflare`) | `tests/workers/harness.test.ts` | `workers` | implemented | `miniflare` is documented with explicit debt rationale in ADR-0015. |
-| REQ-2.3.3 | `docs/PORTABILITY.md`, `examples/*`, `tests/workers/harness.test.ts` | `tests/run.ts`, `tests/workers/harness.test.ts` | `node`, `deno`, `bun`, `workers` | implemented | Required runtime targets are covered; browser remains best-effort. |
+| REQ-2.3.2 | `docs/DEVDEPS.md`, `docs/DECISIONS.md`, `package.json` (`devDependencies.miniflare`, `devDependencies.typescript`) | `tests/workers/harness.test.ts`, `tests/browser/harness.test.ts` | `workers`, `browser` | implemented | Dev dependencies are tracked with explicit debt rationale in ADR-0015 and ADR-0017. |
+| REQ-2.3.3 | `docs/PORTABILITY.md`, `examples/*`, `tests/workers/harness.test.ts`, `tests/browser/harness.test.ts` | `tests/run.ts`, `tests/workers/harness.test.ts`, `tests/browser/harness.test.ts` | `node`, `deno`, `bun`, `workers`, `browser` | implemented | Required targets are covered and browser compatibility is validated by bundling harness. |
 | REQ-4.1.1 | `src/core/*`, `src/providers/*` | `tests/core/*`, `tests/providers/*` | `node`, `deno`, `bun` | implemented | Core uses Web APIs (`fetch`, `crypto.subtle`, streams). |
 | REQ-4.1.2 | `src/index.ts`, `src-node/fs.ts`, `package.json` exports | `tests/io/jsonl.test.ts` | `node` | implemented | Node-only fs isolated under `./node` subpath. |
 | REQ-4.2.1 | `.github/workflows/ci.yml` | `tests/run.ts` | `node`, `deno`, `bun` | implemented | Multi-runtime CI matrix exists. |
 | REQ-4.2.2 | `examples/workers/worker.ts`, `tests/workers/harness.test.ts`, `package.json` (`test:workers`) | `tests/workers/harness.test.ts` | `workers` | implemented | Workers compatibility validated by Miniflare harness in CI. |
-| REQ-4.2.3 | n/a | n/a | n/a | gap | Browser harness not yet implemented. |
+| REQ-4.2.3 | `examples/browser/index.html`, `examples/browser/app.ts`, `tests/browser/harness.test.ts`, `package.json` (`test:browser`) | `tests/browser/harness.test.ts` | `browser` | implemented | Browser compatibility is validated by platform-browser bundle harness in CI. |
 | REQ-6.1.1 | `src/core/types.ts` (`DocumentInput`), `src/engine/run.ts` (`runWithEvidence`) | `tests/engine/run-with-evidence.test.ts` | `node`, `deno`, `bun` | implemented | Document input is explicit and run through public API. |
 | REQ-6.2.1 | `src/core/types.ts` (`Program`) | `tests/providers/fake-e2e.test.ts` | `node`, `deno`, `bun` | partial | Program is structured but does not yet mirror full master-spec shape. |
 | REQ-6.3.1 | `src/schema/s.ts`, `src/schema/validate.ts`, `src/schema/toJsonSchema.ts`, `contracts/json-schema-subset.schema.json` | `tests/schema/*` | `node`, `deno`, `bun` | implemented | Subset documented + validated + generated. |
@@ -43,7 +43,7 @@ Legend:
 | REQ-11.2.1 | `src/eval/runSuite.ts` | `tests/eval/run-suite.test.ts` | `node`, `deno`, `bun` | partial | Variance harness exists; seed/temperature/prompt-variant controls limited. |
 | REQ-11.3.1 | n/a | n/a | n/a | gap | Long-text fixture suite absent. |
 | REQ-12.1 | GitHub PR workflow + branch protections (process) | n/a | `pull_request` workflows | implemented | Enforced by process in this repository workflow. |
-| REQ-12.2 | `.github/workflows/ci.yml`, `.github/dependabot.yml`, `tools/oss-check.ts` | CI status checks, `npm run oss-check` | `node`, `deno`, `bun`, `workers` | implemented | CI runs on `pull_request`, uses least-privilege permissions, and pins actions by SHA. |
+| REQ-12.2 | `.github/workflows/ci.yml`, `.github/dependabot.yml`, `tools/oss-check.ts` | CI status checks, `npm run oss-check` | `node`, `deno`, `bun`, `workers`, `browser` | implemented | CI runs on `pull_request`, uses least-privilege permissions, and pins actions by SHA. |
 | REQ-12.3 | `tools/orphan-check.ts`, `tools/oss-check.ts`, `docs/OSS_PRACTICES.md`, `package.json` (`check`) | `npm run orphan-check`, `npm run oss-check` | `node` | implemented | Export/contract/doc coherence and OSS operations checks are enforced in default validation. |
 | REQ-13.1 | `LICENSE`, `NOTICE` | n/a | n/a | implemented | Apache-2.0 license text and project notice are present at repo root. |
 | REQ-14.1 | `src/*`, `src-node/*`, `contracts/*`, `docs/*`, `tests/*`, `tools/*` | `npm run orphan-check` | `node` | partial | Layout is close; differs from exact `/src/node` and `/scripts` naming convention. |
