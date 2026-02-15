@@ -27,6 +27,7 @@
     },
     "extractions": {
       "type": "array",
+      "description": "Final extractions with top-level char offsets and mirrored span fields.",
       "items": {
         "$ref": "./extraction.schema.json"
       }

@@ -1,8 +1,10 @@
 import type { Extraction } from "./types.ts";
 
 export type QuoteInvariantErrorCode =
-  | "INVALID_SPAN"
-  | "SPAN_OUT_OF_RANGE"
+  | "INVALID_OFFSETS"
+  | "OFFSETS_OUT_OF_RANGE"
+  | "UNSUPPORTED_OFFSET_MODE"
+  | "OFFSET_MISMATCH"
   | "QUOTE_MISMATCH";
 
 export type QuoteInvariantError = {
@@ -28,16 +30,45 @@ export class QuoteInvariantViolation extends Error {
 
 export function assertQuoteInvariant(
   docText: string,
-  extraction: Pick<Extraction, "quote" | "span">,
+  extraction: Pick<Extraction, "quote" | "offsetMode" | "charStart" | "charEnd" | "span">,
 ): void {
-  const { quote, span } = extraction;
-  const { charStart, charEnd } = span;
+  const { quote, offsetMode, charStart, charEnd, span } = extraction;
+
+  if (offsetMode !== "utf16_code_unit") {
+    throw new QuoteInvariantViolation({
+      name: "QuoteInvariantError",
+      code: "UNSUPPORTED_OFFSET_MODE",
+      message: "Only utf16_code_unit offsets are supported.",
+      quote,
+      actualQuote: "",
+      charStart,
+      charEnd,
+      docLength: docText.length,
+    });
+  }
 
   if (!Number.isInteger(charStart) || !Number.isInteger(charEnd) || charStart > charEnd) {
     throw new QuoteInvariantViolation({
       name: "QuoteInvariantError",
-      code: "INVALID_SPAN",
-      message: "Span must contain integer bounds where charStart <= charEnd.",
+      code: "INVALID_OFFSETS",
+      message: "Offsets must contain integer bounds where charStart <= charEnd.",
+      quote,
+      actualQuote: "",
+      charStart,
+      charEnd,
+      docLength: docText.length,
+    });
+  }
+
+  if (
+    span.offsetMode !== offsetMode
+    || span.charStart !== charStart
+    || span.charEnd !== charEnd
+  ) {
+    throw new QuoteInvariantViolation({
+      name: "QuoteInvariantError",
+      code: "OFFSET_MISMATCH",
+      message: "Top-level offsets must match span offsets.",
       quote,
       actualQuote: "",
       charStart,
@@ -49,8 +80,8 @@ export function assertQuoteInvariant(
   if (charStart < 0 || charEnd > docText.length) {
     throw new QuoteInvariantViolation({
       name: "QuoteInvariantError",
-      code: "SPAN_OUT_OF_RANGE",
-      message: "Span must be within document bounds.",
+      code: "OFFSETS_OUT_OF_RANGE",
+      message: "Offsets must be within document bounds.",
       quote,
       actualQuote: "",
       charStart,

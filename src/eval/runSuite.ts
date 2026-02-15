@@ -46,8 +46,8 @@ export type EvalSuiteResult = {
 function extractionKey(extraction: Extraction): string {
   return [
     extraction.extractionClass,
-    extraction.span.charStart,
-    extraction.span.charEnd,
+    extraction.charStart,
+    extraction.charEnd,
     extraction.quote,
   ].join("|");
 }
@@ -79,8 +79,12 @@ function average(values: number[]): number {
 function shapeIsValid(extraction: Extraction): boolean {
   return typeof extraction.extractionClass === "string"
     && typeof extraction.quote === "string"
-    && typeof extraction.span.charStart === "number"
-    && typeof extraction.span.charEnd === "number";
+    && extraction.offsetMode === "utf16_code_unit"
+    && typeof extraction.charStart === "number"
+    && typeof extraction.charEnd === "number"
+    && extraction.span.charStart === extraction.charStart
+    && extraction.span.charEnd === extraction.charEnd
+    && extraction.span.offsetMode === extraction.offsetMode;
 }
 
 async function buildFakeProvider(

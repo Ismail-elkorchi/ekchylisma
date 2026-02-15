@@ -191,10 +191,13 @@ export function buildRepairProviderRequest(
 type RawExtraction = {
   extractionClass: string;
   quote: string;
-  span: {
+  offsetMode?: Span["offsetMode"];
+  charStart?: number;
+  charEnd?: number;
+  span?: {
     offsetMode?: Span["offsetMode"];
-    charStart: number;
-    charEnd: number;
+    charStart?: number;
+    charEnd?: number;
   };
   attributes?: Record<string, unknown>;
   grounding?: Extraction["grounding"];
@@ -241,6 +244,45 @@ function parseExtractions(payload: unknown): RawExtraction[] {
   throw new PayloadShapeFailure(
     "Provider response must be an array or object with `extractions` array.",
   );
+}
+
+function parseRawExtractionSpan(raw: RawExtraction): Span {
+  const hasTopLevel =
+    raw.offsetMode !== undefined || raw.charStart !== undefined || raw.charEnd !== undefined;
+  const hasSpan = raw.span !== undefined;
+
+  const offsetMode = raw.offsetMode ?? raw.span?.offsetMode ?? "utf16_code_unit";
+  const resolvedCharStart = raw.charStart ?? raw.span?.charStart;
+  const resolvedCharEnd = raw.charEnd ?? raw.span?.charEnd;
+
+  if (!Number.isInteger(resolvedCharStart) || !Number.isInteger(resolvedCharEnd)) {
+    throw new PayloadShapeFailure("Each extraction must include integer charStart/charEnd offsets.");
+  }
+
+  const charStart = resolvedCharStart as number;
+  const charEnd = resolvedCharEnd as number;
+
+  if (!hasTopLevel && !hasSpan) {
+    throw new PayloadShapeFailure("Each extraction must include offset fields.");
+  }
+
+  if (
+    hasTopLevel
+    && hasSpan
+    && (
+      raw.span!.offsetMode !== undefined && raw.span!.offsetMode !== offsetMode
+      || raw.span!.charStart !== undefined && raw.span!.charStart !== charStart
+      || raw.span!.charEnd !== undefined && raw.span!.charEnd !== charEnd
+    )
+  ) {
+    throw new PayloadShapeFailure("Extraction offset fields must match between top-level and span.");
+  }
+
+  return {
+    offsetMode,
+    charStart,
+    charEnd,
+  };
 }
 
 function classifyValidationFailureKind(error: unknown): ShardFailure["kind"] {
@@ -551,16 +593,14 @@ async function runShardWithProvider(
 
       const rawExtractions = parseExtractions(parsed.value);
       const extractions = rawExtractions.map((raw) => {
-        const localSpan: Span = {
-          offsetMode: raw.span.offsetMode ?? "utf16_code_unit",
-          charStart: raw.span.charStart,
-          charEnd: raw.span.charEnd,
-        };
-
+        const localSpan = parseRawExtractionSpan(raw);
         const globalSpan = mapShardSpanToDocument(options.shard, localSpan);
         const extraction: Extraction = {
           extractionClass: raw.extractionClass,
           quote: raw.quote,
+          offsetMode: globalSpan.offsetMode,
+          charStart: globalSpan.charStart,
+          charEnd: globalSpan.charEnd,
           span: globalSpan,
           attributes: raw.attributes,
           grounding: raw.grounding ?? "explicit",

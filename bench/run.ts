@@ -143,12 +143,21 @@ function computeVariance(values: number[]): number {
 function shapeIsValid(extraction: {
   extractionClass: unknown;
   quote: unknown;
-  span: { charStart: unknown; charEnd: unknown };
+  charStart: unknown;
+  charEnd: unknown;
+  offsetMode: unknown;
+  span: { charStart: unknown; charEnd: unknown; offsetMode: unknown };
 }): boolean {
   return typeof extraction.extractionClass === "string"
     && typeof extraction.quote === "string"
+    && extraction.offsetMode === "utf16_code_unit"
+    && typeof extraction.charStart === "number"
+    && typeof extraction.charEnd === "number"
     && typeof extraction.span?.charStart === "number"
-    && typeof extraction.span?.charEnd === "number";
+    && typeof extraction.span?.charEnd === "number"
+    && extraction.span?.offsetMode === "utf16_code_unit"
+    && extraction.span.charStart === extraction.charStart
+    && extraction.span.charEnd === extraction.charEnd;
 }
 
 function defaultFailureMessage(kind: MultiPassScript["failureKind"]): string {
@@ -233,7 +242,8 @@ async function runCase(
   bundleExtractions: {
     extractionClass: string;
     quote: string;
-    span: { charStart: number; charEnd: number };
+    charStart: number;
+    charEnd: number;
   }[];
 }> {
   const programHash = await sha256Hex(
@@ -334,10 +344,8 @@ async function runCase(
     bundleExtractions: bundle.extractions.map((item) => ({
       extractionClass: item.extractionClass,
       quote: item.quote,
-      span: {
-        charStart: item.span.charStart,
-        charEnd: item.span.charEnd,
-      },
+      charStart: item.charStart,
+      charEnd: item.charEnd,
     })),
   };
 }
@@ -366,8 +374,8 @@ async function runTrial(
         extractionKey(
           extraction.extractionClass,
           extraction.quote,
-          extraction.span.charStart,
-          extraction.span.charEnd,
+          extraction.charStart,
+          extraction.charEnd,
         )),
     );
 

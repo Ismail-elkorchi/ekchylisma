@@ -290,3 +290,14 @@
 - Consequence:
   - Callers can provide legacy-compatible inputs, but run artifacts and diagnostics always carry a deterministic structured program model.
   - Program shape drift is contract-checked and regression-tested.
+
+## ADR-0033: extraction-offsets-alignment
+- Date: 2026-02-15
+- Context: REQ-6.4.1 and REQ-7.1.1 require final extractions to carry explicit top-level character offsets into the original document and enforce deterministic quote/offset validation rules.
+- Decision:
+  - Extend `Extraction` to require top-level `offsetMode`, `charStart`, and `charEnd` while preserving `span` as a mirrored field.
+  - Expand shard parsing to accept top-level offsets, legacy `span` offsets, or both, and reject mismatched dual representations.
+  - Update quote invariant enforcement to validate offset mode support, top-level/span consistency, bounds, and exact quote matching.
+- Consequence:
+  - Evidence bundles carry unambiguous top-level offsets on every extraction and reject ambiguous offset payloads deterministically.
+  - Consumers can rely on one explicit offset surface (`charStart`/`charEnd`) without silent span drift.
