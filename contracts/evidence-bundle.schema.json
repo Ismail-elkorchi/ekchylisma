@@ -129,7 +129,8 @@
         "checkpointHits",
         "promptLog",
         "budgetLog",
-        "multiPassLog"
+        "multiPassLog",
+        "repairLog"
       ],
       "properties": {
         "emptyResultKind": {
@@ -331,6 +332,74 @@
                         "message": {
                           "type": ["string", "null"]
                         }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "repairLog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["entries"],
+          "properties": {
+            "entries": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["shardId", "pass", "parseOk", "changed", "appliedSteps", "budget"],
+                "properties": {
+                  "shardId": {
+                    "type": "string"
+                  },
+                  "pass": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "parseOk": {
+                    "type": "boolean"
+                  },
+                  "changed": {
+                    "type": "boolean"
+                  },
+                  "appliedSteps": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "stripBOM",
+                        "removeAsciiControlChars",
+                        "trimOuterJunk",
+                        "fixTrailingCommas"
+                      ]
+                    }
+                  },
+                  "budget": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "maxCandidateChars",
+                      "maxRepairChars",
+                      "candidateCharsTruncated",
+                      "repairCharsTruncated"
+                    ],
+                    "properties": {
+                      "maxCandidateChars": {
+                        "type": ["integer", "null"],
+                        "minimum": 1
+                      },
+                      "maxRepairChars": {
+                        "type": ["integer", "null"],
+                        "minimum": 1
+                      },
+                      "candidateCharsTruncated": {
+                        "type": "boolean"
+                      },
+                      "repairCharsTruncated": {
+                        "type": "boolean"
                       }
                     }
                   }

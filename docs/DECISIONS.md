@@ -257,3 +257,14 @@
 - Consequence:
   - Provider adapters expose explicit structured execution semantics.
   - Schema-first extraction paths become deterministic and verifiable through regression dataset cases.
+
+## ADR-0030: repair-log-in-diagnostics
+- Date: 2026-02-15
+- Context: REQ-7.1.2 required explicit repair visibility in run diagnostics. Existing evidence exposed repair metadata only through per-shard pipeline logs and did not provide a typed run-level repair ledger.
+- Decision:
+  - Add `diagnostics.repairLog.entries` with typed, bounded, redacted repair metadata.
+  - Populate repair-log entries for both success and failure paths whenever JSON repair/parse diagnostics are available.
+  - Keep entries text-free and store only step names, parse status, change flags, and budget truncation metadata.
+- Consequence:
+  - Evidence bundles provide deterministic run-level repair audit data.
+  - Downstream tooling can query repair behavior without scanning per-outcome structures.

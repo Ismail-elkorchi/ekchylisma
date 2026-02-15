@@ -79,6 +79,8 @@ test("runWithEvidence returns shard outcomes and provenance for successful extra
   assertEqual(bundle.diagnostics.multiPassLog.maxPasses, 2);
   assertEqual(bundle.diagnostics.multiPassLog.shards.length, 1);
   assertEqual(bundle.diagnostics.multiPassLog.shards[0].finalPass, 1);
+  assertEqual(bundle.diagnostics.repairLog.entries.length, 1);
+  assertEqual(bundle.diagnostics.repairLog.entries[0].parseOk, true);
 
   const firstOutcome = bundle.diagnostics.shardOutcomes[0];
   const shardPrompt = compilePrompt(program, {
@@ -146,6 +148,8 @@ test("runWithEvidence classifies parse failures as empty_by_failure with explici
   assertEqual(bundle.diagnostics.emptyResultKind, "empty_by_failure");
   assertEqual(bundle.diagnostics.failures.length, 1);
   assertEqual(bundle.diagnostics.failures[0].kind, "json_pipeline_failure");
+  assertEqual(bundle.diagnostics.repairLog.entries.length, 1);
+  assertEqual(bundle.diagnostics.repairLog.entries[0].parseOk, false);
   assertEqual(bundle.diagnostics.shardOutcomes[0].status, "failure");
   assert(
     bundle.diagnostics.shardOutcomes[0].status !== "failure"
@@ -251,6 +255,8 @@ test("runWithEvidence records repair cap diagnostics and deterministic failure s
   assertEqual(first.diagnostics.budgetLog.repair.maxRepairChars, 24);
   assertEqual(first.diagnostics.budgetLog.repair.candidateCharsTruncatedCount, 0);
   assertEqual(first.diagnostics.budgetLog.repair.repairCharsTruncatedCount, 1);
+  assertEqual(first.diagnostics.repairLog.entries.length, 1);
+  assertEqual(first.diagnostics.repairLog.entries[0].budget.maxRepairChars, 24);
   assertEqual(second.diagnostics.failures.length, 1);
   assertEqual(second.diagnostics.failures[0].kind, "json_pipeline_failure");
   assertEqual(
