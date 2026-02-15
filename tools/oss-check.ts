@@ -19,6 +19,7 @@ const REQUIRED_DOCS = [
 const REQUIRED_CONFIG_FILES = [
   ".github/workflows/ci.yml",
   ".github/dependabot.yml",
+  ".github/PULL_REQUEST_TEMPLATE.md",
 ];
 
 const REQUIRED_BENCH_FILES = [

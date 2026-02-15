@@ -3,11 +3,12 @@
 ## Workflow
 - Open an issue first for non-trivial changes.
 - Use small, narrow PRs with clear scope and verification output.
+- Use `.github/PULL_REQUEST_TEMPLATE.md` for every PR body without changing section headings.
 - Keep contracts, docs, tests, and code coherent in the same PR.
 - Update `SPEC_TRACEABILITY.md` whenever requirement evidence changes.
 - Use squash merge.
 
-## Local Development
+## Baseline Matrix Before PR
 Run the full matrix before opening or updating a PR:
 
 ```bash
@@ -15,7 +16,11 @@ npm run check
 npm run test:deno
 npm run test:bun
 npm run test:workers
+npm run test:browser
+npm run bench
 ```
+
+Include the commands and key outputs in the PR `## Verification` section.
 
 ## Contribution License Terms
 No CLA is required.
