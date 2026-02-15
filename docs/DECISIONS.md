@@ -301,3 +301,14 @@
 - Consequence:
   - Evidence bundles carry unambiguous top-level offsets on every extraction and reject ambiguous offset payloads deterministically.
   - Consumers can rely on one explicit offset surface (`charStart`/`charEnd`) without silent span drift.
+
+## ADR-0034: schema-dialect-normalization
+- Date: 2026-02-15
+- Context: Provider adapters consume JSON Schema payloads, but dialect-specific keywords (`$schema`, `nullable`, legacy metadata) can cause inconsistent behavior across backends.
+- Decision:
+  - Add `normalizeSchemaDialect()` to canonicalize supported dialect metadata into the JsonSchemaSubset form used internally.
+  - Reject unsupported dialect-only keywords (`definitions`, `$defs`, `$ref`, `oneOf`, `allOf`, etc.) with deterministic errors.
+  - Normalize program schemas before hashing/storage and normalize provider request schemas before transport.
+- Consequence:
+  - Equivalent schemas across supported dialect markers map to one deterministic internal representation.
+  - Provider requests avoid dialect drift and fail fast on unsupported schema constructs.

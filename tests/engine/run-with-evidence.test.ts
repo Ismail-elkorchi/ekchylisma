@@ -128,6 +128,79 @@ test("runWithEvidence normalizes legacy program input into structured program sh
   assert(bundle.program.programId.startsWith("program-"), "programId should be generated");
 });
 
+test("runWithEvidence normalizes schema dialect metadata into canonical subset", async () => {
+  const bundle = await runWithEvidence({
+    runId: "bundle-schema-dialect-normalized",
+    program: {
+      instructions: "Extract token Beta.",
+      examples: [],
+      schema: {
+        $schema: "http://json-schema.org/draft-07/schema#",
+        title: "Ticket",
+        type: "object",
+        required: ["value"],
+        properties: {
+          value: {
+            type: "string",
+            nullable: true,
+          },
+        },
+      },
+    },
+    document: {
+      text: documentText,
+    },
+    provider: new FakeProvider({ defaultResponse: "{\"extractions\":[]}" }),
+    model: "fake-model",
+    chunkSize: 64,
+    overlap: 0,
+  });
+
+  assertEqual(
+    JSON.stringify(bundle.program.schema),
+    JSON.stringify({
+      type: "object",
+      properties: {
+        value: {
+          anyOf: [
+            { type: "string" },
+            { const: null },
+          ],
+        },
+      },
+      required: ["value"],
+    }),
+  );
+});
+
+test("runWithEvidence rejects unsupported schema dialect keywords deterministically", async () => {
+  await assertRejects(
+    () =>
+      runWithEvidence({
+        runId: "bundle-schema-dialect-unsupported",
+        program: {
+          instructions: "Extract token Beta.",
+          examples: [],
+          schema: {
+            type: "object",
+            definitions: {
+              token: { type: "string" },
+            },
+          },
+        },
+        document: {
+          text: documentText,
+        },
+        provider: new FakeProvider({ defaultResponse: "{\"extractions\":[]}" }),
+        model: "fake-model",
+        chunkSize: 64,
+        overlap: 0,
+      }),
+    (error) => error instanceof Error && error.message.includes("definitions"),
+    "unsupported schema dialect keys should fail normalization",
+  );
+});
+
 test("runWithEvidence rejects invalid program class declarations deterministically", async () => {
   await assertRejects(
     () =>
