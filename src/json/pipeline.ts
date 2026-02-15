@@ -3,6 +3,7 @@ import type { JsonParseError } from "./parse.ts";
 import { tryParseJsonStrict } from "./parse.ts";
 import type { RepairLog, RepairOptions } from "./repair.ts";
 import { repairJsonText } from "./repair.ts";
+import { decodeStreamingJsonFrames } from "./frameDecoder.ts";
 
 export type JsonPipelineParseLog =
   | {
@@ -59,8 +60,42 @@ export function parseJsonWithRepairPipeline(
   sourceText: string,
   options: JsonPipelineOptions = {},
 ): JsonPipelineSuccess | JsonPipelineFailureResult {
-  const extractedJson = extractFirstJson(sourceText);
-  const candidate = extractedJson ? extractedJson.text : sourceText;
+  const decodedFrames = decodeStreamingJsonFrames(sourceText);
+  if (!decodedFrames.ok) {
+    const emptyRepairLog = repairJsonText("", options.repair).log;
+    const frameError: JsonParseError = {
+      name: "JsonParseError",
+      message: decodedFrames.error.message,
+      position: null,
+      line: decodedFrames.error.line,
+      column: null,
+      snippet: decodedFrames.error.frameSnippet,
+      inputLength: sourceText.length,
+    };
+    return {
+      ok: false,
+      error: frameError,
+      log: {
+        extractedJson: {
+          found: false,
+          start: null,
+          end: null,
+          kind: null,
+          sourceLength: sourceText.length,
+          candidateLength: 0,
+        },
+        repair: emptyRepairLog,
+        parse: {
+          ok: false,
+          error: frameError,
+        },
+      },
+    };
+  }
+
+  const normalizedSource = decodedFrames.text;
+  const extractedJson = extractFirstJson(normalizedSource);
+  const candidate = extractedJson ? extractedJson.text : normalizedSource;
   const repaired = repairJsonText(candidate, options.repair);
   const parsed = tryParseJsonStrict(repaired.text);
 

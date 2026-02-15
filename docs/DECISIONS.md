@@ -312,3 +312,14 @@
 - Consequence:
   - Equivalent schemas across supported dialect markers map to one deterministic internal representation.
   - Provider requests avoid dialect drift and fail fast on unsupported schema constructs.
+
+## ADR-0035: streaming-frame-decoder
+- Date: 2026-02-15
+- Context: REQ-9.2.1 requires tolerant parsing for fenced/streamed JSON outputs. Existing extraction tolerated wrapped JSON text but did not decode framed SSE-style chunks before repair/parse.
+- Decision:
+  - Add `decodeStreamingJsonFrames()` to assemble JSON fragments from `data:` frame streams before extraction/repair.
+  - Treat malformed frames as deterministic parse failures with explicit line-numbered errors.
+  - Keep downstream pipeline stages unchanged (extract -> repair -> strict parse) after frame decoding.
+- Consequence:
+  - Streamed delta payloads decode deterministically into parseable JSON candidates.
+  - Malformed frame streams fail with stable, machine-readable parse diagnostics instead of opaque parser errors.
