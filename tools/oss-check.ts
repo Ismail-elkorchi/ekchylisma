@@ -32,6 +32,7 @@ const REQUIRED_BENCH_FILES = [
 
 const REQUIRED_TOOL_FILES = [
   "tools/pr-body-check.ts",
+  "tools/repo-scope-check.ts",
 ];
 
 async function ensureFile(path: string): Promise<void> {
@@ -105,8 +106,12 @@ async function run(): Promise<void> {
   requireScript(scripts, "bench:run");
   requireScript(scripts, "bench:score");
   requireScript(scripts, "bench");
+  requireScript(scripts, "repo-scope-check");
   requireScript(scripts, "oss-check");
   const checkScript = requireScript(scripts, "check");
+  if (!checkScript.includes("npm run repo-scope-check")) {
+    throw new Error("`npm run check` must include `npm run repo-scope-check`.");
+  }
   if (!checkScript.includes("npm run oss-check")) {
     throw new Error("`npm run check` must include `npm run oss-check`.");
   }
