@@ -7,7 +7,7 @@
 - `trimTrailingWhitespacePerLine(text)` from `src/core/normalize.ts`
 - `normalizeText(text, options)` from `src/core/normalize.ts`
 - `assertQuoteInvariant(docText, extraction)` from `src/core/invariants.ts`
-- Types from `src/core/types.ts`: `DocumentInput`, `Span`, `Extraction`, `EvidenceBundle`, `EvidenceAttestation`, `Program`, `PromptHashRecord`, `PromptLog`, `RunBudgets`, `BudgetLog`, `MultiPassLog`, `RunRepairLog`, `ShardOutcome`, `RunDiagnostics`
+- Types from `src/core/types.ts`: `DocumentInput`, `Span`, `Extraction`, `EvidenceBundle`, `EvidenceAttestation`, `Program`, `PromptHashRecord`, `PromptLog`, `RunBudgets`, `BudgetLog`, `MultiPassLog`, `RunRepairLog`, `RunCompleteness`, `ShardOutcome`, `RunDiagnostics`
 - Engine chunking from `src/engine/chunk.ts`: `chunkDocument(normalizedText, programHash, options)` where `options` include `documentId`, `chunkSize`, `overlap`, `offsetMode`
 - Span mapping from `src/engine/mapSpan.ts`: `mapShardSpanToDocument(shard, shardSpan)`
 - Checkpointing from `src/engine/checkpoint.ts`: `CheckpointStore`, `InMemoryCheckpointStore`, `buildCheckpointKey(runId, shardId)`
@@ -17,6 +17,10 @@
   - `runExtractionWithProvider(options)` for extraction-first legacy result shape
   - `runWithEvidence(options)` for run-produced `EvidenceBundle` including shard outcomes and explicit failure diagnostics
   - Schema-first requests route through provider `generateStructured()`; text-only requests route through `generate()`
+  - `runWithEvidence(options)` diagnostics include:
+    - `emptyResultKind`: `non_empty`, `empty_by_evidence`, or `empty_by_failure`
+    - `runCompleteness.kind`: `complete_success`, `partial_success`, or `complete_failure`
+    - per-run shard counts (`totalShards`, `successfulShards`, `failedShards`) to prevent silent partial-loss ambiguity
   - `runWithEvidence(options)` diagnostics include `promptLog` (`programHash`, per-shard `promptHash` records)
   - `runWithEvidence(options)` supports explicit budget controls:
     - `timeBudgetMs` (non-negative integer): run deadline for scheduling provider attempts

@@ -124,6 +124,7 @@
       "additionalProperties": false,
       "required": [
         "emptyResultKind",
+        "runCompleteness",
         "shardOutcomes",
         "failures",
         "checkpointHits",
@@ -136,6 +137,29 @@
         "emptyResultKind": {
           "type": "string",
           "enum": ["non_empty", "empty_by_evidence", "empty_by_failure"]
+        },
+        "runCompleteness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "totalShards", "successfulShards", "failedShards"],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": ["complete_success", "partial_success", "complete_failure"]
+            },
+            "totalShards": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "successfulShards": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "failedShards": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
         },
         "checkpointHits": {
           "type": "integer",

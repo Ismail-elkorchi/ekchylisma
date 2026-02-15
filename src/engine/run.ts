@@ -22,6 +22,7 @@ import { sha256Hex } from "../core/hash.ts";
 import { normalizeText } from "../core/normalize.ts";
 import { chunkDocument, type DocumentShard } from "./chunk.ts";
 import {
+  classifyRunCompleteness,
   executeShardsWithCheckpoint,
   type ExecuteShardResult,
 } from "./execute.ts";
@@ -982,6 +983,7 @@ export async function runWithEvidence(
   }
 
   const extractions = shardOutcomes.flatMap((outcome) => outcome.extractions);
+  const runCompleteness = classifyRunCompleteness(shardOutcomes.length, failures.length);
   budgetLog.time.deadlineReached = deadlineReached || hasReachedDeadline();
   budgetLog.repair.candidateCharsTruncatedCount =
     repairBudgetHitCounters.candidateCharsTruncatedCount;
@@ -990,6 +992,7 @@ export async function runWithEvidence(
 
   const diagnostics: RunDiagnostics = {
     emptyResultKind: determineEmptyResultKind(extractions, failures),
+    runCompleteness,
     shardOutcomes,
     failures,
     checkpointHits: shardOutcomes.filter((outcome) => outcome.fromCheckpoint).length,

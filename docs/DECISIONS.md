@@ -268,3 +268,14 @@
 - Consequence:
   - Evidence bundles provide deterministic run-level repair audit data.
   - Downstream tooling can query repair behavior without scanning per-outcome structures.
+
+## ADR-0031: executor-evidence-classification
+- Date: 2026-02-15
+- Context: REQ-7.4.1 and REQ-8.3.1 require explicit distinction between empty-by-evidence and empty-by-failure while also preserving partial shard success semantics.
+- Decision:
+  - Add `diagnostics.runCompleteness` with explicit kind (`complete_success`, `partial_success`, `complete_failure`) and shard counts.
+  - Add `classifyRunCompleteness()` in executor utilities and consume it in `runWithEvidence()`.
+  - Keep `emptyResultKind` independent from completeness so zero-extraction success and zero-extraction failure remain distinct.
+- Consequence:
+  - Evidence bundles expose deterministic, machine-readable partial-success state without collapsing successful shard output.
+  - Consumers can safely gate on both `emptyResultKind` and `runCompleteness` without inferring behavior from raw shard arrays.

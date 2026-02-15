@@ -130,6 +130,7 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - `executeShardsWithCheckpoint()` first checks checkpoints and bypasses completed shards.
 - Retry policy is explicit (`attempts`, `baseDelayMs`, `maxDelayMs`, `jitterRatio`) and bounded.
 - Non-transient failures are surfaced immediately without additional retries.
+- Run diagnostics must classify emptiness (`empty_by_evidence` vs `empty_by_failure`) and run completeness (`complete_success`, `partial_success`, `complete_failure`).
 
 ## Provider Contract Rules
 - Providers implement `generate(request)` and return deterministic `runRecord` metadata.

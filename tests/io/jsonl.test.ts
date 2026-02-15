@@ -35,6 +35,12 @@ function sampleBundle(runId: string) {
     },
     diagnostics: {
       emptyResultKind: "empty_by_evidence" as const,
+      runCompleteness: {
+        kind: "complete_success" as const,
+        totalShards: 1,
+        successfulShards: 1,
+        failedShards: 0,
+      },
       shardOutcomes: [
         {
           shardId: `shard-${runId}`,

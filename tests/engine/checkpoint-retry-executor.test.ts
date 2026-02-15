@@ -3,7 +3,10 @@ import {
   buildCheckpointKey,
   InMemoryCheckpointStore,
 } from "../../src/engine/checkpoint.ts";
-import { executeShardsWithCheckpoint } from "../../src/engine/execute.ts";
+import {
+  classifyRunCompleteness,
+  executeShardsWithCheckpoint,
+} from "../../src/engine/execute.ts";
 import {
   computeBackoffMs,
   computeJitterMs,
@@ -24,6 +27,28 @@ test("retry helpers compute deterministic backoff and jitter", () => {
   assertEqual(computeBackoffMs(policy, 10), 80);
   assertEqual(computeJitterMs(20, 0.5, 0.2), 2);
   assertEqual(computeRetryDelayMs(policy, 2, 0.2), 21);
+});
+
+test("classifyRunCompleteness reports complete_success when no shards fail", () => {
+  const summary = classifyRunCompleteness(3, 0);
+  assertEqual(summary.kind, "complete_success");
+  assertEqual(summary.totalShards, 3);
+  assertEqual(summary.successfulShards, 3);
+  assertEqual(summary.failedShards, 0);
+});
+
+test("classifyRunCompleteness reports partial_success and complete_failure", () => {
+  const partial = classifyRunCompleteness(4, 1);
+  assertEqual(partial.kind, "partial_success");
+  assertEqual(partial.totalShards, 4);
+  assertEqual(partial.successfulShards, 3);
+  assertEqual(partial.failedShards, 1);
+
+  const failure = classifyRunCompleteness(2, 2);
+  assertEqual(failure.kind, "complete_failure");
+  assertEqual(failure.totalShards, 2);
+  assertEqual(failure.successfulShards, 0);
+  assertEqual(failure.failedShards, 2);
 });
 
 test("executeShardsWithCheckpoint retries transient failures and completes run", async () => {
