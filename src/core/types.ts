@@ -86,6 +86,12 @@ export type JsonRepairStep = {
 export type JsonRepairLog = {
   steps: JsonRepairStep[];
   changed: boolean;
+  budget: {
+    maxCandidateChars: number | null;
+    maxRepairChars: number | null;
+    candidateCharsTruncated: boolean;
+    repairCharsTruncated: boolean;
+  };
 };
 
 export type JsonParseErrorDetail = {
@@ -123,6 +129,7 @@ export type ShardFailureKind =
   | "json_pipeline_failure"
   | "payload_shape_failure"
   | "quote_invariant_failure"
+  | "budget_exhausted"
   | "unknown_failure";
 
 export type ShardFailure = {
@@ -185,12 +192,42 @@ export type PromptLog = {
   shardPromptHashes: PromptHashRecord[];
 };
 
+export type RunBudgets = {
+  timeBudgetMs?: number;
+  repair?: {
+    maxCandidateChars?: number;
+    maxRepairChars?: number;
+  };
+};
+
+export type BudgetLog = {
+  time: {
+    timeBudgetMs: number | null;
+    deadlineReached: boolean;
+    startedAtMs: number;
+    deadlineAtMs: number | null;
+  };
+  retry: {
+    attempts: number;
+    baseDelayMs: number;
+    maxDelayMs: number;
+    jitterRatio: number;
+  };
+  repair: {
+    maxCandidateChars: number | null;
+    maxRepairChars: number | null;
+    candidateCharsTruncatedCount: number;
+    repairCharsTruncatedCount: number;
+  };
+};
+
 export type RunDiagnostics = {
   emptyResultKind: EmptyResultKind;
   shardOutcomes: ShardOutcome[];
   failures: ShardFailure[];
   checkpointHits: number;
   promptLog: PromptLog;
+  budgetLog: BudgetLog;
 };
 
 export type EvidenceAttestation = {

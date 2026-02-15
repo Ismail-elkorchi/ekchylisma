@@ -63,6 +63,12 @@ function sampleBundle(runId: string) {
             repair: {
               changed: false,
               steps: [],
+              budget: {
+                maxCandidateChars: null,
+                maxRepairChars: null,
+                candidateCharsTruncated: false,
+                repairCharsTruncated: false,
+              },
             },
             parse: {
               ok: true as const,
@@ -80,6 +86,26 @@ function sampleBundle(runId: string) {
             promptHash: "prompt-hash",
           },
         ],
+      },
+      budgetLog: {
+        time: {
+          timeBudgetMs: null,
+          deadlineReached: false,
+          startedAtMs: 0,
+          deadlineAtMs: null,
+        },
+        retry: {
+          attempts: 2,
+          baseDelayMs: 1,
+          maxDelayMs: 8,
+          jitterRatio: 0,
+        },
+        repair: {
+          maxCandidateChars: null,
+          maxRepairChars: null,
+          candidateCharsTruncatedCount: 0,
+          repairCharsTruncatedCount: 0,
+        },
       },
     },
   };

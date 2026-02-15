@@ -122,7 +122,14 @@
     "diagnostics": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["emptyResultKind", "shardOutcomes", "failures", "checkpointHits", "promptLog"],
+      "required": [
+        "emptyResultKind",
+        "shardOutcomes",
+        "failures",
+        "checkpointHits",
+        "promptLog",
+        "budgetLog"
+      ],
       "properties": {
         "emptyResultKind": {
           "type": "string",
@@ -172,6 +179,87 @@
                   "promptHash": {
                     "type": "string"
                   }
+                }
+              }
+            }
+          }
+        },
+        "budgetLog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["time", "retry", "repair"],
+          "properties": {
+            "time": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["timeBudgetMs", "deadlineReached", "startedAtMs", "deadlineAtMs"],
+              "properties": {
+                "timeBudgetMs": {
+                  "type": ["integer", "null"],
+                  "minimum": 0
+                },
+                "deadlineReached": {
+                  "type": "boolean"
+                },
+                "startedAtMs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "deadlineAtMs": {
+                  "type": ["integer", "null"],
+                  "minimum": 0
+                }
+              }
+            },
+            "retry": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["attempts", "baseDelayMs", "maxDelayMs", "jitterRatio"],
+              "properties": {
+                "attempts": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "baseDelayMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "maxDelayMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "jitterRatio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            },
+            "repair": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "maxCandidateChars",
+                "maxRepairChars",
+                "candidateCharsTruncatedCount",
+                "repairCharsTruncatedCount"
+              ],
+              "properties": {
+                "maxCandidateChars": {
+                  "type": ["integer", "null"],
+                  "minimum": 1
+                },
+                "maxRepairChars": {
+                  "type": ["integer", "null"],
+                  "minimum": 1
+                },
+                "candidateCharsTruncatedCount": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "repairCharsTruncatedCount": {
+                  "type": "integer",
+                  "minimum": 0
                 }
               }
             }
@@ -292,6 +380,7 @@
             "json_pipeline_failure",
             "payload_shape_failure",
             "quote_invariant_failure",
+            "budget_exhausted",
             "unknown_failure"
           ]
         },
