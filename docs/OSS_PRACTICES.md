@@ -16,6 +16,7 @@ This document defines operational checks used to keep the repository forkable, r
 | Cross-runtime regression matrix | Node, Deno, Bun, Workers tests must pass | CI jobs `node`, `deno`, `bun`, `workers` |
 | Browser compatibility harness | Browser example must bundle against published distribution output | `npm run test:browser` and CI job `browser` |
 | Bench evidence harness | Deterministic benchmark run and score must execute in CI | `npm run bench` and CI job `bench` |
+| Long-text regression coverage | Deterministic long-text fixture tests must run in default test suite and bench dataset | `npm test` and `npm run bench` |
 | PR-only integration workflow | CI must run on pull requests and gate merges | `.github/workflows/ci.yml` + branch policy |
 | PR body template presence | Repository PR template must exist and be used for standardized verification/evidence sections | `npm run oss-check` |
 | PR body heading enforcement | CI node job must execute `node tools/pr-body-check.ts` and fail on missing template headings in pull request bodies | CI `node` job and `npm run oss-check` |

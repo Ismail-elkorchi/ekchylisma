@@ -151,7 +151,7 @@ async function runTrial(
       },
       provider,
       model: "fake-model",
-      chunkSize: 512,
+      chunkSize: 8192,
       overlap: 0,
     });
 

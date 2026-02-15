@@ -10,6 +10,7 @@
 
 ## Bench harness
 - Dataset files live under `bench/datasets/`.
+- `bench/datasets/smoke.jsonl` includes deterministic short-text and long-text cases.
 - Deterministic benchmark run:
   - `npm run bench:run`
   - `npm run bench:score`
