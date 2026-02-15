@@ -16,6 +16,11 @@ const REQUIRED_DOCS = [
   "docs/DECISIONS.md",
 ];
 
+const REQUIRED_CONFIG_FILES = [
+  ".github/workflows/ci.yml",
+  ".github/dependabot.yml",
+];
+
 async function ensureFile(path: string): Promise<void> {
   const fileStat = await stat(path);
   if (!fileStat.isFile()) {
@@ -36,6 +41,9 @@ function requireScript(
 
 async function run(): Promise<void> {
   for (const path of [...REQUIRED_ROOT_DOCS, ...REQUIRED_DOCS]) {
+    await ensureFile(path);
+  }
+  for (const path of REQUIRED_CONFIG_FILES) {
     await ensureFile(path);
   }
 
@@ -74,8 +82,32 @@ async function run(): Promise<void> {
     }
   }
 
+  const ciWorkflow = await readFile(".github/workflows/ci.yml", "utf8");
+  if (!ciWorkflow.includes("permissions:")) {
+    throw new Error("CI workflow must declare explicit permissions.");
+  }
+  if (!ciWorkflow.includes("contents: read")) {
+    throw new Error("CI workflow permissions must include least-privilege `contents: read`.");
+  }
+
+  const usesLines = ciWorkflow
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("- uses: "));
+  if (usesLines.length === 0) {
+    throw new Error("CI workflow must contain at least one GitHub Action step.");
+  }
+
+  for (const line of usesLines) {
+    if (!/@[0-9a-f]{40}\b/.test(line)) {
+      throw new Error(
+        `Workflow action step must be pinned to a full commit SHA: ${line}`,
+      );
+    }
+  }
+
   console.log(
-    `oss-check passed (${REQUIRED_ROOT_DOCS.length} root docs, ${REQUIRED_DOCS.length} docs entries, ${devDeps.length} dev dependencies verified).`,
+    `oss-check passed (${REQUIRED_ROOT_DOCS.length} root docs, ${REQUIRED_DOCS.length} docs entries, ${REQUIRED_CONFIG_FILES.length} config files, ${devDeps.length} dev dependencies verified).`,
   );
 }
 
