@@ -3,6 +3,10 @@ import { assertQuoteInvariant } from "../src/core/invariants.ts";
 import { sha256Hex } from "../src/core/hash.ts";
 import { runWithEvidence } from "../src/engine/run.ts";
 import { FakeProvider } from "../src/providers/fake.ts";
+import {
+  loadRegressionDataset,
+  type RegressionDatasetCase,
+} from "./regressionDataset.ts";
 
 type GoldSpan = {
   extractionClass: string;
@@ -11,7 +15,7 @@ type GoldSpan = {
   charEnd: number;
 };
 
-type DatasetCase = {
+type SmokeDatasetCase = {
   caseId: string;
   documentText: string;
   instructions: string;
@@ -21,13 +25,15 @@ type DatasetCase = {
 };
 
 type RunOptions = {
-  datasetPath: string;
+  smokeDatasetPath: string;
+  regressionDatasetPath: string;
   outputPath: string;
   mode: "deterministic" | "variance";
   trials: number;
 };
 
 type CaseResult = {
+  dataset: "smoke" | "regression";
   caseId: string;
   extractionCount: number;
   success: boolean;
@@ -71,20 +77,22 @@ function parseArgs(argv: string[]): RunOptions {
   const trials = trialsRaw ? Number.parseInt(trialsRaw, 10) : 1;
 
   return {
-    datasetPath: args.get("--dataset") ?? "bench/datasets/smoke.jsonl",
+    smokeDatasetPath: args.get("--smoke-dataset") ?? "bench/datasets/smoke.jsonl",
+    regressionDatasetPath: args.get("--regression-dataset")
+      ?? "bench/datasets/regression.jsonl",
     outputPath: args.get("--out") ?? "bench/results/latest.json",
     mode,
     trials: Number.isFinite(trials) && trials > 0 ? trials : 1,
   };
 }
 
-async function loadDataset(path: string): Promise<DatasetCase[]> {
+async function loadSmokeDataset(path: string): Promise<SmokeDatasetCase[]> {
   const source = await readFile(path, "utf8");
   return source
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line) => JSON.parse(line) as DatasetCase);
+    .map((line) => JSON.parse(line) as SmokeDatasetCase);
 }
 
 function extractionKey(
@@ -122,54 +130,97 @@ function shapeIsValid(extraction: {
     && typeof extraction.span?.charEnd === "number";
 }
 
+async function runCase(
+  testCase: {
+    caseId: string;
+    documentText: string;
+    instructions: string;
+    targetSchema: Record<string, unknown>;
+    providerResponseText: string;
+  },
+  trialIndex: number,
+): Promise<{
+  extractionCount: number;
+  schemaValidityRate: number;
+  quoteInvariantPassRate: number;
+  failures: number;
+  emptyResultKind: "non_empty" | "empty_by_evidence" | "empty_by_failure";
+  bundleExtractions: {
+    extractionClass: string;
+    quote: string;
+    span: { charStart: number; charEnd: number };
+  }[];
+}> {
+  const provider = new FakeProvider({
+    defaultResponse: testCase.providerResponseText,
+  });
+
+  const programHash = await sha256Hex(
+    `${testCase.instructions}:${JSON.stringify(testCase.targetSchema)}`,
+  );
+
+  const bundle = await runWithEvidence({
+    runId: `bench-${testCase.caseId}-${trialIndex}`,
+    program: {
+      instructions: testCase.instructions,
+      examples: [],
+      schema: testCase.targetSchema,
+      programHash,
+    },
+    document: {
+      documentId: testCase.caseId,
+      text: testCase.documentText,
+    },
+    provider,
+    model: "fake-model",
+    chunkSize: 8192,
+    overlap: 0,
+  });
+
+  let schemaValidCount = 0;
+  let quoteInvariantCount = 0;
+
+  for (const extraction of bundle.extractions) {
+    if (shapeIsValid(extraction)) {
+      schemaValidCount += 1;
+    }
+
+    try {
+      assertQuoteInvariant(testCase.documentText, extraction);
+      quoteInvariantCount += 1;
+    } catch {
+      // tracked in aggregate rate
+    }
+  }
+
+  return {
+    extractionCount: bundle.extractions.length,
+    schemaValidityRate:
+      bundle.extractions.length === 0 ? 1 : schemaValidCount / bundle.extractions.length,
+    quoteInvariantPassRate:
+      bundle.extractions.length === 0 ? 1 : quoteInvariantCount / bundle.extractions.length,
+    failures: bundle.diagnostics.failures.length,
+    emptyResultKind: bundle.diagnostics.emptyResultKind,
+    bundleExtractions: bundle.extractions.map((item) => ({
+      extractionClass: item.extractionClass,
+      quote: item.quote,
+      span: {
+        charStart: item.span.charStart,
+        charEnd: item.span.charEnd,
+      },
+    })),
+  };
+}
+
 async function runTrial(
-  dataset: DatasetCase[],
+  smokeDataset: SmokeDatasetCase[],
+  regressionDataset: RegressionDatasetCase[],
   trialIndex: number,
 ): Promise<TrialResult> {
   const caseResults: CaseResult[] = [];
 
-  for (const testCase of dataset) {
-    const provider = new FakeProvider({
-      defaultResponse: testCase.providerResponseText,
-    });
-
-    const programHash = await sha256Hex(
-      `${testCase.instructions}:${JSON.stringify(testCase.targetSchema)}`,
-    );
-
-    const bundle = await runWithEvidence({
-      runId: `bench-${testCase.caseId}-${trialIndex}`,
-      program: {
-        instructions: testCase.instructions,
-        examples: [],
-        schema: testCase.targetSchema,
-        programHash,
-      },
-      document: {
-        documentId: testCase.caseId,
-        text: testCase.documentText,
-      },
-      provider,
-      model: "fake-model",
-      chunkSize: 8192,
-      overlap: 0,
-    });
-
-    let schemaValidCount = 0;
-    let quoteInvariantCount = 0;
-
-    for (const extraction of bundle.extractions) {
-      if (shapeIsValid(extraction)) {
-        schemaValidCount += 1;
-      }
-
-      try {
-        assertQuoteInvariant(testCase.documentText, extraction);
-        quoteInvariantCount += 1;
-      } catch {
-        // tracked in aggregate rate
-      }
-    }
+  for (const testCase of smokeDataset) {
+    const outcome = await runCase(testCase, trialIndex);
 
     const goldSet = new Set(
       testCase.goldSpans.map((span) =>
@@ -181,7 +232,7 @@ async function runTrial(
         )),
     );
     const actualSet = new Set(
-      bundle.extractions.map((extraction) =>
+      outcome.bundleExtractions.map((extraction) =>
         extractionKey(
           extraction.extractionClass,
           extraction.quote,
@@ -198,17 +249,46 @@ async function runTrial(
     }
 
     caseResults.push({
+      dataset: "smoke",
       caseId: testCase.caseId,
-      extractionCount: bundle.extractions.length,
-      success: bundle.diagnostics.failures.length === 0,
-      schemaValidityRate:
-        bundle.extractions.length === 0 ? 1 : schemaValidCount / bundle.extractions.length,
-      quoteInvariantPassRate:
-        bundle.extractions.length === 0 ? 1 : quoteInvariantCount / bundle.extractions.length,
-      coverageRate:
-        testCase.goldSpans.length === 0 ? 1 : matchedGold / testCase.goldSpans.length,
-      failures: bundle.diagnostics.failures.length,
-      emptyResultKind: bundle.diagnostics.emptyResultKind,
+      extractionCount: outcome.extractionCount,
+      success: outcome.failures === 0,
+      schemaValidityRate: outcome.schemaValidityRate,
+      quoteInvariantPassRate: outcome.quoteInvariantPassRate,
+      coverageRate: testCase.goldSpans.length === 0 ? 1 : matchedGold / testCase.goldSpans.length,
+      failures: outcome.failures,
+      emptyResultKind: outcome.emptyResultKind,
+    });
+  }
+
+  for (const testCase of regressionDataset) {
+    const outcome = await runCase(testCase, trialIndex);
+
+    const extractionBoundsMatch = outcome.extractionCount >= testCase.expected.minExtractions
+      && outcome.extractionCount <= testCase.expected.maxExtractions;
+    const emptyKindMatch = outcome.emptyResultKind === testCase.expected.emptyResultKind;
+
+    let stateSpecificMatch = true;
+    if (testCase.expected.emptyResultKind === "empty_by_failure") {
+      stateSpecificMatch = outcome.failures > 0 && outcome.extractionCount === 0;
+    } else if (testCase.expected.emptyResultKind === "empty_by_evidence") {
+      stateSpecificMatch = outcome.failures === 0 && outcome.extractionCount === 0;
+    } else {
+      stateSpecificMatch = outcome.extractionCount > 0;
+    }
+
+    const success = extractionBoundsMatch && emptyKindMatch && stateSpecificMatch;
+
+    caseResults.push({
+      dataset: "regression",
+      caseId: testCase.caseId,
+      extractionCount: outcome.extractionCount,
+      success,
+      schemaValidityRate: outcome.schemaValidityRate,
+      quoteInvariantPassRate: outcome.quoteInvariantPassRate,
+      coverageRate: success ? 1 : 0,
+      failures: outcome.failures,
+      emptyResultKind: outcome.emptyResultKind,
     });
   }
 
@@ -225,19 +305,32 @@ async function runTrial(
 
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
-  const dataset = await loadDataset(options.datasetPath);
-  const trialsTarget = options.mode === "variance" ? Math.max(2, options.trials) : options.trials;
+  const smokeDataset = await loadSmokeDataset(options.smokeDatasetPath);
+  let regressionDataset: RegressionDatasetCase[];
 
+  try {
+    regressionDataset = await loadRegressionDataset(options.regressionDatasetPath);
+  } catch (error) {
+    throw new Error(
+      `invalid regression dataset (${options.regressionDatasetPath}): ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  const trialsTarget = options.mode === "variance" ? Math.max(2, options.trials) : options.trials;
   const trialResults: TrialResult[] = [];
+
   for (let trialIndex = 0; trialIndex < trialsTarget; trialIndex += 1) {
-    trialResults.push(await runTrial(dataset, trialIndex));
+    trialResults.push(await runTrial(smokeDataset, regressionDataset, trialIndex));
   }
 
   const output = {
     generatedAt: new Date().toISOString(),
     mode: options.mode,
     trials: trialsTarget,
-    datasetPath: options.datasetPath,
+    datasetPaths: {
+      smoke: options.smokeDatasetPath,
+      regression: options.regressionDatasetPath,
+    },
     aggregate: {
       successRate: average(trialResults.map((entry) => entry.successRate)),
       schemaValidityRate: average(trialResults.map((entry) => entry.schemaValidityRate)),
@@ -259,7 +352,9 @@ async function main(): Promise<void> {
   }
   await writeFile(options.outputPath, `${JSON.stringify(output, null, 2)}\n`, "utf8");
 
-  console.log(`bench run complete: ${options.outputPath}`);
+  console.log(
+    `bench run complete: ${options.outputPath} | smokeCases=${smokeDataset.length} | regressionCases=${regressionDataset.length}`,
+  );
 }
 
 main().catch((error) => {
