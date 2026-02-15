@@ -44,7 +44,7 @@ Legend:
 | REQ-11.3.1 | n/a | n/a | n/a | gap | Long-text fixture suite absent. |
 | REQ-12.1 | GitHub PR workflow + branch protections (process) | n/a | `pull_request` workflows | implemented | Enforced by process in this repository workflow. |
 | REQ-12.2 | `.github/workflows/ci.yml`, `.github/dependabot.yml`, `tools/oss-check.ts` | CI status checks, `npm run oss-check` | `node`, `deno`, `bun`, `workers`, `browser`, `bench` | implemented | CI runs on `pull_request`, uses least-privilege permissions, and pins actions by SHA. |
-| REQ-12.3 | `tools/orphan-check.ts`, `tools/oss-check.ts`, `docs/OSS_PRACTICES.md`, `package.json` (`check`) | `npm run orphan-check`, `npm run oss-check` | `node` | implemented | Export/contract/doc coherence and OSS operations checks are enforced in default validation. |
+| REQ-12.3 | `tools/orphan-check.ts`, `tools/oss-check.ts`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/OSS_PRACTICES.md`, `package.json` (`check`) | `npm run orphan-check`, `npm run oss-check` | `node` | implemented | Export/contract/doc coherence and OSS operations checks are enforced in default validation, including PR template presence. |
 | REQ-13.1 | `LICENSE`, `NOTICE` | n/a | n/a | implemented | Apache-2.0 license text and project notice are present at repo root. |
 | REQ-14.1 | `src/*`, `src-node/*`, `contracts/*`, `docs/*`, `tests/*`, `tools/*` | `npm run orphan-check` | `node` | partial | Layout is close; differs from exact `/src/node` and `/scripts` naming convention. |
 
