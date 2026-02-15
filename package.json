@@ -41,7 +41,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "miniflare": "^3.20250718.3",
+    "miniflare": "^4.20260212.0",
     "typescript": "^5.9.2"
   }
 }
