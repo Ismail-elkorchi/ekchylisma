@@ -16,8 +16,11 @@ export type ProviderRunRecord = {
   requestHash: string;
 };
 
+export type ProviderOutputChannel = "text" | "tool_call";
+
 export type ProviderResponse = {
   text: string;
+  outputChannel: ProviderOutputChannel;
   runRecord: ProviderRunRecord;
 };
 

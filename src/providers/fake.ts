@@ -56,6 +56,7 @@ export class FakeProvider implements Provider {
 
     return {
       text,
+      outputChannel: "text",
       runRecord: {
         provider: this.name,
         model: request.model,
@@ -74,6 +75,7 @@ export class FakeProvider implements Provider {
 
     return {
       text,
+      outputChannel: "text",
       runRecord: {
         provider: this.name,
         model: request.model,

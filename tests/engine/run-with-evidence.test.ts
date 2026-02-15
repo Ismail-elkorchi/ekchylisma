@@ -283,6 +283,112 @@ test("runWithEvidence classifies parse failures as empty_by_failure with explici
   );
 });
 
+test("runWithEvidence prefers tool-call payload envelopes before text fallback", async () => {
+  const program = await buildProgram();
+  const provider = new FakeProvider({
+    defaultResponse: JSON.stringify({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              extractions: [
+                {
+                  extractionClass: "token",
+                  quote: "Alpha",
+                  span: {
+                    offsetMode: "utf16_code_unit",
+                    charStart: 0,
+                    charEnd: 5,
+                  },
+                  grounding: "explicit",
+                },
+              ],
+            }),
+            tool_calls: [
+              {
+                function: {
+                  arguments: JSON.stringify({
+                    extractions: [
+                      {
+                        extractionClass: "token",
+                        quote: "Beta",
+                        span: {
+                          offsetMode: "utf16_code_unit",
+                          charStart: 6,
+                          charEnd: 10,
+                        },
+                        grounding: "explicit",
+                      },
+                    ],
+                  }),
+                },
+              },
+            ],
+          },
+        },
+      ],
+    }),
+  });
+
+  const bundle = await runWithEvidence({
+    runId: "bundle-tool-call-first",
+    program,
+    document: {
+      text: documentText,
+    },
+    provider,
+    model: "fake-model",
+    chunkSize: 64,
+    overlap: 0,
+  });
+
+  assertEqual(bundle.extractions.length, 1);
+  assertEqual(bundle.extractions[0].quote, "Beta");
+});
+
+test("runWithEvidence falls back to text envelope when tool-call payload is absent", async () => {
+  const program = await buildProgram();
+  const provider = new FakeProvider({
+    defaultResponse: JSON.stringify({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              extractions: [
+                {
+                  extractionClass: "token",
+                  quote: "Beta",
+                  span: {
+                    offsetMode: "utf16_code_unit",
+                    charStart: 6,
+                    charEnd: 10,
+                  },
+                  grounding: "explicit",
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    }),
+  });
+
+  const bundle = await runWithEvidence({
+    runId: "bundle-text-envelope-fallback",
+    program,
+    document: {
+      text: documentText,
+    },
+    provider,
+    model: "fake-model",
+    chunkSize: 64,
+    overlap: 0,
+  });
+
+  assertEqual(bundle.extractions.length, 1);
+  assertEqual(bundle.extractions[0].quote, "Beta");
+});
+
 test("runWithEvidence reports partial_success and preserves successful shard extractions", async () => {
   const program = await buildProgram();
   const multiShardText = "Alpha Beta";

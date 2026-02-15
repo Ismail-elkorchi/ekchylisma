@@ -18,17 +18,49 @@ function ensureFetch(fetchFn: typeof fetch | undefined): typeof fetch {
   return resolved;
 }
 
-function extractText(response: unknown): string {
+function extractPayload(response: unknown): { text: string; outputChannel: "text" | "tool_call" } {
   if (typeof response !== "object" || response === null) {
     throw new ProviderError("permanent", "parse_error", "Ollama response is not an object.");
   }
 
-  const content = (response as { message?: { content?: unknown } }).message?.content;
+  const message = (response as {
+    message?: {
+      content?: unknown;
+      tool_calls?: Array<{
+        function?: {
+          arguments?: unknown;
+        };
+      }>;
+    };
+  }).message;
+
+  if (Array.isArray(message?.tool_calls)) {
+    for (const call of message.tool_calls) {
+      const argumentsValue = call?.function?.arguments;
+      if (typeof argumentsValue === "string" && argumentsValue.trim().length > 0) {
+        return {
+          text: argumentsValue,
+          outputChannel: "tool_call",
+        };
+      }
+      if (typeof argumentsValue === "object" && argumentsValue !== null) {
+        return {
+          text: JSON.stringify(argumentsValue),
+          outputChannel: "tool_call",
+        };
+      }
+    }
+  }
+
+  const content = message?.content;
   if (typeof content !== "string") {
     throw new ProviderError("permanent", "parse_error", "Ollama response missing message content.");
   }
 
-  return content;
+  return {
+    text: content,
+    outputChannel: "text",
+  };
 }
 
 export class OllamaProvider implements Provider {
@@ -74,11 +106,12 @@ export class OllamaProvider implements Provider {
     }
 
     const data = await response.json();
-    const text = extractText(data);
+    const payloadText = extractPayload(data);
     const requestHash = await hashProviderRequest(request);
 
     return {
-      text,
+      text: payloadText.text,
+      outputChannel: payloadText.outputChannel,
       runRecord: {
         provider: this.name,
         model: request.model,

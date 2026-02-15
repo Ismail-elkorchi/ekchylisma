@@ -232,7 +232,141 @@ class ShardValidationFailure extends Error {
   }
 }
 
-function parseExtractions(payload: unknown): RawExtraction[] {
+function collectTextPayload(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (!Array.isArray(value)) {
+    return "";
+  }
+
+  return value
+    .map((entry) => {
+      if (typeof entry === "string") {
+        return entry;
+      }
+      if (typeof entry === "object" && entry !== null && typeof (entry as { text?: unknown }).text === "string") {
+        return (entry as { text: string }).text;
+      }
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+function collectStructuredPayloadCandidates(payload: Record<string, unknown>): {
+  toolCalls: string[];
+  fallbackTexts: string[];
+} {
+  const toolCalls: string[] = [];
+  const fallbackTexts: string[] = [];
+
+  const choices = payload.choices;
+  if (Array.isArray(choices)) {
+    for (const choice of choices) {
+      const message = typeof (choice as { message?: unknown }).message === "object"
+          && (choice as { message?: unknown }).message !== null
+        ? (choice as { message: Record<string, unknown> }).message
+        : null;
+
+      if (Array.isArray(message?.tool_calls)) {
+        for (const call of message.tool_calls as Array<{ function?: { arguments?: unknown } }>) {
+          const argumentsValue = call?.function?.arguments;
+          if (typeof argumentsValue === "string" && argumentsValue.trim().length > 0) {
+            toolCalls.push(argumentsValue);
+          } else if (typeof argumentsValue === "object" && argumentsValue !== null) {
+            toolCalls.push(JSON.stringify(argumentsValue));
+          }
+        }
+      }
+
+      const content = collectTextPayload(message?.content);
+      if (content.length > 0) {
+        fallbackTexts.push(content);
+      }
+    }
+  }
+
+  const candidates = payload.candidates;
+  if (Array.isArray(candidates)) {
+    for (const candidate of candidates) {
+      const parts = (candidate as { content?: { parts?: unknown } }).content?.parts;
+      if (!Array.isArray(parts)) {
+        continue;
+      }
+
+      const partTexts: string[] = [];
+      for (const part of parts as Array<{ text?: unknown; functionCall?: { args?: unknown } }>) {
+        const argumentsValue = part.functionCall?.args;
+        if (typeof argumentsValue === "string" && argumentsValue.trim().length > 0) {
+          toolCalls.push(argumentsValue);
+        } else if (typeof argumentsValue === "object" && argumentsValue !== null) {
+          toolCalls.push(JSON.stringify(argumentsValue));
+        }
+
+        if (typeof part.text === "string" && part.text.length > 0) {
+          partTexts.push(part.text);
+        }
+      }
+
+      if (partTexts.length > 0) {
+        fallbackTexts.push(partTexts.join("\n"));
+      }
+    }
+  }
+
+  const message = typeof payload.message === "object" && payload.message !== null
+    ? payload.message as Record<string, unknown>
+    : null;
+  if (Array.isArray(message?.tool_calls)) {
+    for (const call of message.tool_calls as Array<{ function?: { arguments?: unknown } }>) {
+      const argumentsValue = call?.function?.arguments;
+      if (typeof argumentsValue === "string" && argumentsValue.trim().length > 0) {
+        toolCalls.push(argumentsValue);
+      } else if (typeof argumentsValue === "object" && argumentsValue !== null) {
+        toolCalls.push(JSON.stringify(argumentsValue));
+      }
+    }
+  }
+  if (typeof message?.content === "string" && message.content.length > 0) {
+    fallbackTexts.push(message.content);
+  }
+
+  if (typeof payload.arguments === "string" && payload.arguments.length > 0) {
+    toolCalls.push(payload.arguments);
+  } else if (typeof payload.arguments === "object" && payload.arguments !== null) {
+    toolCalls.push(JSON.stringify(payload.arguments));
+  }
+
+  if (typeof payload.content === "string" && payload.content.length > 0) {
+    fallbackTexts.push(payload.content);
+  }
+
+  if (typeof payload.text === "string" && payload.text.length > 0) {
+    fallbackTexts.push(payload.text);
+  }
+
+  return { toolCalls, fallbackTexts };
+}
+
+function parseCandidatePayload(
+  text: string,
+  label: string,
+  depth: number,
+): RawExtraction[] {
+  const parsed = parseJsonWithRepairPipeline(text);
+  if (!parsed.ok) {
+    throw new PayloadShapeFailure(`${label} is invalid JSON: ${parsed.error.message}`);
+  }
+  return parseExtractions(parsed.value, depth + 1);
+}
+
+function parseExtractions(payload: unknown, depth = 0): RawExtraction[] {
+  if (depth > 3) {
+    throw new PayloadShapeFailure("Provider response nesting exceeded maximum extraction envelope depth.");
+  }
+
   if (Array.isArray(payload)) {
     return payload as RawExtraction[];
   }
@@ -241,6 +375,39 @@ function parseExtractions(payload: unknown): RawExtraction[] {
     const extractions = (payload as { extractions?: unknown }).extractions;
     if (Array.isArray(extractions)) {
       return extractions as RawExtraction[];
+    }
+
+    const { toolCalls, fallbackTexts } = collectStructuredPayloadCandidates(
+      payload as Record<string, unknown>,
+    );
+    let firstFailure: PayloadShapeFailure | null = null;
+
+    for (let index = 0; index < toolCalls.length; index += 1) {
+      try {
+        return parseCandidatePayload(toolCalls[index], `Tool-call payload ${index + 1}`, depth);
+      } catch (error) {
+        if (error instanceof PayloadShapeFailure && firstFailure === null) {
+          firstFailure = error;
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    for (let index = 0; index < fallbackTexts.length; index += 1) {
+      try {
+        return parseCandidatePayload(fallbackTexts[index], `Text payload ${index + 1}`, depth);
+      } catch (error) {
+        if (error instanceof PayloadShapeFailure && firstFailure === null) {
+          firstFailure = error;
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    if (firstFailure !== null) {
+      throw firstFailure;
     }
   }
 

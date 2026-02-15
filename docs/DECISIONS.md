@@ -323,3 +323,14 @@
 - Consequence:
   - Streamed delta payloads decode deterministically into parseable JSON candidates.
   - Malformed frame streams fail with stable, machine-readable parse diagnostics instead of opaque parser errors.
+
+## ADR-0036: tool-call-first-parsing
+- Date: 2026-02-15
+- Context: Structured model outputs can arrive through tool/function-call envelopes; falling back to free-text parsing first can silently miss structured payloads.
+- Decision:
+  - Extend provider adapters to prefer tool/function-call argument payloads before message text.
+  - Extend run-path extraction parsing to unwrap tool-call envelopes before fallback text parsing.
+  - Add explicit `ProviderResponse.outputChannel` (`tool_call` vs `text`) for deterministic response-source attribution.
+- Consequence:
+  - Structured arguments are parsed first when present, reducing silent structured-output loss.
+  - Error surfaces remain deterministic when tool-call arguments are malformed or missing extraction payloads.
