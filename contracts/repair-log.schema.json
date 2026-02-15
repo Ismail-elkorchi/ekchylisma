@@ -4,10 +4,36 @@
   "title": "RepairLog",
   "type": "object",
   "additionalProperties": false,
-  "required": ["steps", "changed"],
+  "required": ["steps", "changed", "budget"],
   "properties": {
     "changed": {
       "type": "boolean"
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxCandidateChars",
+        "maxRepairChars",
+        "candidateCharsTruncated",
+        "repairCharsTruncated"
+      ],
+      "properties": {
+        "maxCandidateChars": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "maxRepairChars": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "candidateCharsTruncated": {
+          "type": "boolean"
+        },
+        "repairCharsTruncated": {
+          "type": "boolean"
+        }
+      }
     },
     "steps": {
       "type": "array",

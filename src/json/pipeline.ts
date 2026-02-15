@@ -1,7 +1,7 @@
 import { extractFirstJson } from "./extractJson.ts";
 import type { JsonParseError } from "./parse.ts";
 import { tryParseJsonStrict } from "./parse.ts";
-import type { RepairLog } from "./repair.ts";
+import type { RepairLog, RepairOptions } from "./repair.ts";
 import { repairJsonText } from "./repair.ts";
 
 export type JsonPipelineParseLog =
@@ -51,12 +51,17 @@ export class JsonPipelineFailure extends Error {
   }
 }
 
+export type JsonPipelineOptions = {
+  repair?: RepairOptions;
+};
+
 export function parseJsonWithRepairPipeline(
   sourceText: string,
+  options: JsonPipelineOptions = {},
 ): JsonPipelineSuccess | JsonPipelineFailureResult {
   const extractedJson = extractFirstJson(sourceText);
   const candidate = extractedJson ? extractedJson.text : sourceText;
-  const repaired = repairJsonText(candidate);
+  const repaired = repairJsonText(candidate, options.repair);
   const parsed = tryParseJsonStrict(repaired.text);
 
   const baseLog: Omit<JsonPipelineLog, "parse"> = {

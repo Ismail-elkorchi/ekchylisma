@@ -1,4 +1,5 @@
 import type {
+  BudgetLog,
   DocumentInput,
   EvidenceBundle,
   EvidenceProvenance,
@@ -6,6 +7,7 @@ import type {
   JsonPipelineDiagnostic,
   PromptLog,
   Program,
+  RunBudgets,
   RunDiagnostics,
   ShardFailure,
   ShardOutcome,
@@ -26,6 +28,7 @@ import {
 } from "./checkpoint.ts";
 import {
   computeRetryDelayMs,
+  normalizeRetryPolicy,
   shouldRetry,
   type RetryPolicy,
 } from "./retry.ts";
@@ -57,6 +60,7 @@ type RunShardOptions = {
   model: string;
   provider: Provider;
   documentText: string;
+  repairBudgets?: RunBudgets["repair"];
 };
 
 const DEFAULT_RETRY_POLICY: RetryPolicy = {
@@ -130,6 +134,9 @@ export type RunWithEvidenceOptions = {
   allOrNothing?: boolean;
   random?: () => number;
   sleep?: (milliseconds: number) => Promise<void>;
+  nowMs?: () => number;
+  timeBudgetMs?: number;
+  repairBudgets?: RunBudgets["repair"];
 };
 
 export function buildProviderRequest(
@@ -175,6 +182,42 @@ function defaultSleep(milliseconds: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, milliseconds);
   });
+}
+
+function normalizeTimeBudgetMs(value: number | undefined): number | null {
+  if (value === undefined) {
+    return null;
+  }
+
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error("timeBudgetMs must be a non-negative integer.");
+  }
+
+  return value;
+}
+
+function normalizePositiveBudget(
+  label: string,
+  value: number | undefined,
+): number | null {
+  if (value === undefined) {
+    return null;
+  }
+
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(`${label} must be a positive integer.`);
+  }
+
+  return value;
+}
+
+function readClockMs(nowMs: () => number): number {
+  const value = nowMs();
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error("nowMs must return a non-negative finite number.");
+  }
+
+  return Math.floor(value);
 }
 
 function detectRuntime(): EvidenceProvenance["runtime"] {
@@ -277,6 +320,34 @@ function classifyShardFailure(
   };
 }
 
+function createBudgetExhaustedFailure(
+  shardId: string,
+  message: string,
+): ShardFailure {
+  return {
+    shardId,
+    kind: "budget_exhausted",
+    message,
+    retryable: false,
+    errorName: "BudgetExhaustedError",
+  };
+}
+
+function aggregateRepairBudgetHits(
+  diagnostic: JsonPipelineDiagnostic,
+  counters: {
+    candidateCharsTruncatedCount: number;
+    repairCharsTruncatedCount: number;
+  },
+): void {
+  if (diagnostic.repair.budget.candidateCharsTruncated) {
+    counters.candidateCharsTruncatedCount += 1;
+  }
+  if (diagnostic.repair.budget.repairCharsTruncated) {
+    counters.repairCharsTruncatedCount += 1;
+  }
+}
+
 function determineEmptyResultKind(
   extractions: Extraction[],
   failures: ShardFailure[],
@@ -301,7 +372,9 @@ async function runShardWithProvider(
     options.model,
   );
   const response = await options.provider.generate(request);
-  const parsed = parseJsonWithRepairPipeline(response.text);
+  const parsed = parseJsonWithRepairPipeline(response.text, {
+    repair: options.repairBudgets,
+  });
   if (!parsed.ok) {
     throw new JsonPipelineFailure(parsed.error, parsed.log);
   }
@@ -353,7 +426,9 @@ export async function runExtractionWithProvider(
   const checkpointStore =
     options.checkpointStore ?? new InMemoryCheckpointStore<ShardRunValue>();
 
-  const retryPolicy: RetryPolicy = options.retryPolicy ?? DEFAULT_RETRY_POLICY;
+  const retryPolicy: RetryPolicy = normalizeRetryPolicy(
+    options.retryPolicy ?? DEFAULT_RETRY_POLICY,
+  );
 
   const shardResults: ExecuteShardResult<ShardRunValue> =
     await executeShardsWithCheckpoint({
@@ -395,11 +470,65 @@ export async function runWithEvidence(
   const textHash = await sha256Hex(options.document.text);
   const documentId = options.document.documentId ?? `doc-${textHash.slice(0, 16)}`;
   const runtime = options.runtime ?? detectRuntime();
-  const retryPolicy = options.retryPolicy ?? DEFAULT_RETRY_POLICY;
+  const retryPolicy = normalizeRetryPolicy(options.retryPolicy ?? DEFAULT_RETRY_POLICY);
   const checkpointStore =
     options.checkpointStore ?? new InMemoryCheckpointStore<ShardRunValue>();
   const random = options.random ?? Math.random;
   const sleep = options.sleep ?? defaultSleep;
+  const nowMs = options.nowMs ?? Date.now;
+
+  const startedAtMs = readClockMs(nowMs);
+  const timeBudgetMs = normalizeTimeBudgetMs(options.timeBudgetMs);
+  const deadlineAtMs = timeBudgetMs === null ? null : startedAtMs + timeBudgetMs;
+
+  const configuredRepairBudgets = {
+    maxCandidateChars: normalizePositiveBudget(
+      "repairBudgets.maxCandidateChars",
+      options.repairBudgets?.maxCandidateChars,
+    ),
+    maxRepairChars: normalizePositiveBudget(
+      "repairBudgets.maxRepairChars",
+      options.repairBudgets?.maxRepairChars,
+    ),
+  };
+  const normalizedRepairBudgets = configuredRepairBudgets.maxCandidateChars === null &&
+      configuredRepairBudgets.maxRepairChars === null
+    ? undefined
+    : {
+      maxCandidateChars: configuredRepairBudgets.maxCandidateChars ?? undefined,
+      maxRepairChars: configuredRepairBudgets.maxRepairChars ?? undefined,
+    };
+
+  let deadlineReached = false;
+  const repairBudgetHitCounters = {
+    candidateCharsTruncatedCount: 0,
+    repairCharsTruncatedCount: 0,
+  };
+
+  const budgetLog: BudgetLog = {
+    time: {
+      timeBudgetMs,
+      deadlineReached,
+      startedAtMs,
+      deadlineAtMs,
+    },
+    retry: {
+      attempts: retryPolicy.attempts,
+      baseDelayMs: retryPolicy.baseDelayMs,
+      maxDelayMs: retryPolicy.maxDelayMs,
+      jitterRatio: retryPolicy.jitterRatio,
+    },
+    repair: {
+      maxCandidateChars: configuredRepairBudgets.maxCandidateChars,
+      maxRepairChars: configuredRepairBudgets.maxRepairChars,
+      candidateCharsTruncatedCount: 0,
+      repairCharsTruncatedCount: 0,
+    },
+  };
+
+  function hasReachedDeadline(): boolean {
+    return deadlineAtMs !== null && readClockMs(nowMs) >= deadlineAtMs;
+  }
 
   const shards = await chunkDocument(
     normalized.text,
@@ -430,6 +559,10 @@ export async function runWithEvidence(
     const checkpointValue = await checkpointStore.get(checkpointKey);
 
     if (checkpointValue !== undefined) {
+      aggregateRepairBudgetHits(
+        checkpointValue.jsonPipelineLog,
+        repairBudgetHitCounters,
+      );
       shardOutcomes.push({
         shardId: shard.shardId,
         start: shard.start,
@@ -444,8 +577,48 @@ export async function runWithEvidence(
       continue;
     }
 
+    if (hasReachedDeadline()) {
+      const failure = createBudgetExhaustedFailure(
+        shard.shardId,
+        "Run time budget exhausted before shard execution.",
+      );
+      deadlineReached = true;
+      failures.push(failure);
+      shardOutcomes.push({
+        shardId: shard.shardId,
+        start: shard.start,
+        end: shard.end,
+        status: "failure",
+        fromCheckpoint: false,
+        attempts: 0,
+        extractions: [],
+        failure,
+      });
+      continue;
+    }
+
     let attempt = 1;
     while (true) {
+      if (hasReachedDeadline()) {
+        const failure = createBudgetExhaustedFailure(
+          shard.shardId,
+          "Run time budget exhausted before provider attempt.",
+        );
+        deadlineReached = true;
+        failures.push(failure);
+        shardOutcomes.push({
+          shardId: shard.shardId,
+          start: shard.start,
+          end: shard.end,
+          status: "failure",
+          fromCheckpoint: false,
+          attempts: Math.max(0, attempt - 1),
+          extractions: [],
+          failure,
+        });
+        break;
+      }
+
       try {
         const shardValue = await runShardWithProvider({
           program: options.program,
@@ -453,8 +626,10 @@ export async function runWithEvidence(
           model: options.model,
           provider: options.provider,
           documentText: normalized.text,
+          repairBudgets: normalizedRepairBudgets,
         });
 
+        aggregateRepairBudgetHits(shardValue.jsonPipelineLog, repairBudgetHitCounters);
         await checkpointStore.set(checkpointKey, shardValue);
         shardOutcomes.push({
           shardId: shard.shardId,
@@ -478,6 +653,9 @@ export async function runWithEvidence(
           continue;
         }
 
+        if (error instanceof JsonPipelineFailure) {
+          aggregateRepairBudgetHits(error.log, repairBudgetHitCounters);
+        }
         const failure = classifyShardFailure(shard.shardId, error);
         failures.push(failure);
         shardOutcomes.push({
@@ -500,12 +678,19 @@ export async function runWithEvidence(
   }
 
   const extractions = shardOutcomes.flatMap((outcome) => outcome.extractions);
+  budgetLog.time.deadlineReached = deadlineReached || hasReachedDeadline();
+  budgetLog.repair.candidateCharsTruncatedCount =
+    repairBudgetHitCounters.candidateCharsTruncatedCount;
+  budgetLog.repair.repairCharsTruncatedCount =
+    repairBudgetHitCounters.repairCharsTruncatedCount;
+
   const diagnostics: RunDiagnostics = {
     emptyResultKind: determineEmptyResultKind(extractions, failures),
     shardOutcomes,
     failures,
     checkpointHits: shardOutcomes.filter((outcome) => outcome.fromCheckpoint).length,
     promptLog,
+    budgetLog,
   };
 
   return {

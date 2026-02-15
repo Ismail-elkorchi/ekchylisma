@@ -6,7 +6,7 @@
 - `trimTrailingWhitespacePerLine(text)` from `src/core/normalize.ts`
 - `normalizeText(text, options)` from `src/core/normalize.ts`
 - `assertQuoteInvariant(docText, extraction)` from `src/core/invariants.ts`
-- Types from `src/core/types.ts`: `DocumentInput`, `Span`, `Extraction`, `EvidenceBundle`, `EvidenceAttestation`, `Program`, `PromptHashRecord`, `PromptLog`, `ShardOutcome`, `RunDiagnostics`
+- Types from `src/core/types.ts`: `DocumentInput`, `Span`, `Extraction`, `EvidenceBundle`, `EvidenceAttestation`, `Program`, `PromptHashRecord`, `PromptLog`, `RunBudgets`, `BudgetLog`, `ShardOutcome`, `RunDiagnostics`
 - Engine chunking from `src/engine/chunk.ts`: `chunkDocument(normalizedText, programHash, options)` where `options` include `documentId`, `chunkSize`, `overlap`, `offsetMode`
 - Span mapping from `src/engine/mapSpan.ts`: `mapShardSpanToDocument(shard, shardSpan)`
 - Checkpointing from `src/engine/checkpoint.ts`: `CheckpointStore`, `InMemoryCheckpointStore`, `buildCheckpointKey(runId, shardId)`
@@ -16,6 +16,14 @@
   - `runExtractionWithProvider(options)` for extraction-first legacy result shape
   - `runWithEvidence(options)` for run-produced `EvidenceBundle` including shard outcomes and explicit failure diagnostics
   - `runWithEvidence(options)` diagnostics include `promptLog` (`programHash`, per-shard `promptHash` records)
+  - `runWithEvidence(options)` supports explicit budget controls:
+    - `timeBudgetMs` (non-negative integer): run deadline for scheduling provider attempts
+    - `repairBudgets.maxCandidateChars` and `repairBudgets.maxRepairChars` (positive integers)
+    - `nowMs` override for deterministic time-budget tests and replay
+  - `runWithEvidence(options)` diagnostics include `budgetLog`:
+    - `budgetLog.time`: effective `timeBudgetMs`, `startedAtMs`, `deadlineAtMs`, `deadlineReached`
+    - `budgetLog.retry`: effective retry policy values
+    - `budgetLog.repair`: effective repair caps and cap-hit counters
   - `buildProviderRequest(program, shard, model)`
 - Evidence attestation:
   - `attestEvidenceBundle(bundle, options)` from `src/evidence/attest.ts`
@@ -28,7 +36,7 @@
 - Schema validator: `validate(schema, value, options)` from `src/schema/validate.ts`
 - JSON Schema generator: `toJsonSchema(schema)` from `src/schema/toJsonSchema.ts`
 - JSON extraction helpers from `src/json/extractJson.ts`: `extractFirstJson(text)`, `detectJsonFlavor(text)`
-- JSON repair pipeline from `src/json/repair.ts`: `repairJsonText(input)` with `RepairLog`
+- JSON repair pipeline from `src/json/repair.ts`: `repairJsonText(input, options)` with `RepairLog` budget metadata (`maxCandidateChars`, `maxRepairChars`, truncation flags)
 - JSON parser from `src/json/parse.ts`: `parseJsonStrict(text)`, `tryParseJsonStrict(text)`, `JsonParseFailure`
 - Provider contracts from `src/providers/types.ts`: `Provider`, `ProviderRequest`, `ProviderResponse`
 - Provider error helpers from `src/providers/errors.ts`: `ProviderError`, `classifyProviderStatus`, `isTransientProviderError`

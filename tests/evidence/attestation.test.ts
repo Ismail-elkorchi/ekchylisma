@@ -89,6 +89,26 @@ function buildSampleBundle(): EvidenceBundle {
         programHash: "program-hash-001",
         shardPromptHashes: [],
       },
+      budgetLog: {
+        time: {
+          timeBudgetMs: null,
+          deadlineReached: false,
+          startedAtMs: 0,
+          deadlineAtMs: null,
+        },
+        retry: {
+          attempts: 2,
+          baseDelayMs: 1,
+          maxDelayMs: 8,
+          jitterRatio: 0,
+        },
+        repair: {
+          maxCandidateChars: null,
+          maxRepairChars: null,
+          candidateCharsTruncatedCount: 0,
+          repairCharsTruncatedCount: 0,
+        },
+      },
     },
   };
 }
@@ -98,6 +118,7 @@ function buildReorderedBundle(source: EvidenceBundle): EvidenceBundle {
     diagnostics: {
       checkpointHits: source.diagnostics.checkpointHits,
       promptLog: source.diagnostics.promptLog,
+      budgetLog: source.diagnostics.budgetLog,
       failures: source.diagnostics.failures,
       shardOutcomes: source.diagnostics.shardOutcomes,
       emptyResultKind: source.diagnostics.emptyResultKind,

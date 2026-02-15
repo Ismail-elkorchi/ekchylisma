@@ -64,6 +64,12 @@ test("runWithEvidence returns shard outcomes and provenance for successful extra
   assertEqual(bundle.diagnostics.shardOutcomes[0].status, "success");
   assertEqual(bundle.diagnostics.promptLog.programHash, program.programHash);
   assertEqual(bundle.diagnostics.promptLog.shardPromptHashes.length, 1);
+  assertEqual(bundle.diagnostics.budgetLog.time.timeBudgetMs, null);
+  assertEqual(bundle.diagnostics.budgetLog.time.deadlineReached, false);
+  assertEqual(bundle.diagnostics.budgetLog.repair.maxCandidateChars, null);
+  assertEqual(bundle.diagnostics.budgetLog.repair.maxRepairChars, null);
+  assertEqual(bundle.diagnostics.budgetLog.repair.candidateCharsTruncatedCount, 0);
+  assertEqual(bundle.diagnostics.budgetLog.repair.repairCharsTruncatedCount, 0);
 
   const firstOutcome = bundle.diagnostics.shardOutcomes[0];
   const shardPrompt = compilePrompt(program, {
@@ -136,5 +142,105 @@ test("runWithEvidence classifies parse failures as empty_by_failure with explici
     bundle.diagnostics.shardOutcomes[0].status !== "failure"
       || bundle.diagnostics.shardOutcomes[0].failure.kind === "json_pipeline_failure",
     "failure outcome should retain explicit failure kind",
+  );
+});
+
+test("runWithEvidence enforces timeBudgetMs and surfaces budget_exhausted failures", async () => {
+  const program = await buildProgram();
+  let providerCalls = 0;
+  const provider = {
+    name: "no-call-provider",
+    async generate() {
+      providerCalls += 1;
+      throw new Error("provider should not be called after budget exhaustion");
+    },
+  };
+
+  const bundle = await runWithEvidence({
+    runId: "bundle-time-budget",
+    program,
+    document: {
+      text: documentText,
+    },
+    provider,
+    model: "fake-model",
+    chunkSize: 64,
+    overlap: 0,
+    nowMs: () => 0,
+    timeBudgetMs: 0,
+  });
+
+  assertEqual(providerCalls, 0);
+  assertEqual(bundle.extractions.length, 0);
+  assertEqual(bundle.diagnostics.emptyResultKind, "empty_by_failure");
+  assertEqual(bundle.diagnostics.failures.length, 1);
+  assertEqual(bundle.diagnostics.failures[0].kind, "budget_exhausted");
+  assertEqual(bundle.diagnostics.budgetLog.time.timeBudgetMs, 0);
+  assertEqual(bundle.diagnostics.budgetLog.time.startedAtMs, 0);
+  assertEqual(bundle.diagnostics.budgetLog.time.deadlineAtMs, 0);
+  assertEqual(bundle.diagnostics.budgetLog.time.deadlineReached, true);
+  assertEqual(bundle.diagnostics.shardOutcomes[0].status, "failure");
+  assert(
+    bundle.diagnostics.shardOutcomes[0].status !== "failure"
+      || bundle.diagnostics.shardOutcomes[0].failure.kind === "budget_exhausted",
+    "failure outcome should surface budget exhaustion kind",
+  );
+});
+
+test("runWithEvidence records repair cap diagnostics and deterministic failure shape", async () => {
+  const program = await buildProgram();
+  const provider = new FakeProvider({
+    defaultResponse: JSON.stringify({
+      extractions: [
+        {
+          extractionClass: "token",
+          quote: "Beta",
+          span: {
+            offsetMode: "utf16_code_unit",
+            charStart: 6,
+            charEnd: 10,
+          },
+          grounding: "explicit",
+        },
+      ],
+    }),
+  });
+
+  const baseOptions = {
+    program,
+    document: {
+      text: documentText,
+    },
+    provider,
+    model: "fake-model",
+    chunkSize: 64,
+    overlap: 0,
+    repairBudgets: {
+      maxRepairChars: 24,
+    },
+  } as const;
+
+  const first = await runWithEvidence({
+    runId: "bundle-repair-cap-1",
+    ...baseOptions,
+  });
+  const second = await runWithEvidence({
+    runId: "bundle-repair-cap-2",
+    ...baseOptions,
+  });
+
+  assertEqual(first.extractions.length, 0);
+  assertEqual(first.diagnostics.failures.length, 1);
+  assertEqual(first.diagnostics.failures[0].kind, "json_pipeline_failure");
+  assertEqual(first.diagnostics.budgetLog.repair.maxCandidateChars, null);
+  assertEqual(first.diagnostics.budgetLog.repair.maxRepairChars, 24);
+  assertEqual(first.diagnostics.budgetLog.repair.candidateCharsTruncatedCount, 0);
+  assertEqual(first.diagnostics.budgetLog.repair.repairCharsTruncatedCount, 1);
+  assertEqual(second.diagnostics.failures.length, 1);
+  assertEqual(second.diagnostics.failures[0].kind, "json_pipeline_failure");
+  assertEqual(
+    first.diagnostics.failures[0].message,
+    second.diagnostics.failures[0].message,
+    "repair cap failures should be deterministic for identical inputs",
   );
 });

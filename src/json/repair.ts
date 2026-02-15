@@ -16,12 +16,35 @@ export type RepairStep = {
 export type RepairLog = {
   steps: RepairStep[];
   changed: boolean;
+  budget: {
+    maxCandidateChars: number | null;
+    maxRepairChars: number | null;
+    candidateCharsTruncated: boolean;
+    repairCharsTruncated: boolean;
+  };
 };
 
 export type RepairResult = {
   text: string;
   log: RepairLog;
 };
+
+export type RepairOptions = {
+  maxCandidateChars?: number;
+  maxRepairChars?: number;
+};
+
+function normalizeLimit(value: number | undefined): number | null {
+  if (value === undefined) {
+    return null;
+  }
+
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error("Repair budget values must be positive integers.");
+  }
+
+  return value;
+}
 
 function withStep(
   steps: RepairStep[],
@@ -104,10 +127,20 @@ function fixTrailingCommas(text: string): string {
   return changed ? output : text;
 }
 
-export function repairJsonText(input: string): RepairResult {
+export function repairJsonText(input: string, options: RepairOptions = {}): RepairResult {
+  const maxCandidateChars = normalizeLimit(options.maxCandidateChars);
+  const maxRepairChars = normalizeLimit(options.maxRepairChars);
+
+  const candidate =
+    maxCandidateChars !== null && input.length > maxCandidateChars
+      ? input.slice(0, maxCandidateChars)
+      : input;
+
+  const candidateCharsTruncated = candidate.length !== input.length;
+
   const steps: RepairStep[] = [];
 
-  let current = input;
+  let current = candidate;
   current = withStep(steps, "stripBOM", current, stripBOM(current));
   current = withStep(
     steps,
@@ -123,11 +156,23 @@ export function repairJsonText(input: string): RepairResult {
     fixTrailingCommas(current),
   );
 
+  const repaired =
+    maxRepairChars !== null && current.length > maxRepairChars
+      ? current.slice(0, maxRepairChars)
+      : current;
+  const repairCharsTruncated = repaired.length !== current.length;
+
   return {
-    text: current,
+    text: repaired,
     log: {
       steps,
-      changed: steps.some((step) => step.applied),
+      changed: steps.some((step) => step.applied) || candidateCharsTruncated || repairCharsTruncated,
+      budget: {
+        maxCandidateChars,
+        maxRepairChars,
+        candidateCharsTruncated,
+        repairCharsTruncated,
+      },
     },
   };
 }

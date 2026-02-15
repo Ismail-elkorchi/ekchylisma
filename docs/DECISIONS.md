@@ -195,3 +195,14 @@
   - Extend `bench/datasets/smoke.jsonl` with a deterministic long-text case (`caseId=long-token`).
 - Rationale: Long-input coverage must be a direct regression signal in the default runtime matrix and benchmark protocol.
 - Consequence: Test and benchmark suites include long-text workload checks without introducing runtime dependencies.
+
+## ADR-0025: Surface explicit run budgets for time, retries, and repair caps
+- Date: 2026-02-15
+- Context: REQ-9.2.2 requires explicit bounded behavior and diagnostics for repair/retry/time budget controls.
+- Decision:
+  - Extend `runWithEvidence()` options with `timeBudgetMs`, `repairBudgets`, and deterministic `nowMs` injection.
+  - Add `diagnostics.budgetLog` containing effective time budget, retry policy values, and repair cap settings/counters.
+  - Add `budget_exhausted` shard failure classification when deadline checks prevent provider attempt scheduling.
+  - Extend JSON repair diagnostics with cap metadata (`maxCandidateChars`, `maxRepairChars`, truncation flags).
+- Rationale: Explicit budget surfaces convert hidden control flow limits into auditable, typed diagnostics with deterministic test hooks.
+- Consequence: Evidence bundle contract and fixture payloads include budget metadata; tests assert deadline and repair-cap behavior.
