@@ -15,6 +15,7 @@ const REQUIRED_DOCS = [
   "docs/EVAL.md",
   "docs/THREAT_MODEL.md",
   "docs/SECURE_INTEGRATION.md",
+  "docs/EVIDENCE_ATTESTATION.md",
   "docs/ROADMAP.md",
   "docs/NON_GOALS.md",
 ];

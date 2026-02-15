@@ -134,3 +134,13 @@
   - Keep default benchmark mode deterministic via `FakeProvider`, with optional multi-trial variance mode.
 - Rationale: Deterministic evidence reduces ambiguity in regression review and keeps benchmark checks fast in CI.
 - Consequence: README/docs claims should reference benchmark outputs under `bench/results/`.
+
+## ADR-0019: Add optional EvidenceBundle attestation with WebCrypto HMAC
+- Date: 2026-02-15
+- Context: Evidence bundles are portable audit artifacts, but integrity checks were not built into the contract.
+- Decision:
+  - Add optional `attestation` field on `EvidenceBundle`.
+  - Implement `attestEvidenceBundle()` and `verifyEvidenceBundleAttestation()` using WebCrypto.
+  - Use deterministic canonicalization (`ekchylisma-json-c14n-v1`) and `HMAC-SHA-256` with JWK `kty=oct`.
+- Rationale: A dependency-free integrity check improves evidence transport safety across runtimes.
+- Consequence: Integrators must manage key distribution and trust policy outside the library.
