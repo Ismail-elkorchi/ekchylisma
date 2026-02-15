@@ -30,6 +30,7 @@
 
 ## ADR-0005: Shard identity uses program hash + normalized shard text
 - Date: 2026-02-14
+- Status: superseded by ADR-0023
 - Context: Prompt 04 requires resumable chunk execution with deterministic shard IDs.
 - Decision: `shardId = sha256(programHash + normalizedTextSlice)` and chunk boundaries are char-based with inclusive `start`, exclusive `end`.
 - Rationale: Pairing program and content isolates shards across extraction programs while keeping IDs portable.
@@ -174,3 +175,13 @@
   - Record `diagnostics.promptLog` in `runWithEvidence()` with `programHash` and per-shard `promptHash` values.
 - Rationale: Explicit marker escaping and prompt hash logs improve boundary safety and post-run auditability.
 - Consequence: Evidence bundle diagnostics and schema include prompt hash records for every shard.
+
+## ADR-0023: Expand shard hash inputs with document and shard parameters
+- Date: 2026-02-15
+- Context: REQ-8.1.2 requires shard identity to include document and shard parameters, not only program hash and text slice.
+- Decision:
+  - Require `chunkDocument()` options to include `documentId` and `offsetMode`.
+  - Derive `shardId` from hash input containing `programHash`, `documentId`, `chunkSize`, `overlap`, `offsetMode`, `shardStart`, `shardEnd`, and `shardText`.
+  - Propagate `documentId`/`offsetMode` through run and evaluation call sites.
+- Rationale: Including document/shard parameters prevents cross-document and cross-configuration shard identity collisions.
+- Consequence: Existing chunking call sites must provide the expanded option set and tests must validate shard-id divergence across documents/parameters.

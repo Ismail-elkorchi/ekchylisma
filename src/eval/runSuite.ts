@@ -94,8 +94,10 @@ async function buildFakeProvider(
 
   for (const testCase of dataset) {
     const shards = await chunkDocument(testCase.documentText, program.programHash, {
+      documentId: testCase.caseId,
       chunkSize,
       overlap,
+      offsetMode: "utf16_code_unit",
     });
 
     for (const shard of shards) {
@@ -154,6 +156,7 @@ export async function runSuite(
           runId: `eval-${runIndex}-${testCase.caseId}`,
           program: options.program,
           documentText: testCase.documentText,
+          documentId: testCase.caseId,
           provider,
           model: options.model,
           chunkSize,

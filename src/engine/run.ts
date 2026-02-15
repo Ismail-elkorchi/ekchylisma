@@ -90,6 +90,7 @@ export type EngineRunOptions = {
   runId: string;
   program: Program;
   documentText: string;
+  documentId?: string;
   provider: Provider;
   model: string;
   chunkSize: number;
@@ -336,12 +337,16 @@ async function runShardWithProvider(
 export async function runExtractionWithProvider(
   options: EngineRunOptions,
 ): Promise<EngineRunResult> {
+  const documentId = options.documentId
+    ?? `doc-${(await sha256Hex(options.documentText)).slice(0, 16)}`;
   const shards = await chunkDocument(
     options.documentText,
     options.program.programHash,
     {
+      documentId,
       chunkSize: options.chunkSize,
       overlap: options.overlap,
+      offsetMode: "utf16_code_unit",
     },
   );
 
@@ -400,8 +405,10 @@ export async function runWithEvidence(
     normalized.text,
     options.program.programHash,
     {
+      documentId,
       chunkSize: options.chunkSize,
       overlap: options.overlap,
+      offsetMode: "utf16_code_unit",
     },
   );
 

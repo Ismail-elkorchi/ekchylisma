@@ -8,11 +8,17 @@ export type DocumentShard = {
 };
 
 export type ChunkOptions = {
+  documentId: string;
   chunkSize: number;
   overlap: number;
+  offsetMode: "utf16_code_unit";
 };
 
 function validateOptions(options: ChunkOptions): void {
+  if (typeof options.documentId !== "string" || options.documentId.length === 0) {
+    throw new Error("documentId must be a non-empty string.");
+  }
+
   if (!Number.isInteger(options.chunkSize) || options.chunkSize <= 0) {
     throw new Error("chunkSize must be a positive integer.");
   }
@@ -26,6 +32,25 @@ function validateOptions(options: ChunkOptions): void {
   }
 }
 
+function buildShardHashInput(
+  programHash: string,
+  options: ChunkOptions,
+  shardStart: number,
+  shardEnd: number,
+  shardText: string,
+): string {
+  return [
+    `programHash=${programHash}`,
+    `documentId=${options.documentId}`,
+    `chunkSize=${options.chunkSize}`,
+    `overlap=${options.overlap}`,
+    `offsetMode=${options.offsetMode}`,
+    `shardStart=${shardStart}`,
+    `shardEnd=${shardEnd}`,
+    `shardText=${shardText}`,
+  ].join("\n");
+}
+
 export async function chunkDocument(
   normalizedText: string,
   programHash: string,
@@ -36,7 +61,9 @@ export async function chunkDocument(
   if (normalizedText.length === 0) {
     return [
       {
-        shardId: await sha256Hex(`${programHash}`),
+        shardId: await sha256Hex(
+          buildShardHashInput(programHash, options, 0, 0, ""),
+        ),
         start: 0,
         end: 0,
         text: "",
@@ -50,7 +77,9 @@ export async function chunkDocument(
   for (let start = 0; start < normalizedText.length; start += step) {
     const end = Math.min(normalizedText.length, start + options.chunkSize);
     const text = normalizedText.slice(start, end);
-    const shardId = await sha256Hex(`${programHash}${text}`);
+    const shardId = await sha256Hex(
+      buildShardHashInput(programHash, options, start, end, text),
+    );
 
     shards.push({
       shardId,

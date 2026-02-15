@@ -28,7 +28,7 @@ Legend:
 | REQ-7.3.1 | `src/providers/*` | `tests/providers/real-providers.test.ts` | `node`, `deno`, `bun` | implemented | Model IDs treated opaquely. |
 | REQ-7.4.1 | `src/engine/run.ts` (`runWithEvidence`) | `tests/engine/run-with-evidence.test.ts` | `node`, `deno`, `bun` | implemented | Diagnostics classify `non_empty`, `empty_by_evidence`, and `empty_by_failure` explicitly. |
 | REQ-8.1.1 | `src/engine/chunk.ts` | `tests/engine/chunk-map-span.test.ts` | `node`, `deno`, `bun` | implemented | Chunk size, overlap, deterministic IDs. |
-| REQ-8.1.2 | `src/engine/chunk.ts` | `tests/engine/chunk-map-span.test.ts` | `node`, `deno`, `bun` | partial | Hash currently uses `programHash + shardText`; missing documentId + shard params in hash input. |
+| REQ-8.1.2 | `src/engine/chunk.ts`, `src/engine/run.ts`, `src/eval/runSuite.ts` | `tests/engine/chunk-map-span.test.ts`, `tests/providers/fake-e2e.test.ts` | `node`, `deno`, `bun` | implemented | Shard hash input includes documentId, chunkSize, overlap, offsetMode, shard range, and shard text; call sites pass expanded options. |
 | REQ-8.2.1 | n/a | n/a | n/a | gap | Multi-pass execution model not yet implemented. |
 | REQ-8.3.1 | `src/engine/execute.ts`, `src/engine/run.ts` | `tests/engine/checkpoint-retry-executor.test.ts` | `node`, `deno`, `bun` | partial | Partial execution works at shard executor level; evidence classification still limited. |
 | REQ-8.3.2 | `src/engine/checkpoint.ts`, `src/engine/execute.ts`, `src-node/fs.ts` | `tests/engine/checkpoint-retry-executor.test.ts` | `node`, `deno`, `bun` | implemented | In-memory + node adapter pathways exist. |

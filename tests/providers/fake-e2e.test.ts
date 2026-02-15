@@ -31,8 +31,10 @@ test("runExtractionWithProvider executes end-to-end with FakeProvider and quote 
   };
 
   const [shard] = await chunkDocument(documentText, program.programHash, {
+    documentId: "doc-provider-e2e",
     chunkSize: 32,
     overlap: 0,
+    offsetMode: "utf16_code_unit",
   });
   const request = buildProviderRequest(program, shard, "fake-model");
   const requestHash = await hashProviderRequest(request);
@@ -60,6 +62,7 @@ test("runExtractionWithProvider executes end-to-end with FakeProvider and quote 
     runId: "provider-e2e",
     program,
     documentText,
+    documentId: "doc-provider-e2e",
     provider: fakeProvider,
     model: "fake-model",
     chunkSize: 32,

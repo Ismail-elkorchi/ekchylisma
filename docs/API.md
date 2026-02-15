@@ -7,7 +7,7 @@
 - `normalizeText(text, options)` from `src/core/normalize.ts`
 - `assertQuoteInvariant(docText, extraction)` from `src/core/invariants.ts`
 - Types from `src/core/types.ts`: `DocumentInput`, `Span`, `Extraction`, `EvidenceBundle`, `EvidenceAttestation`, `Program`, `PromptHashRecord`, `PromptLog`, `ShardOutcome`, `RunDiagnostics`
-- Engine chunking from `src/engine/chunk.ts`: `chunkDocument(normalizedText, programHash, options)`
+- Engine chunking from `src/engine/chunk.ts`: `chunkDocument(normalizedText, programHash, options)` where `options` include `documentId`, `chunkSize`, `overlap`, `offsetMode`
 - Span mapping from `src/engine/mapSpan.ts`: `mapShardSpanToDocument(shard, shardSpan)`
 - Checkpointing from `src/engine/checkpoint.ts`: `CheckpointStore`, `InMemoryCheckpointStore`, `buildCheckpointKey(runId, shardId)`
 - Retry policy helpers from `src/engine/retry.ts`: `computeBackoffMs`, `computeJitterMs`, `computeRetryDelayMs`, `shouldRetry`
