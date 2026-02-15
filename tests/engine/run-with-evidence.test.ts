@@ -163,6 +163,10 @@ test("runWithEvidence enforces timeBudgetMs and surfaces budget_exhausted failur
       providerCalls += 1;
       throw new Error("provider should not be called after budget exhaustion");
     },
+    async generateStructured() {
+      providerCalls += 1;
+      throw new Error("provider should not be called after budget exhaustion");
+    },
   };
 
   const bundle = await runWithEvidence({

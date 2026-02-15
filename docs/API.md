@@ -16,6 +16,7 @@
 - Provider-backed engine run from `src/engine/run.ts`:
   - `runExtractionWithProvider(options)` for extraction-first legacy result shape
   - `runWithEvidence(options)` for run-produced `EvidenceBundle` including shard outcomes and explicit failure diagnostics
+  - Schema-first requests route through provider `generateStructured()`; text-only requests route through `generate()`
   - `runWithEvidence(options)` diagnostics include `promptLog` (`programHash`, per-shard `promptHash` records)
   - `runWithEvidence(options)` supports explicit budget controls:
     - `timeBudgetMs` (non-negative integer): run deadline for scheduling provider attempts
@@ -45,7 +46,7 @@
 - JSON extraction helpers from `src/json/extractJson.ts`: `extractFirstJson(text)`, `detectJsonFlavor(text)`
 - JSON repair pipeline from `src/json/repair.ts`: `repairJsonText(input, options)` with `RepairLog` budget metadata (`maxCandidateChars`, `maxRepairChars`, truncation flags)
 - JSON parser from `src/json/parse.ts`: `parseJsonStrict(text)`, `tryParseJsonStrict(text)`, `JsonParseFailure`
-- Provider contracts from `src/providers/types.ts`: `Provider`, `ProviderRequest`, `ProviderResponse`
+- Provider contracts from `src/providers/types.ts`: `Provider` (`generate(request)`, `generateStructured(request)`), `ProviderRequest`, `ProviderResponse`
 - Provider error helpers from `src/providers/errors.ts`: `ProviderError`, `classifyProviderStatus`, `isTransientProviderError`
 - Provider request hash helper from `src/providers/requestHash.ts`: `hashProviderRequest(request)`
 - Fake provider test adapter from `src/providers/fake.ts`: `FakeProvider`

@@ -245,3 +245,15 @@
 - Consequence:
   - First-pass payload-shape and quote-invariant failures can converge on pass two without changing retry semantics for provider transport failures.
   - Evidence bundles include deterministic stage logs for pass-by-pass execution review.
+
+## ADR-0029: provider-structured-generate-split
+- Date: 2026-02-15
+- Context: REQ-9.1.1 required explicit separation of free-text generation from schema-first structured generation. A single provider method allowed schema-first paths to drift into text-format responses.
+- Decision:
+  - Split provider contract into `generate()` and `generateStructured()`.
+  - Route schema-bearing requests through `generateStructured()` in engine run paths.
+  - Extend `FakeProvider` with separate structured response mapping for deterministic regression control.
+  - Add structured-split regression scripts and tests that fail on text-channel fallback.
+- Consequence:
+  - Provider adapters expose explicit structured execution semantics.
+  - Schema-first extraction paths become deterministic and verifiable through regression dataset cases.

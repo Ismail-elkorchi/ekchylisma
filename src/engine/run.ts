@@ -494,7 +494,9 @@ async function runShardWithProvider(
 
     let response: Awaited<ReturnType<Provider["generate"]>>;
     try {
-      response = await options.provider.generate(request);
+      response = request.schema
+        ? await options.provider.generateStructured(request)
+        : await options.provider.generate(request);
       stages.push({
         pass,
         stage: "draft",

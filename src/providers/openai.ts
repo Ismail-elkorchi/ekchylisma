@@ -56,8 +56,9 @@ export class OpenAIProvider implements Provider {
     this.config = config;
   }
 
-  async generate(
+  private async generateInternal(
     request: ProviderRequest,
+    structured: boolean,
     options: { fetchFn?: typeof fetch } = {},
   ): Promise<ProviderResponse> {
     const fetchFn = ensureFetch(options.fetchFn ?? this.config.fetchFn);
@@ -69,7 +70,7 @@ export class OpenAIProvider implements Provider {
       messages: [{ role: "user", content: request.prompt }],
     };
 
-    if (request.schema) {
+    if (structured && request.schema) {
       payload.response_format = {
         type: "json_schema",
         json_schema: {
@@ -115,5 +116,19 @@ export class OpenAIProvider implements Provider {
         requestHash,
       },
     };
+  }
+
+  async generate(
+    request: ProviderRequest,
+    options: { fetchFn?: typeof fetch } = {},
+  ): Promise<ProviderResponse> {
+    return this.generateInternal(request, false, options);
+  }
+
+  async generateStructured(
+    request: ProviderRequest,
+    options: { fetchFn?: typeof fetch } = {},
+  ): Promise<ProviderResponse> {
+    return this.generateInternal(request, true, options);
   }
 }

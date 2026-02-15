@@ -51,8 +51,9 @@ export class GeminiProvider implements Provider {
     this.config = config;
   }
 
-  async generate(
+  private async generateInternal(
     request: ProviderRequest,
+    structured: boolean,
     options: { fetchFn?: typeof fetch } = {},
   ): Promise<ProviderResponse> {
     const fetchFn = ensureFetch(options.fetchFn ?? this.config.fetchFn);
@@ -69,7 +70,7 @@ export class GeminiProvider implements Provider {
       ],
     };
 
-    if (request.schema) {
+    if (structured && request.schema) {
       payload.generationConfig = {
         responseMimeType: "application/json",
         responseSchema: request.schema,
@@ -107,5 +108,19 @@ export class GeminiProvider implements Provider {
         requestHash,
       },
     };
+  }
+
+  async generate(
+    request: ProviderRequest,
+    options: { fetchFn?: typeof fetch } = {},
+  ): Promise<ProviderResponse> {
+    return this.generateInternal(request, false, options);
+  }
+
+  async generateStructured(
+    request: ProviderRequest,
+    options: { fetchFn?: typeof fetch } = {},
+  ): Promise<ProviderResponse> {
+    return this.generateInternal(request, true, options);
   }
 }

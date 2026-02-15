@@ -75,3 +75,60 @@ test("runExtractionWithProvider executes end-to-end with FakeProvider and quote 
   assertEqual(result.extractions[0].span.charStart, 6);
   assertEqual(result.extractions[0].span.charEnd, 10);
 });
+
+test("runExtractionWithProvider routes schema-first requests to generateStructured", async () => {
+  const documentText = "Alpha Beta";
+  const program = {
+    instructions: "Extract token Beta.",
+    examples: [],
+    schema: {
+      type: "object",
+    },
+    programHash: await sha256Hex("Extract token Beta.structured"),
+  };
+
+  const [shard] = await chunkDocument(documentText, program.programHash, {
+    documentId: "doc-provider-structured",
+    chunkSize: 32,
+    overlap: 0,
+    offsetMode: "utf16_code_unit",
+  });
+  const request = buildProviderRequest(program, shard, "fake-model");
+  const requestHash = await hashProviderRequest(request);
+
+  const fakeProvider = new FakeProvider({
+    defaultResponse: "{\"items\":[]}",
+  });
+  fakeProvider.setResponse(requestHash, "{\"items\":[]}");
+  fakeProvider.setStructuredResponse(
+    requestHash,
+    JSON.stringify({
+      extractions: [
+        {
+          extractionClass: "token",
+          quote: "Beta",
+          span: {
+            offsetMode: "utf16_code_unit",
+            charStart: 6,
+            charEnd: 10,
+          },
+          grounding: "explicit",
+        },
+      ],
+    }),
+  );
+
+  const result = await runExtractionWithProvider({
+    runId: "provider-structured-route",
+    program,
+    documentText,
+    documentId: "doc-provider-structured",
+    provider: fakeProvider,
+    model: "fake-model",
+    chunkSize: 32,
+    overlap: 0,
+  });
+
+  assertEqual(result.extractions.length, 1);
+  assertEqual(result.extractions[0].quote, "Beta");
+});
