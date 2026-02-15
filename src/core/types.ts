@@ -30,11 +30,42 @@ export type ProgramExample = {
   output: Extraction[];
 };
 
+export type ProgramClass = {
+  name: string;
+  attributesSchema?: JsonSchemaSubset;
+  allowInferred?: boolean;
+};
+
+export type ProgramConstraints = {
+  requireExactQuote: boolean;
+  forbidOverlap: boolean;
+  maxExtractionsPerShard?: number;
+};
+
 export type Program = {
+  programId: string;
+  description: string;
+  classes: ProgramClass[];
+  constraints: ProgramConstraints;
   instructions: string;
   examples: ProgramExample[];
   schema: JsonSchemaSubset;
   programHash: string;
+};
+
+export type ProgramInput = {
+  programId?: string;
+  description?: string;
+  classes?: ProgramClass[];
+  constraints?: {
+    requireExactQuote?: boolean;
+    forbidOverlap?: boolean;
+    maxExtractionsPerShard?: number;
+  };
+  instructions: string;
+  examples?: ProgramExample[];
+  schema: JsonSchemaSubset;
+  programHash?: string;
 };
 
 export type DocumentInput = {

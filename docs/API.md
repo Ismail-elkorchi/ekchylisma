@@ -3,11 +3,12 @@
 ## Root Exports (`src/index.ts`)
 - `sha256Hex(input)` from `src/core/hash.ts`
 - Identifier helpers from `src/core/identifiers.ts`: `isValidPackId(value)`, `isValidCaseId(value)`, `containsPlaceholderToken(value)`
+- Program normalization/validation from `src/core/program.ts`: `normalizeProgram(programInput)`
 - `normalizeNewlines(text)` from `src/core/normalize.ts`
 - `trimTrailingWhitespacePerLine(text)` from `src/core/normalize.ts`
 - `normalizeText(text, options)` from `src/core/normalize.ts`
 - `assertQuoteInvariant(docText, extraction)` from `src/core/invariants.ts`
-- Types from `src/core/types.ts`: `DocumentInput`, `Span`, `Extraction`, `EvidenceBundle`, `EvidenceAttestation`, `Program`, `PromptHashRecord`, `PromptLog`, `RunBudgets`, `BudgetLog`, `MultiPassLog`, `RunRepairLog`, `RunCompleteness`, `ShardOutcome`, `RunDiagnostics`
+- Types from `src/core/types.ts`: `DocumentInput`, `Span`, `Extraction`, `EvidenceBundle`, `EvidenceAttestation`, `Program`, `ProgramInput`, `PromptHashRecord`, `PromptLog`, `RunBudgets`, `BudgetLog`, `MultiPassLog`, `RunRepairLog`, `RunCompleteness`, `ShardOutcome`, `RunDiagnostics`
 - Engine chunking from `src/engine/chunk.ts`: `chunkDocument(normalizedText, programHash, options)` where `options` include `documentId`, `chunkSize`, `overlap`, `offsetMode`
 - Span mapping from `src/engine/mapSpan.ts`: `mapShardSpanToDocument(shard, shardSpan)`
 - Checkpointing from `src/engine/checkpoint.ts`: `CheckpointStore`, `InMemoryCheckpointStore`, `buildCheckpointKey(runId, shardId)`
@@ -16,6 +17,7 @@
 - Provider-backed engine run from `src/engine/run.ts`:
   - `runExtractionWithProvider(options)` for extraction-first legacy result shape
   - `runWithEvidence(options)` for run-produced `EvidenceBundle` including shard outcomes and explicit failure diagnostics
+  - `runWithEvidence(options)` normalizes/validates `ProgramInput` into a deterministic structured `Program` shape (`programId`, `description`, `classes`, `constraints`)
   - Schema-first requests route through provider `generateStructured()`; text-only requests route through `generate()`
   - `runWithEvidence(options)` diagnostics include:
     - `emptyResultKind`: `non_empty`, `empty_by_evidence`, or `empty_by_failure`

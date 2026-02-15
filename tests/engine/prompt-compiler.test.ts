@@ -102,7 +102,7 @@ test("hashPromptText is deterministic with stable expected hash", async () => {
   assertEqual(hashOne, hashTwo, "prompt hash should be deterministic");
   assertEqual(
     hashOne,
-    "c9603b9ff1968013da012b465bdfd70869fe4887ebffa990f32722a0886d136f",
+    "9dfaae086f277257cad703a65a4073226a536eaf4fd1b7584af294b24851d291",
     "prompt hash should match expected vector",
   );
 });
