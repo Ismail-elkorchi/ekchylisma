@@ -72,6 +72,15 @@ function sampleBundle(runId: string) {
       ],
       failures: [],
       checkpointHits: 0,
+      promptLog: {
+        programHash: "program-hash",
+        shardPromptHashes: [
+          {
+            shardId: `shard-${runId}`,
+            promptHash: "prompt-hash",
+          },
+        ],
+      },
     },
   };
 }

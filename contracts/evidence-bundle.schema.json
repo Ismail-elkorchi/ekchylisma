@@ -122,7 +122,7 @@
     "diagnostics": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["emptyResultKind", "shardOutcomes", "failures", "checkpointHits"],
+      "required": ["emptyResultKind", "shardOutcomes", "failures", "checkpointHits", "promptLog"],
       "properties": {
         "emptyResultKind": {
           "type": "string",
@@ -149,6 +149,32 @@
                 "$ref": "#/$defs/shardOutcomeFailure"
               }
             ]
+          }
+        },
+        "promptLog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["programHash", "shardPromptHashes"],
+          "properties": {
+            "programHash": {
+              "type": "string"
+            },
+            "shardPromptHashes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["shardId", "promptHash"],
+                "properties": {
+                  "shardId": {
+                    "type": "string"
+                  },
+                  "promptHash": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         }
       }

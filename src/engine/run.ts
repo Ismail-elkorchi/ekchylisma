@@ -4,6 +4,7 @@ import type {
   EvidenceProvenance,
   Extraction,
   JsonPipelineDiagnostic,
+  PromptLog,
   Program,
   RunDiagnostics,
   ShardFailure,
@@ -42,7 +43,7 @@ import {
   ProviderError,
   isTransientProviderError,
 } from "../providers/errors.ts";
-import { compilePrompt } from "./promptCompiler.ts";
+import { compilePrompt, hashPromptText } from "./promptCompiler.ts";
 
 type ShardRunValue = {
   extractions: Extraction[];
@@ -406,8 +407,18 @@ export async function runWithEvidence(
 
   const shardOutcomes: ShardOutcome[] = [];
   const failures: ShardFailure[] = [];
+  const promptLog: PromptLog = {
+    programHash: options.program.programHash,
+    shardPromptHashes: [],
+  };
 
   for (const shard of shards) {
+    const promptHash = await hashPromptText(compilePrompt(options.program, shard));
+    promptLog.shardPromptHashes.push({
+      shardId: shard.shardId,
+      promptHash,
+    });
+
     const checkpointKey = buildCheckpointKey(options.runId, shard.shardId);
     const checkpointValue = await checkpointStore.get(checkpointKey);
 
@@ -487,6 +498,7 @@ export async function runWithEvidence(
     shardOutcomes,
     failures,
     checkpointHits: shardOutcomes.filter((outcome) => outcome.fromCheckpoint).length,
+    promptLog,
   };
 
   return {

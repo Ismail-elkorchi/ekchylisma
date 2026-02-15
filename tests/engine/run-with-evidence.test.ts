@@ -1,4 +1,5 @@
 import { sha256Hex } from "../../src/core/hash.ts";
+import { compilePrompt, hashPromptText } from "../../src/engine/promptCompiler.ts";
 import { runWithEvidence } from "../../src/engine/run.ts";
 import { FakeProvider } from "../../src/providers/fake.ts";
 import { assert, assertEqual, test } from "../harness.ts";
@@ -61,6 +62,27 @@ test("runWithEvidence returns shard outcomes and provenance for successful extra
   assertEqual(bundle.diagnostics.failures.length, 0);
   assertEqual(bundle.diagnostics.shardOutcomes.length, 1);
   assertEqual(bundle.diagnostics.shardOutcomes[0].status, "success");
+  assertEqual(bundle.diagnostics.promptLog.programHash, program.programHash);
+  assertEqual(bundle.diagnostics.promptLog.shardPromptHashes.length, 1);
+
+  const firstOutcome = bundle.diagnostics.shardOutcomes[0];
+  const shardPrompt = compilePrompt(program, {
+    shardId: firstOutcome.shardId,
+    start: firstOutcome.start,
+    end: firstOutcome.end,
+    text: documentText.slice(firstOutcome.start, firstOutcome.end),
+  });
+  const expectedPromptHash = await hashPromptText(shardPrompt);
+  assertEqual(
+    bundle.diagnostics.promptLog.shardPromptHashes[0].promptHash,
+    expectedPromptHash,
+    "prompt hash log should match compiled shard prompt hash",
+  );
+  assertEqual(
+    bundle.diagnostics.promptLog.shardPromptHashes[0].shardId,
+    firstOutcome.shardId,
+    "prompt hash log should reference shard id",
+  );
 });
 
 test("runWithEvidence classifies valid empty output as empty_by_evidence", async () => {
