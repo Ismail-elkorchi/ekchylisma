@@ -1,26 +1,42 @@
 # Secure Integration Guide
 
 ## Integration Goal
-Use extraction outputs as validated data artifacts, not as executable instructions.
+Use extraction outputs as validated data artifacts, never as executable instructions.
+
+## Required Gates Before Any Downstream Action
+1. Run `runWithEvidence()` and persist the returned `EvidenceBundle`.
+2. Require `diagnostics.emptyResultKind !== "empty_by_failure"`.
+3. Require invariant-safe extractions (quote/offset checks pass).
+4. Apply explicit allowlists in downstream action layers (outside this library).
+
+## Attack-Class Integration Checklist
+- Prompt injection boundaries
+  - Treat all document text as untrusted data.
+  - Do not concatenate raw user text into trusted prompt blocks outside `compilePrompt` / `compileRepairPrompt`.
+- Schema confusion
+  - Reject schemas with unsupported dialect keywords.
+  - Reject payloads that do not match extraction shape requirements.
+- Quote spoofing
+  - Reject extractions when quote/offset invariant fails.
+  - Never bypass invariant checks for convenience mapping.
 
 ## Do
-- Run `runWithEvidence()` and persist `EvidenceBundle` for auditability.
-- Gate downstream processing on:
-  - successful parse/payload checks
-  - quote invariant compliance
-  - acceptable `diagnostics.emptyResultKind`
-- Require explicit allowlists before any downstream action is triggered.
-- Separate extraction runtime credentials from action-execution credentials.
-- Log run identifiers and shard failures for incident analysis.
+- Separate extraction credentials from action-execution credentials.
+- Store run IDs and shard failures for incident forensics.
+- Enforce timeout, retry, and repair budgets.
+- Restrict outbound network destinations in systems that consume extraction results.
+- Run `npm run check` and `npm run bench` before deployment changes.
 
 ## Do Not
-- Do not execute shell commands, SQL, HTTP requests, or filesystem writes directly from model-generated attributes.
-- Do not treat `empty_by_failure` as a valid “no entities present” result.
-- Do not bypass quote invariant checks when mapping spans to source text.
-- Do not expose provider credentials through prompt text, error messages, or browser output.
+- Do not execute shell commands, SQL, HTTP requests, or filesystem writes directly from model output.
+- Do not treat `empty_by_failure` as “no entities found.”
+- Do not trust provider text before parse + payload + invariant checks.
+- Do not expose secrets in prompts, browser bundles, or error logs.
 
-## Recommended Runtime Controls
-- Enforce per-request timeout budgets and retry limits.
-- Restrict outbound network destinations in action layers outside this library.
-- Keep CI and release paths deterministic (`npm run check` + runtime matrix tests).
-- Require PR review for dependency and workflow changes.
+## Recommended Minimal Policy
+- `empty_by_failure`: reject and quarantine.
+- `empty_by_evidence`: treat as valid empty result.
+- `non_empty`: accept only after invariant-safe extraction checks.
+
+## Runtime Notes
+This library enforces data-shape and invariant boundaries. It does not enforce org-specific policy controls (RBAC, outbound firewall, key rotation, DLP), which must be implemented by the integrating system.

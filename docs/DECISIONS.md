@@ -356,3 +356,14 @@
 - Consequence:
   - Eval regressions can now be detected from instability and breadth erosion, not just single aggregate pass/fail rates.
   - CI remains deterministic in fake-provider mode while preserving configurable tolerance controls for broader trial modes.
+
+## ADR-0039: threat-model-hardening
+- Date: 2026-02-15
+- Context: Threat-model guidance existed, but attack-class coverage needed stronger executable validation and tighter repair-prompt boundary handling.
+- Decision:
+  - Harden repair prompt construction by neutralizing boundary-token injection in previous-response context fields.
+  - Expand security-focused tests to cover prompt-injection boundaries, schema confusion rejection, and quote spoofing rejection.
+  - Align threat-model and secure-integration docs with executable controls and regression packs.
+- Consequence:
+  - REQ-10.1 now has executable evidence across deterministic unit and regression paths.
+  - Documented attack classes map to concrete guardrails and tests rather than prose-only guidance.
