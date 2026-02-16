@@ -28,7 +28,7 @@ export * from "./providers/fake.ts";
 export * from "./providers/openai.ts";
 export * from "./providers/gemini.ts";
 export * from "./providers/ollama.ts";
-export * from "./schema/s.ts";
+export * from "./schema/schemaCue.ts";
 export * from "./schema/validate.ts";
 export * from "./schema/toJsonSchema.ts";
 export * from "./schema/normalizeDialect.ts";

@@ -144,7 +144,7 @@ export const optional = <const TInner extends SchemaAny>(
   inner: TInner,
 ): OptionalSchema<TInner> => ({ kind: "optional", inner });
 
-export const s = {
+export const schemaCue = {
   string,
   number,
   boolean,

@@ -5,7 +5,7 @@ import type {
   OptionalSchema,
   SchemaAny,
   UnionSchema,
-} from "./s.ts";
+} from "./schemaCue.ts";
 
 export type ValidationErrorCode =
   | "type_mismatch"

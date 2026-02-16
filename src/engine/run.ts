@@ -1065,6 +1065,21 @@ function orderAndDedupExtractions(extractions: Extraction[]): Extraction[] {
   return unique;
 }
 
+const CUE_LABEL = {
+  draftResponseReceived: "CUE:DRAFT_RESPONSE_RECEIVED",
+} as const;
+
+const ACT_LABEL = {
+  finalizeEmitExtractions: "ACT:FINALIZE_EMIT_EXTRACTIONS",
+  repairPassScheduled: "ACT:REPAIR_PASS_SCHEDULED",
+} as const;
+
+const EVAL_LABEL = {
+  draftProviderError: "EVAL:DRAFT_PROVIDER_ERROR",
+  validationPass: "EVAL:VALIDATION_PASS",
+  validationError: "EVAL:VALIDATION_ERROR",
+} as const;
+
 async function runShardWithProvider(
   options: RunShardOptions,
 ): Promise<ShardRunValue> {
@@ -1104,7 +1119,7 @@ async function runShardWithProvider(
         stage: "draft",
         status: "ok",
         failureKind: null,
-        message: null,
+        message: CUE_LABEL.draftResponseReceived,
       });
     } catch (error) {
       stages.push({
@@ -1112,7 +1127,9 @@ async function runShardWithProvider(
         stage: "draft",
         status: "error",
         failureKind: "provider_error",
-        message: error instanceof Error ? error.message : String(error),
+        message: `${EVAL_LABEL.draftProviderError} ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       });
       throw error;
     }
@@ -1150,14 +1167,14 @@ async function runShardWithProvider(
         stage: "validate",
         status: "ok",
         failureKind: null,
-        message: null,
+        message: EVAL_LABEL.validationPass,
       });
       stages.push({
         pass,
         stage: "finalize",
         status: "ok",
         failureKind: null,
-        message: null,
+        message: ACT_LABEL.finalizeEmitExtractions,
       });
 
       return {
@@ -1186,7 +1203,7 @@ async function runShardWithProvider(
         stage: "validate",
         status: "error",
         failureKind: lastFailureKind,
-        message: lastFailureMessage,
+        message: `${EVAL_LABEL.validationError} ${lastFailureMessage}`,
       });
 
       const canRepair = pass < options.multiPassMaxPasses &&
@@ -1197,7 +1214,7 @@ async function runShardWithProvider(
           stage: "repair",
           status: "ok",
           failureKind: lastFailureKind,
-          message: "Repair pass scheduled.",
+          message: ACT_LABEL.repairPassScheduled,
         });
         continue;
       }
