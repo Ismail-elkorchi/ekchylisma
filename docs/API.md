@@ -73,6 +73,9 @@
       `changed`, applied step names, and repair budget truncation flags)
     - Repair log entries are redacted metadata only and contain no raw provider
       text
+  - JSON parse failures include stable `failureCode` values:
+    `stream_frame_malformed`, `json_payload_missing`, `json_parse_failed`, and
+    `schema_validation_failed`
   - `buildProviderRequest(program, shard, model)`
   - `buildRepairProviderRequest(program, shard, model, context)`
 - Evidence attestation:

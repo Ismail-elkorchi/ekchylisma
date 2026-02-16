@@ -441,6 +441,7 @@
                       "enum": [
                         "stripBOM",
                         "removeAsciiControlChars",
+                        "fixInvalidEscapes",
                         "trimOuterJunk",
                         "fixTrailingCommas"
                       ]

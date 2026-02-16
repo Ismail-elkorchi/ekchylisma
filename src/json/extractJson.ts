@@ -75,6 +75,20 @@ function scanCompleteJson(text: string, start: number): JsonSlice | null {
 }
 
 export function extractFirstJson(text: string): JsonSlice | null {
+  const slices = extractJsonCandidates(text, { maxCandidates: 1 });
+  return slices[0] ?? null;
+}
+
+export function extractJsonCandidates(
+  text: string,
+  options: { maxCandidates?: number } = {},
+): JsonSlice[] {
+  const maxCandidates = options.maxCandidates ?? Number.POSITIVE_INFINITY;
+  if (Number.isNaN(maxCandidates) || maxCandidates <= 0) {
+    return [];
+  }
+
+  const slices: JsonSlice[] = [];
   for (let index = 0; index < text.length; index += 1) {
     const char = text[index];
     if (char !== "{" && char !== "[") {
@@ -83,11 +97,15 @@ export function extractFirstJson(text: string): JsonSlice | null {
 
     const slice = scanCompleteJson(text, index);
     if (slice) {
-      return slice;
+      slices.push(slice);
+      index = slice.end - 1;
+      if (slices.length >= maxCandidates) {
+        break;
+      }
     }
   }
 
-  return null;
+  return slices;
 }
 
 export function detectJsonFlavor(text: string): JsonFlavor {

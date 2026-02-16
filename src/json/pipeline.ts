@@ -65,6 +65,7 @@ export function parseJsonWithRepairPipeline(
     const emptyRepairLog = repairJsonText("", options.repair).log;
     const frameError: JsonParseError = {
       name: "JsonParseError",
+      failureCode: "stream_frame_malformed",
       message: decodedFrames.error.message,
       position: null,
       line: decodedFrames.error.line,
