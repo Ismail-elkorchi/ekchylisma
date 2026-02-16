@@ -94,8 +94,10 @@
   `decodeJsonlToEvidenceBundles(input)`
 - Visualization from `src/viz/html.ts`:
   `visualizeEvidenceBundle(bundles, options)`
-- Schema builders from `src/schema/s.ts`: `s.string`, `s.number`, `s.boolean`,
-  `s.literal`, `s.enum`, `s.array`, `s.object`, `s.union`, `s.optional`
+- Schema builders from `src/schema/schemaCue.ts`: `schemaCue.string`,
+  `schemaCue.number`, `schemaCue.boolean`, `schemaCue.literal`,
+  `schemaCue.enum`, `schemaCue.array`, `schemaCue.object`, `schemaCue.union`,
+  `schemaCue.optional`
 - Schema validator: `validate(schema, value, options)` from
   `src/schema/validate.ts`
 - JSON Schema generator: `toJsonSchema(schema)` from
@@ -150,12 +152,12 @@
 ## Schema Example
 
 ```ts
-import { s, toJsonSchema, validate } from "ekchylisma";
+import { schemaCue, toJsonSchema, validate } from "ekchylisma";
 
-const Ticket = s.object({
-  title: s.string(),
-  priority: s.enum(["low", "high"]),
-  points: s.optional(s.number()),
+const Ticket = schemaCue.object({
+  title: schemaCue.string(),
+  priority: schemaCue.enum(["low", "high"]),
+  points: schemaCue.optional(schemaCue.number()),
 });
 
 const result = validate(Ticket, { title: "Bug", priority: "high" });

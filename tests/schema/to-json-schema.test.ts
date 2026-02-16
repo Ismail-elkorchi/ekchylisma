@@ -1,12 +1,12 @@
-import { s } from "../../src/schema/s.ts";
+import { schemaCue } from "../../src/schema/schemaCue.ts";
 import { toJsonSchema } from "../../src/schema/toJsonSchema.ts";
 import { assertEqual, test } from "../harness.ts";
 
 test("toJsonSchema emits deterministic object schema with optional fields", () => {
-  const schema = s.object({
-    id: s.string(),
-    status: s.enum(["open", "closed"]),
-    score: s.optional(s.number()),
+  const schema = schemaCue.object({
+    id: schemaCue.string(),
+    status: schemaCue.enum(["open", "closed"]),
+    score: schemaCue.optional(schemaCue.number()),
   });
 
   const jsonSchema = toJsonSchema(schema);
@@ -27,7 +27,10 @@ test("toJsonSchema emits deterministic object schema with optional fields", () =
 });
 
 test("toJsonSchema emits anyOf for unions", () => {
-  const schema = s.union([s.literal("one"), s.number()]);
+  const schema = schemaCue.union([
+    schemaCue.literal("one"),
+    schemaCue.number(),
+  ]);
   const jsonSchema = toJsonSchema(schema);
 
   assertEqual(

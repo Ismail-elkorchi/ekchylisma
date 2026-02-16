@@ -1,5 +1,5 @@
 import type { JsonSchemaSubset } from "../core/types.ts";
-import type { ObjectShape, SchemaAny } from "./s.ts";
+import type { ObjectShape, SchemaAny } from "./schemaCue.ts";
 
 function toObjectSchema(shape: ObjectShape): JsonSchemaSubset {
   const properties: Record<string, JsonSchemaSubset> = {};

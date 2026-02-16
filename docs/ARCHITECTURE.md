@@ -51,7 +51,8 @@
   Bun.
 - `scripts/orphan-check.ts`: repository-check entrypoint for
   docs/contracts/exports coherence and runtime example smoke checks.
-- `src/schema/s.ts`: dependency-free schema DSL with TypeScript inference.
+- `src/schema/schemaCue.ts`: dependency-free schema DSL with TypeScript
+  inference.
 - `src/schema/validate.ts`: deterministic validator with JSON pointer errors.
 - `src/schema/toJsonSchema.ts`: limited JSON Schema subset generator.
 - `contracts/`: JSON Schema representations of external contracts.

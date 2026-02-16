@@ -1,6 +1,7 @@
 import "./core/hash.test.ts";
 import "./core/normalize.test.ts";
 import "./core/invariants.test.ts";
+import "./core/export-naming-activation-handles.test.ts";
 import "./core/property-invariants.test.ts";
 import "./core/program-shape.test.ts";
 import "./contracts/evidence-bundle-diagnostics-fields.test.ts";
