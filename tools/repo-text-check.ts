@@ -1,5 +1,7 @@
+import { execFile } from "node:child_process";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
+import { promisify } from "node:util";
 import {
   containsPlaceholderToken,
   isValidCaseId,
@@ -25,9 +27,60 @@ const FORBIDDEN_HEADER_PATTERN = new RegExp(
 );
 
 const SKIP_DIRS = new Set([".git", "node_modules", "dist"]);
+const execFileAsync = promisify(execFile);
+
+const UNICODE_FORMAT_CONTROL_NAMES = new Map<number, string>([
+  [0x00AD, "SOFT HYPHEN"],
+  [0x061C, "ARABIC LETTER MARK"],
+  [0x200B, "ZERO WIDTH SPACE"],
+  [0x200C, "ZERO WIDTH NON-JOINER"],
+  [0x200D, "ZERO WIDTH JOINER"],
+  [0x200E, "LEFT-TO-RIGHT MARK"],
+  [0x200F, "RIGHT-TO-LEFT MARK"],
+  [0x202A, "LEFT-TO-RIGHT EMBEDDING"],
+  [0x202B, "RIGHT-TO-LEFT EMBEDDING"],
+  [0x202C, "POP DIRECTIONAL FORMATTING"],
+  [0x202D, "LEFT-TO-RIGHT OVERRIDE"],
+  [0x202E, "RIGHT-TO-LEFT OVERRIDE"],
+  [0x2060, "WORD JOINER"],
+  [0x2066, "LEFT-TO-RIGHT ISOLATE"],
+  [0x2067, "RIGHT-TO-LEFT ISOLATE"],
+  [0x2068, "FIRST STRONG ISOLATE"],
+  [0x2069, "POP DIRECTIONAL ISOLATE"],
+  [0xFEFF, "ZERO WIDTH NO-BREAK SPACE"],
+]);
 
 function fail(message: string): never {
   throw new Error(message);
+}
+
+export function eval_hasUnicodeFormatControl(text: string): boolean {
+  return /\p{Cf}/u.test(text);
+}
+
+function eval_findFirstUnicodeFormatControl(text: string):
+  | {
+    character: string;
+    codePoint: number;
+  }
+  | null {
+  const match = /\p{Cf}/u.exec(text);
+  if (match === null || match[0].length === 0) {
+    return null;
+  }
+  return {
+    character: match[0],
+    codePoint: match[0].codePointAt(0) ?? 0,
+  };
+}
+
+function formatCodePoint(value: number): string {
+  return `U+${value.toString(16).toUpperCase().padStart(4, "0")}`;
+}
+
+function getUnicodeFormatControlName(codePoint: number): string {
+  return UNICODE_FORMAT_CONTROL_NAMES.get(codePoint) ??
+    "Unicode name unavailable";
 }
 
 async function walkFiles(root: string): Promise<string[]> {
@@ -53,6 +106,48 @@ async function walkFiles(root: string): Promise<string[]> {
 
   await walk(root);
   return output;
+}
+
+async function act_listTrackedFiles(): Promise<string[]> {
+  try {
+    const { stdout } = await execFileAsync("git", ["ls-files", "-z"], {
+      encoding: "utf8",
+    });
+    return stdout
+      .split("\0")
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0);
+  } catch {
+    // Some tests execute in temporary directories outside a git worktree.
+    return await walkFiles(".");
+  }
+}
+
+export async function act_scanRepoForUnicodeFormatControls(): Promise<void> {
+  const files = await act_listTrackedFiles();
+  for (const file of files) {
+    let content: string;
+    try {
+      content = await readFile(file, "utf8");
+    } catch {
+      continue;
+    }
+
+    if (!eval_hasUnicodeFormatControl(content)) {
+      continue;
+    }
+
+    const first = eval_findFirstUnicodeFormatControl(content);
+    if (first === null) {
+      continue;
+    }
+
+    const codePoint = formatCodePoint(first.codePoint);
+    const name = getUnicodeFormatControlName(first.codePoint);
+    fail(
+      `EVAL: ${file} contains Unicode format control ${codePoint} (${name})`,
+    );
+  }
 }
 
 async function verifyForbiddenPaths(): Promise<void> {
@@ -144,6 +239,7 @@ async function verifyRegressionGrammar(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  await act_scanRepoForUnicodeFormatControls();
   await verifyForbiddenPaths();
   await verifyPlaceholderTokens();
   await verifyRegressionGrammar();

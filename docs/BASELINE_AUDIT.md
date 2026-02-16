@@ -13,12 +13,12 @@ Timestamp: `2026-02-15T01:50:52+01:00`
 
 ## Command Results
 
-| Command                | Result | Notes                                                         |
-| ---------------------- | ------ | ------------------------------------------------------------- |
-| `npm run check`        | PASS   | Runs `npm test`, `npm run typecheck`, `npm run orphan-check`. |
-| `npm run test:deno`    | PASS   | Full test suite executed under Deno stable.                   |
-| `npm run test:bun`     | PASS   | Full test suite executed under Bun stable.                    |
-| `npm run test:workers` | PASS   | Workers harness test executed via Miniflare.                  |
+| Command                | Result | Notes                                                                                                                                            |
+| ---------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run check`        | PASS   | Runs `npm run repo-scope-check`, `npm run repo-text-check`, `npm run typecheck`, `npm test`, `npm run test:workers`, and `npm run test:browser`. |
+| `npm run test:deno`    | PASS   | Full test suite executed under Deno stable.                                                                                                      |
+| `npm run test:bun`     | PASS   | Full test suite executed under Bun stable.                                                                                                       |
+| `npm run test:workers` | PASS   | Workers harness test executed via Miniflare.                                                                                                     |
 
 ## Observations
 
