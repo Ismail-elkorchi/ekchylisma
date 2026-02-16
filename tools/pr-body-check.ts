@@ -21,9 +21,9 @@ type PullRequestEvent = {
 };
 
 const TITLE_REGEX =
-  /^(build|ci|docs|feat|fix|perf|refactor|test)\([a-z0-9-]+\): [A-Za-z0-9].+$/;
+  /^(build|ci|cleanup|docs|feat|fix|perf|refactor|test)\([a-z0-9-]+\): [A-Za-z0-9].+$/;
 const BRANCH_REGEX =
-  /^(build|ci|docs|feat|fix|perf|refactor|test)\/[a-z0-9-]+$/;
+  /^(build|ci|cleanup|docs|feat|fix|perf|refactor|test)\/[a-z0-9-]+$/;
 const TITLE_FORBIDDEN_TOKEN_PATTERN =
   /PR-[0-9]+|\b(?:T[O][D][O]|T[B][D]|W[I][P])\b/;
 const BRANCH_FORBIDDEN_TOKEN_PATTERN = /pr-[0-9]+/;
