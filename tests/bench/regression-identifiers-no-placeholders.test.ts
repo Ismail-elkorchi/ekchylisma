@@ -3,6 +3,8 @@ import { assertRejects, test } from "../harness.ts";
 
 const CASE_PLACEHOLDER = ["to", "do"].join("");
 const PACK_PLACEHOLDER = ["wi", "p"].join("");
+const CASE_PR_PLACEHOLDER = ["pr", "-42"].join("");
+const PACK_PR_PLACEHOLDER = ["pr", "42"].join("");
 
 function baseRecord() {
   return {
@@ -54,5 +56,33 @@ test("regression identifiers reject placeholder token in packId", async () => {
       ]),
     (error) => error instanceof Error && error.message.includes("packId contains a placeholder token"),
     "packId placeholder token should be rejected",
+  );
+});
+
+test("regression identifiers reject pull-request marker token in caseId", async () => {
+  await assertRejects(
+    () =>
+      validateRegressionDatasetRecords([
+        {
+          ...baseRecord(),
+          caseId: `placeholder-${CASE_PR_PLACEHOLDER}--fake-provider--1--1a2b3c4d`,
+        },
+      ]),
+    (error) => error instanceof Error && error.message.includes("caseId contains a placeholder token"),
+    "caseId pull-request marker token should be rejected",
+  );
+});
+
+test("regression identifiers reject pull-request marker token in packId", async () => {
+  await assertRejects(
+    () =>
+      validateRegressionDatasetRecords([
+        {
+          ...baseRecord(),
+          packId: `2026-02-15--placeholder-${PACK_PR_PLACEHOLDER}-pack--1a2b3c4d`,
+        },
+      ]),
+    (error) => error instanceof Error && error.message.includes("packId contains a placeholder token"),
+    "packId pull-request marker token should be rejected",
   );
 });

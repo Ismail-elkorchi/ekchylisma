@@ -9,12 +9,15 @@ import {
 const FORBIDDEN_DOC_PATTERNS = [
   /^docs\/PROGRAM_.*\.md$/,
   /^docs\/COMPETITION_.*\.md$/,
+  /^docs\/.*SIGNAL.*\.md$/,
   /^docs\/.*PLAN.*\.md$/,
   /^docs\/.*MATRIX.*\.md$/,
   /^docs\/.*WORKBENCH.*\.md$/,
 ];
 
 const FORBIDDEN_ROOT_PATHS = ["WORKBENCH"];
+const FORBIDDEN_HEADER_TERMS = ["competition", "scan"];
+const FORBIDDEN_HEADER_PATTERN = new RegExp(FORBIDDEN_HEADER_TERMS.join("\\s+"), "i");
 
 const SKIP_DIRS = new Set([".git", "node_modules", "dist"]);
 
@@ -65,6 +68,20 @@ async function verifyForbiddenPaths(): Promise<void> {
       if (pattern.test(path)) {
         fail(`forbidden path matches policy: ${path}`);
       }
+    }
+  }
+
+  for (const file of files) {
+    let content: string;
+    try {
+      content = await readFile(file, "utf8");
+    } catch {
+      continue;
+    }
+
+    const firstLines = content.split(/\r?\n/).slice(0, 200).join("\n");
+    if (FORBIDDEN_HEADER_PATTERN.test(firstLines)) {
+      fail(`${file} contains forbidden marker phrase in first 200 lines`);
     }
   }
 }

@@ -10,6 +10,7 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SCRIPT_PATH = join(REPO_ROOT, "tools", "pr-body-check.ts");
 const TEMPLATE_PATH = join(REPO_ROOT, ".github", "PULL_REQUEST_TEMPLATE.md");
 const TEMP_DIR = join(REPO_ROOT, "tests", ".tmp-pr-check-branch");
+const BRANCH_TOKEN = ["pr", "-11"].join("");
 
 function headingsToBody(template: string): string {
   const headings = template
@@ -39,7 +40,7 @@ test("pr-body-check rejects forbidden PR branch tokens", async () => {
         title: "feat(core): deterministic title",
         body: headingsToBody(template),
         head: {
-          ref: "feat/program-pr-11",
+          ref: `feat/program-${BRANCH_TOKEN}`,
         },
       },
     }),

@@ -10,6 +10,7 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SCRIPT_PATH = join(REPO_ROOT, "tools", "pr-body-check.ts");
 const TEMPLATE_PATH = join(REPO_ROOT, ".github", "PULL_REQUEST_TEMPLATE.md");
 const TEMP_DIR = join(REPO_ROOT, "tests", ".tmp-pr-check-title");
+const TITLE_TOKEN = ["PR", "-11"].join("");
 
 function headingsToBody(template: string): string {
   const headings = template
@@ -36,7 +37,7 @@ test("pr-body-check rejects forbidden PR title tokens", async () => {
     JSON.stringify({
       pull_request: {
         number: 101,
-        title: "feat(core): PR-11 noncompliant title",
+        title: `feat(core): ${TITLE_TOKEN} noncompliant title`,
         body: headingsToBody(template),
         head: {
           ref: "ci/valid-branch-name",
