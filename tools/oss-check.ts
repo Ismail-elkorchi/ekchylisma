@@ -14,10 +14,12 @@ const REQUIRED_DOCS = [
   "docs/OSS_PRACTICES.md",
   "docs/DEVDEPS.md",
   "docs/DECISIONS.md",
+  "docs/RELEASE.md",
 ];
 
 const REQUIRED_CONFIG_FILES = [
   ".github/workflows/ci.yml",
+  ".github/workflows/release.yml",
   ".github/dependabot.yml",
   ".github/PULL_REQUEST_TEMPLATE.md",
 ];
@@ -78,6 +80,29 @@ function collectStringValues(value: unknown): string[] {
   }
 
   return [];
+}
+
+function assertPinnedWorkflowUses(
+  workflowSource: string,
+  workflowPath: string,
+): void {
+  const usesLines = workflowSource
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("- uses: "));
+  if (usesLines.length === 0) {
+    throw new Error(
+      `${workflowPath} must contain at least one GitHub Action step.`,
+    );
+  }
+
+  for (const line of usesLines) {
+    if (!/@[0-9a-f]{40}\b/.test(line)) {
+      throw new Error(
+        `Workflow action step must be pinned to a full commit SHA: ${line}`,
+      );
+    }
+  }
 }
 
 async function run(): Promise<void> {
@@ -230,23 +255,7 @@ async function run(): Promise<void> {
     );
   }
 
-  const usesLines = ciWorkflow
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith("- uses: "));
-  if (usesLines.length === 0) {
-    throw new Error(
-      "CI workflow must contain at least one GitHub Action step.",
-    );
-  }
-
-  for (const line of usesLines) {
-    if (!/@[0-9a-f]{40}\b/.test(line)) {
-      throw new Error(
-        `Workflow action step must be pinned to a full commit SHA: ${line}`,
-      );
-    }
-  }
+  assertPinnedWorkflowUses(ciWorkflow, ".github/workflows/ci.yml");
 
   if (!ciWorkflow.includes("browser:")) {
     throw new Error("CI workflow must include a browser compatibility job.");
@@ -262,6 +271,12 @@ async function run(): Promise<void> {
   if (!ciWorkflow.includes("- run: npm run check")) {
     throw new Error("CI workflow must run `npm run check` in the node job.");
   }
+
+  const releaseWorkflow = await readFile(
+    ".github/workflows/release.yml",
+    "utf8",
+  );
+  assertPinnedWorkflowUses(releaseWorkflow, ".github/workflows/release.yml");
 
   console.log(
     `oss-check passed (${REQUIRED_ROOT_DOCS.length} root docs, ${REQUIRED_DOCS.length} docs entries, ${REQUIRED_CONFIG_FILES.length} config files, ${REQUIRED_BENCH_FILES.length} bench files, ${devDeps.length} dev dependencies verified).`,
