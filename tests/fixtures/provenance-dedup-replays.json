@@ -1,0 +1,22 @@
+[
+  {
+    "signal": "llamaindex-citation-duplication",
+    "sourceUrl": "https://github.com/run-llama/llama_index/issues/17439",
+    "documentText": "aaaaa Beta ccccc",
+    "expectedExtraction": {
+      "quote": "Beta",
+      "charStart": 6,
+      "charEnd": 10
+    },
+    "chunkConfigs": [
+      {
+        "chunkSize": 11,
+        "overlap": 5
+      },
+      {
+        "chunkSize": 10,
+        "overlap": 4
+      }
+    ]
+  }
+]
