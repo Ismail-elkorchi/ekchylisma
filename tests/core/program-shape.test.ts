@@ -18,9 +18,20 @@ test("normalizeProgram derives structured fields deterministically from legacy i
   assertEqual(first.classes[0].name, "extraction");
   assertEqual(first.constraints.requireExactQuote, true);
   assertEqual(first.constraints.forbidOverlap, true);
-  assert(first.programId.startsWith("program-"), "programId should be generated");
-  assertEqual(first.programHash, second.programHash, "program hash should be deterministic");
-  assertEqual(first.programId, second.programId, "program id should be deterministic");
+  assert(
+    first.programId.startsWith("program-"),
+    "programId should be generated",
+  );
+  assertEqual(
+    first.programHash,
+    second.programHash,
+    "program hash should be deterministic",
+  );
+  assertEqual(
+    first.programId,
+    second.programId,
+    "program id should be deterministic",
+  );
 });
 
 test("normalizeProgram rejects invalid constraints and duplicate class names", async () => {
@@ -32,7 +43,8 @@ test("normalizeProgram rejects invalid constraints and duplicate class names", a
         examples: [],
         classes: [{ name: "token" }, { name: "token" }],
       }),
-    (error) => error instanceof Error && error.message.includes("duplicate name"),
+    (error) =>
+      error instanceof Error && error.message.includes("duplicate name"),
     "duplicate classes should fail",
   );
 
@@ -44,7 +56,8 @@ test("normalizeProgram rejects invalid constraints and duplicate class names", a
         examples: [],
         constraints: { maxExtractionsPerShard: 0 },
       }),
-    (error) => error instanceof Error && error.message.includes("positive integer"),
+    (error) =>
+      error instanceof Error && error.message.includes("positive integer"),
     "invalid maxExtractionsPerShard should fail",
   );
 });

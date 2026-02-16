@@ -127,7 +127,10 @@ function fixTrailingCommas(text: string): string {
   return changed ? output : text;
 }
 
-export function repairJsonText(input: string, options: RepairOptions = {}): RepairResult {
+export function repairJsonText(
+  input: string,
+  options: RepairOptions = {},
+): RepairResult {
   const maxCandidateChars = normalizeLimit(options.maxCandidateChars);
   const maxRepairChars = normalizeLimit(options.maxRepairChars);
 
@@ -156,17 +159,17 @@ export function repairJsonText(input: string, options: RepairOptions = {}): Repa
     fixTrailingCommas(current),
   );
 
-  const repaired =
-    maxRepairChars !== null && current.length > maxRepairChars
-      ? current.slice(0, maxRepairChars)
-      : current;
+  const repaired = maxRepairChars !== null && current.length > maxRepairChars
+    ? current.slice(0, maxRepairChars)
+    : current;
   const repairCharsTruncated = repaired.length !== current.length;
 
   return {
     text: repaired,
     log: {
       steps,
-      changed: steps.some((step) => step.applied) || candidateCharsTruncated || repairCharsTruncated,
+      changed: steps.some((step) => step.applied) || candidateCharsTruncated ||
+        repairCharsTruncated,
       budget: {
         maxCandidateChars,
         maxRepairChars,

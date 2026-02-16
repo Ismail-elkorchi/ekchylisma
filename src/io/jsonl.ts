@@ -38,10 +38,9 @@ async function readStreamToLines(
       break;
     }
 
-    const chunk =
-      typeof value === "string"
-        ? value
-        : decoder.decode(value, { stream: true });
+    const chunk = typeof value === "string"
+      ? value
+      : decoder.decode(value, { stream: true });
     const combined = carry + chunk;
     const segments = combined.split(/\r?\n/);
     carry = segments.pop() ?? "";
@@ -60,10 +59,9 @@ async function readStreamToLines(
 export async function* decodeJsonlToEvidenceBundles(
   input: JsonlInput,
 ): AsyncIterable<EvidenceBundle> {
-  const lines =
-    typeof input === "string"
-      ? input.split(/\r?\n/)
-      : await readStreamToLines(input);
+  const lines = typeof input === "string"
+    ? input.split(/\r?\n/)
+    : await readStreamToLines(input);
 
   for (const bundle of parseJsonlLines(lines)) {
     yield bundle;

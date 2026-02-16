@@ -103,7 +103,9 @@ export function detectJsonFlavor(text: string): JsonFlavor {
     // continue to JSONL probe
   }
 
-  const lines = trimmed.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const lines = trimmed.split(/\r?\n/).map((line) => line.trim()).filter(
+    Boolean,
+  );
   if (lines.length < 2) {
     return "unknown";
   }

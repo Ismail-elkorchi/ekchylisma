@@ -8,36 +8,39 @@ import type {
   MultiPassLog,
   MultiPassShardLog,
   MultiPassStageLog,
-  PromptLog,
   Program,
   ProgramInput,
-  RunRepairLogEntry,
+  PromptLog,
   RunBudgets,
   RunDiagnostics,
+  RunRepairLogEntry,
   ShardFailure,
   ShardOutcome,
   Span,
 } from "../core/types.ts";
 import { normalizeProgram } from "../core/program.ts";
-import { QuoteInvariantViolation, assertQuoteInvariant } from "../core/invariants.ts";
+import {
+  assertQuoteInvariant,
+  QuoteInvariantViolation,
+} from "../core/invariants.ts";
 import { sha256Hex } from "../core/hash.ts";
 import { normalizeText } from "../core/normalize.ts";
 import { chunkDocument, type DocumentShard } from "./chunk.ts";
 import {
   classifyRunCompleteness,
-  executeShardsWithCheckpoint,
   type ExecuteShardResult,
+  executeShardsWithCheckpoint,
 } from "./execute.ts";
 import {
   buildCheckpointKey,
-  InMemoryCheckpointStore,
   type CheckpointStore,
+  InMemoryCheckpointStore,
 } from "./checkpoint.ts";
 import {
   computeRetryDelayMs,
   normalizeRetryPolicy,
-  shouldRetry,
   type RetryPolicy,
+  shouldRetry,
 } from "./retry.ts";
 import { mapShardSpanToDocument } from "./mapSpan.ts";
 import {
@@ -50,8 +53,8 @@ import type {
   ProviderRunRecord,
 } from "../providers/types.ts";
 import {
-  ProviderError,
   isTransientProviderError,
+  ProviderError,
 } from "../providers/errors.ts";
 import {
   compilePrompt,
@@ -223,7 +226,9 @@ class ShardValidationFailure extends Error {
     multiPassShardLog: MultiPassShardLog,
     jsonPipelineLog: JsonPipelineDiagnostic | null,
   ) {
-    const message = causeError instanceof Error ? causeError.message : String(causeError);
+    const message = causeError instanceof Error
+      ? causeError.message
+      : String(causeError);
     super(message);
     this.name = "ShardValidationFailure";
     this.causeError = causeError;
@@ -246,7 +251,10 @@ function collectTextPayload(value: unknown): string {
       if (typeof entry === "string") {
         return entry;
       }
-      if (typeof entry === "object" && entry !== null && typeof (entry as { text?: unknown }).text === "string") {
+      if (
+        typeof entry === "object" && entry !== null &&
+        typeof (entry as { text?: unknown }).text === "string"
+      ) {
         return (entry as { text: string }).text;
       }
       return "";
@@ -265,17 +273,27 @@ function collectStructuredPayloadCandidates(payload: Record<string, unknown>): {
   const choices = payload.choices;
   if (Array.isArray(choices)) {
     for (const choice of choices) {
-      const message = typeof (choice as { message?: unknown }).message === "object"
-          && (choice as { message?: unknown }).message !== null
-        ? (choice as { message: Record<string, unknown> }).message
-        : null;
+      const message =
+        typeof (choice as { message?: unknown }).message === "object" &&
+          (choice as { message?: unknown }).message !== null
+          ? (choice as { message: Record<string, unknown> }).message
+          : null;
 
       if (Array.isArray(message?.tool_calls)) {
-        for (const call of message.tool_calls as Array<{ function?: { arguments?: unknown } }>) {
+        for (
+          const call of message.tool_calls as Array<
+            { function?: { arguments?: unknown } }
+          >
+        ) {
           const argumentsValue = call?.function?.arguments;
-          if (typeof argumentsValue === "string" && argumentsValue.trim().length > 0) {
+          if (
+            typeof argumentsValue === "string" &&
+            argumentsValue.trim().length > 0
+          ) {
             toolCalls.push(argumentsValue);
-          } else if (typeof argumentsValue === "object" && argumentsValue !== null) {
+          } else if (
+            typeof argumentsValue === "object" && argumentsValue !== null
+          ) {
             toolCalls.push(JSON.stringify(argumentsValue));
           }
         }
@@ -291,17 +309,26 @@ function collectStructuredPayloadCandidates(payload: Record<string, unknown>): {
   const candidates = payload.candidates;
   if (Array.isArray(candidates)) {
     for (const candidate of candidates) {
-      const parts = (candidate as { content?: { parts?: unknown } }).content?.parts;
+      const parts = (candidate as { content?: { parts?: unknown } }).content
+        ?.parts;
       if (!Array.isArray(parts)) {
         continue;
       }
 
       const partTexts: string[] = [];
-      for (const part of parts as Array<{ text?: unknown; functionCall?: { args?: unknown } }>) {
+      for (
+        const part of parts as Array<
+          { text?: unknown; functionCall?: { args?: unknown } }
+        >
+      ) {
         const argumentsValue = part.functionCall?.args;
-        if (typeof argumentsValue === "string" && argumentsValue.trim().length > 0) {
+        if (
+          typeof argumentsValue === "string" && argumentsValue.trim().length > 0
+        ) {
           toolCalls.push(argumentsValue);
-        } else if (typeof argumentsValue === "object" && argumentsValue !== null) {
+        } else if (
+          typeof argumentsValue === "object" && argumentsValue !== null
+        ) {
           toolCalls.push(JSON.stringify(argumentsValue));
         }
 
@@ -316,15 +343,24 @@ function collectStructuredPayloadCandidates(payload: Record<string, unknown>): {
     }
   }
 
-  const message = typeof payload.message === "object" && payload.message !== null
-    ? payload.message as Record<string, unknown>
-    : null;
+  const message =
+    typeof payload.message === "object" && payload.message !== null
+      ? payload.message as Record<string, unknown>
+      : null;
   if (Array.isArray(message?.tool_calls)) {
-    for (const call of message.tool_calls as Array<{ function?: { arguments?: unknown } }>) {
+    for (
+      const call of message.tool_calls as Array<
+        { function?: { arguments?: unknown } }
+      >
+    ) {
       const argumentsValue = call?.function?.arguments;
-      if (typeof argumentsValue === "string" && argumentsValue.trim().length > 0) {
+      if (
+        typeof argumentsValue === "string" && argumentsValue.trim().length > 0
+      ) {
         toolCalls.push(argumentsValue);
-      } else if (typeof argumentsValue === "object" && argumentsValue !== null) {
+      } else if (
+        typeof argumentsValue === "object" && argumentsValue !== null
+      ) {
         toolCalls.push(JSON.stringify(argumentsValue));
       }
     }
@@ -335,7 +371,9 @@ function collectStructuredPayloadCandidates(payload: Record<string, unknown>): {
 
   if (typeof payload.arguments === "string" && payload.arguments.length > 0) {
     toolCalls.push(payload.arguments);
-  } else if (typeof payload.arguments === "object" && payload.arguments !== null) {
+  } else if (
+    typeof payload.arguments === "object" && payload.arguments !== null
+  ) {
     toolCalls.push(JSON.stringify(payload.arguments));
   }
 
@@ -357,14 +395,18 @@ function parseCandidatePayload(
 ): RawExtraction[] {
   const parsed = parseJsonWithRepairPipeline(text);
   if (!parsed.ok) {
-    throw new PayloadShapeFailure(`${label} is invalid JSON: ${parsed.error.message}`);
+    throw new PayloadShapeFailure(
+      `${label} is invalid JSON: ${parsed.error.message}`,
+    );
   }
   return parseExtractions(parsed.value, depth + 1);
 }
 
 function parseExtractions(payload: unknown, depth = 0): RawExtraction[] {
   if (depth > 3) {
-    throw new PayloadShapeFailure("Provider response nesting exceeded maximum extraction envelope depth.");
+    throw new PayloadShapeFailure(
+      "Provider response nesting exceeded maximum extraction envelope depth.",
+    );
   }
 
   if (Array.isArray(payload)) {
@@ -384,7 +426,11 @@ function parseExtractions(payload: unknown, depth = 0): RawExtraction[] {
 
     for (let index = 0; index < toolCalls.length; index += 1) {
       try {
-        return parseCandidatePayload(toolCalls[index], `Tool-call payload ${index + 1}`, depth);
+        return parseCandidatePayload(
+          toolCalls[index],
+          `Tool-call payload ${index + 1}`,
+          depth,
+        );
       } catch (error) {
         if (error instanceof PayloadShapeFailure && firstFailure === null) {
           firstFailure = error;
@@ -396,7 +442,11 @@ function parseExtractions(payload: unknown, depth = 0): RawExtraction[] {
 
     for (let index = 0; index < fallbackTexts.length; index += 1) {
       try {
-        return parseCandidatePayload(fallbackTexts[index], `Text payload ${index + 1}`, depth);
+        return parseCandidatePayload(
+          fallbackTexts[index],
+          `Text payload ${index + 1}`,
+          depth,
+        );
       } catch (error) {
         if (error instanceof PayloadShapeFailure && firstFailure === null) {
           firstFailure = error;
@@ -417,35 +467,45 @@ function parseExtractions(payload: unknown, depth = 0): RawExtraction[] {
 }
 
 function parseRawExtractionSpan(raw: RawExtraction): Span {
-  const hasTopLevel =
-    raw.offsetMode !== undefined || raw.charStart !== undefined || raw.charEnd !== undefined;
+  const hasTopLevel = raw.offsetMode !== undefined ||
+    raw.charStart !== undefined || raw.charEnd !== undefined;
   const hasSpan = raw.span !== undefined;
 
-  const offsetMode = raw.offsetMode ?? raw.span?.offsetMode ?? "utf16_code_unit";
+  const offsetMode = raw.offsetMode ?? raw.span?.offsetMode ??
+    "utf16_code_unit";
   const resolvedCharStart = raw.charStart ?? raw.span?.charStart;
   const resolvedCharEnd = raw.charEnd ?? raw.span?.charEnd;
 
-  if (!Number.isInteger(resolvedCharStart) || !Number.isInteger(resolvedCharEnd)) {
-    throw new PayloadShapeFailure("Each extraction must include integer charStart/charEnd offsets.");
+  if (
+    !Number.isInteger(resolvedCharStart) || !Number.isInteger(resolvedCharEnd)
+  ) {
+    throw new PayloadShapeFailure(
+      "Each extraction must include integer charStart/charEnd offsets.",
+    );
   }
 
   const charStart = resolvedCharStart as number;
   const charEnd = resolvedCharEnd as number;
 
   if (!hasTopLevel && !hasSpan) {
-    throw new PayloadShapeFailure("Each extraction must include offset fields.");
+    throw new PayloadShapeFailure(
+      "Each extraction must include offset fields.",
+    );
   }
 
   if (
-    hasTopLevel
-    && hasSpan
-    && (
-      raw.span!.offsetMode !== undefined && raw.span!.offsetMode !== offsetMode
-      || raw.span!.charStart !== undefined && raw.span!.charStart !== charStart
-      || raw.span!.charEnd !== undefined && raw.span!.charEnd !== charEnd
+    hasTopLevel &&
+    hasSpan &&
+    (
+      raw.span!.offsetMode !== undefined &&
+        raw.span!.offsetMode !== offsetMode ||
+      raw.span!.charStart !== undefined && raw.span!.charStart !== charStart ||
+      raw.span!.charEnd !== undefined && raw.span!.charEnd !== charEnd
     )
   ) {
-    throw new PayloadShapeFailure("Extraction offset fields must match between top-level and span.");
+    throw new PayloadShapeFailure(
+      "Extraction offset fields must match between top-level and span.",
+    );
   }
 
   return {
@@ -485,9 +545,9 @@ function normalizeMultiPassMaxPasses(value: number | undefined): number {
 
 function isRepairableValidationFailure(error: unknown): boolean {
   const kind = classifyValidationFailureKind(error);
-  return kind === "json_pipeline_failure"
-    || kind === "payload_shape_failure"
-    || kind === "quote_invariant_failure";
+  return kind === "json_pipeline_failure" ||
+    kind === "payload_shape_failure" ||
+    kind === "quote_invariant_failure";
 }
 
 function defaultSleep(milliseconds: number): Promise<void> {
@@ -630,7 +690,9 @@ function classifyShardFailure(
   return {
     shardId,
     kind: "unknown_failure",
-    message: unwrappedError instanceof Error ? unwrappedError.message : String(unwrappedError),
+    message: unwrappedError instanceof Error
+      ? unwrappedError.message
+      : String(unwrappedError),
     retryable: false,
     errorName: unwrappedError instanceof Error ? unwrappedError.name : "Error",
   };
@@ -674,7 +736,9 @@ function toRunRepairLogEntry(
     pass,
     parseOk: diagnostic.parse.ok,
     changed: diagnostic.repair.changed,
-    appliedSteps: diagnostic.repair.steps.filter((step) => step.applied).map((step) => step.step),
+    appliedSteps: diagnostic.repair.steps.filter((step) => step.applied).map((
+      step,
+    ) => step.step),
     budget: {
       maxCandidateChars: diagnostic.repair.budget.maxCandidateChars,
       maxRepairChars: diagnostic.repair.budget.maxRepairChars,
@@ -809,7 +873,9 @@ async function runShardWithProvider(
     } catch (error) {
       lastError = error;
       lastFailureKind = classifyValidationFailureKind(error);
-      lastFailureMessage = error instanceof Error ? error.message : String(error);
+      lastFailureMessage = error instanceof Error
+        ? error.message
+        : String(error);
       if (error instanceof JsonPipelineFailure) {
         lastJsonPipelineLog = error.log;
       }
@@ -822,8 +888,8 @@ async function runShardWithProvider(
         message: lastFailureMessage,
       });
 
-      const canRepair = pass < options.multiPassMaxPasses
-        && isRepairableValidationFailure(error);
+      const canRepair = pass < options.multiPassMaxPasses &&
+        isRepairableValidationFailure(error);
       if (canRepair) {
         stages.push({
           pass,
@@ -855,8 +921,8 @@ export async function runExtractionWithProvider(
   options: EngineRunOptions,
 ): Promise<EngineRunResult> {
   const program = await normalizeProgram(options.program);
-  const documentId = options.documentId
-    ?? `doc-${(await sha256Hex(options.documentText)).slice(0, 16)}`;
+  const documentId = options.documentId ??
+    `doc-${(await sha256Hex(options.documentText)).slice(0, 16)}`;
   const shards = await chunkDocument(
     options.documentText,
     program.programHash,
@@ -868,8 +934,8 @@ export async function runExtractionWithProvider(
     },
   );
 
-  const checkpointStore =
-    options.checkpointStore ?? new InMemoryCheckpointStore<ShardRunValue>();
+  const checkpointStore = options.checkpointStore ??
+    new InMemoryCheckpointStore<ShardRunValue>();
 
   const retryPolicy: RetryPolicy = normalizeRetryPolicy(
     options.retryPolicy ?? DEFAULT_RETRY_POLICY,
@@ -902,7 +968,9 @@ export async function runExtractionWithProvider(
       },
     });
 
-  const jsonPipelineLogs: JsonPipelineShardLog[] = shardResults.map((entry) => ({
+  const jsonPipelineLogs: JsonPipelineShardLog[] = shardResults.map((
+    entry,
+  ) => ({
     shardId: entry.shardId,
     providerRunRecord: entry.value.providerRunRecord,
     pipeline: entry.value.jsonPipelineLog,
@@ -921,22 +989,30 @@ export async function runWithEvidence(
 ): Promise<EvidenceBundle> {
   const program = await normalizeProgram(options.program);
   const normalized = normalizeText(options.document.text, {
-    trimTrailingWhitespacePerLine: options.normalize?.trimTrailingWhitespacePerLine,
+    trimTrailingWhitespacePerLine: options.normalize
+      ?.trimTrailingWhitespacePerLine,
   });
   const textHash = await sha256Hex(options.document.text);
-  const documentId = options.document.documentId ?? `doc-${textHash.slice(0, 16)}`;
+  const documentId = options.document.documentId ??
+    `doc-${textHash.slice(0, 16)}`;
   const runtime = options.runtime ?? detectRuntime();
-  const retryPolicy = normalizeRetryPolicy(options.retryPolicy ?? DEFAULT_RETRY_POLICY);
-  const checkpointStore =
-    options.checkpointStore ?? new InMemoryCheckpointStore<ShardRunValue>();
+  const retryPolicy = normalizeRetryPolicy(
+    options.retryPolicy ?? DEFAULT_RETRY_POLICY,
+  );
+  const checkpointStore = options.checkpointStore ??
+    new InMemoryCheckpointStore<ShardRunValue>();
   const random = options.random ?? Math.random;
   const sleep = options.sleep ?? defaultSleep;
   const nowMs = options.nowMs ?? Date.now;
-  const multiPassMaxPasses = normalizeMultiPassMaxPasses(options.multiPassMaxPasses);
+  const multiPassMaxPasses = normalizeMultiPassMaxPasses(
+    options.multiPassMaxPasses,
+  );
 
   const startedAtMs = readClockMs(nowMs);
   const timeBudgetMs = normalizeTimeBudgetMs(options.timeBudgetMs);
-  const deadlineAtMs = timeBudgetMs === null ? null : startedAtMs + timeBudgetMs;
+  const deadlineAtMs = timeBudgetMs === null
+    ? null
+    : startedAtMs + timeBudgetMs;
 
   const configuredRepairBudgets = {
     maxCandidateChars: normalizePositiveBudget(
@@ -948,13 +1024,15 @@ export async function runWithEvidence(
       options.repairBudgets?.maxRepairChars,
     ),
   };
-  const normalizedRepairBudgets = configuredRepairBudgets.maxCandidateChars === null &&
+  const normalizedRepairBudgets =
+    configuredRepairBudgets.maxCandidateChars === null &&
       configuredRepairBudgets.maxRepairChars === null
-    ? undefined
-    : {
-      maxCandidateChars: configuredRepairBudgets.maxCandidateChars ?? undefined,
-      maxRepairChars: configuredRepairBudgets.maxRepairChars ?? undefined,
-    };
+      ? undefined
+      : {
+        maxCandidateChars: configuredRepairBudgets.maxCandidateChars ??
+          undefined,
+        maxRepairChars: configuredRepairBudgets.maxRepairChars ?? undefined,
+      };
 
   let deadlineReached = false;
   const repairBudgetHitCounters = {
@@ -1125,7 +1203,10 @@ export async function runWithEvidence(
           multiPassMaxPasses,
         });
 
-        aggregateRepairBudgetHits(shardValue.jsonPipelineLog, repairBudgetHitCounters);
+        aggregateRepairBudgetHits(
+          shardValue.jsonPipelineLog,
+          repairBudgetHitCounters,
+        );
         await checkpointStore.set(checkpointKey, shardValue);
         shardOutcomes.push({
           shardId: shard.shardId,
@@ -1148,7 +1229,9 @@ export async function runWithEvidence(
         );
         break;
       } catch (error) {
-        if (shouldRetry(error, attempt, retryPolicy, isTransientProviderError)) {
+        if (
+          shouldRetry(error, attempt, retryPolicy, isTransientProviderError)
+        ) {
           const delay = computeRetryDelayMs(retryPolicy, attempt, random());
           if (delay > 0) {
             await sleep(delay);
@@ -1160,7 +1243,10 @@ export async function runWithEvidence(
         if (error instanceof ShardValidationFailure) {
           multiPassShardLogs.push(error.multiPassShardLog);
           if (error.jsonPipelineLog !== null) {
-            aggregateRepairBudgetHits(error.jsonPipelineLog, repairBudgetHitCounters);
+            aggregateRepairBudgetHits(
+              error.jsonPipelineLog,
+              repairBudgetHitCounters,
+            );
             repairLogEntries.push(
               toRunRepairLogEntry(
                 shard.shardId,
@@ -1197,7 +1283,10 @@ export async function runWithEvidence(
   }
 
   const extractions = shardOutcomes.flatMap((outcome) => outcome.extractions);
-  const runCompleteness = classifyRunCompleteness(shardOutcomes.length, failures.length);
+  const runCompleteness = classifyRunCompleteness(
+    shardOutcomes.length,
+    failures.length,
+  );
   budgetLog.time.deadlineReached = deadlineReached || hasReachedDeadline();
   budgetLog.repair.candidateCharsTruncatedCount =
     repairBudgetHitCounters.candidateCharsTruncatedCount;
@@ -1209,7 +1298,8 @@ export async function runWithEvidence(
     runCompleteness,
     shardOutcomes,
     failures,
-    checkpointHits: shardOutcomes.filter((outcome) => outcome.fromCheckpoint).length,
+    checkpointHits:
+      shardOutcomes.filter((outcome) => outcome.fromCheckpoint).length,
     promptLog,
     budgetLog,
     multiPassLog: {

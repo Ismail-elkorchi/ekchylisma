@@ -35,7 +35,13 @@
     "provenance": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["documentId", "textHash", "runtime", "createdAt", "programHash"],
+      "required": [
+        "documentId",
+        "textHash",
+        "runtime",
+        "createdAt",
+        "programHash"
+      ],
       "properties": {
         "documentId": {
           "type": "string"
@@ -75,7 +81,13 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["step", "mappingStrategy", "lossy", "beforeLength", "afterLength"],
+            "required": [
+              "step",
+              "mappingStrategy",
+              "lossy",
+              "beforeLength",
+              "afterLength"
+            ],
             "properties": {
               "step": {
                 "type": "string",
@@ -142,11 +154,20 @@
         "runCompleteness": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "totalShards", "successfulShards", "failedShards"],
+          "required": [
+            "kind",
+            "totalShards",
+            "successfulShards",
+            "failedShards"
+          ],
           "properties": {
             "kind": {
               "type": "string",
-              "enum": ["complete_success", "partial_success", "complete_failure"]
+              "enum": [
+                "complete_success",
+                "partial_success",
+                "complete_failure"
+              ]
             },
             "totalShards": {
               "type": "integer",
@@ -219,7 +240,12 @@
             "time": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["timeBudgetMs", "deadlineReached", "startedAtMs", "deadlineAtMs"],
+              "required": [
+                "timeBudgetMs",
+                "deadlineReached",
+                "startedAtMs",
+                "deadlineAtMs"
+              ],
               "properties": {
                 "timeBudgetMs": {
                   "type": ["integer", "null"],
@@ -241,7 +267,12 @@
             "retry": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["attempts", "baseDelayMs", "maxDelayMs", "jitterRatio"],
+              "required": [
+                "attempts",
+                "baseDelayMs",
+                "maxDelayMs",
+                "jitterRatio"
+              ],
               "properties": {
                 "attempts": {
                   "type": "integer",
@@ -328,7 +359,13 @@
                     "items": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": ["pass", "stage", "status", "failureKind", "message"],
+                      "required": [
+                        "pass",
+                        "stage",
+                        "status",
+                        "failureKind",
+                        "message"
+                      ],
                       "properties": {
                         "pass": {
                           "type": "integer",
@@ -375,7 +412,14 @@
               "items": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["shardId", "pass", "parseOk", "changed", "appliedSteps", "budget"],
+                "required": [
+                  "shardId",
+                  "pass",
+                  "parseOk",
+                  "changed",
+                  "appliedSteps",
+                  "budget"
+                ],
                 "properties": {
                   "shardId": {
                     "type": "string"
@@ -472,7 +516,14 @@
         "extractedJson": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["found", "start", "end", "kind", "sourceLength", "candidateLength"],
+          "required": [
+            "found",
+            "start",
+            "end",
+            "kind",
+            "sourceLength",
+            "candidateLength"
+          ],
           "properties": {
             "found": {
               "type": "boolean"

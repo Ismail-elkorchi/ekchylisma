@@ -11,7 +11,9 @@ const DISALLOWED_PATHS = [
 const found = DISALLOWED_PATHS.filter((path) => existsSync(path));
 
 if (found.length > 0) {
-  console.error(`repo-scope-check failed: disallowed path(s) present: ${found.join(",")}`);
+  console.error(
+    `repo-scope-check failed: disallowed path(s) present: ${found.join(",")}`,
+  );
   process.exit(1);
 }
 

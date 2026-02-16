@@ -12,7 +12,10 @@ test("provider response contract requires deterministic output channel metadata"
     };
   };
 
-  assert(schema.required?.includes("outputChannel") === true, "outputChannel should be required");
+  assert(
+    schema.required?.includes("outputChannel") === true,
+    "outputChannel should be required",
+  );
   assertEqual(
     JSON.stringify(schema.properties?.outputChannel?.enum),
     JSON.stringify(["text", "tool_call"]),

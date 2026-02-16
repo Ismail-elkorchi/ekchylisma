@@ -39,7 +39,10 @@ test("long-text fixture span mapping is stable", async () => {
   const targetShard = shards[Math.floor(shards.length / 2)];
   const localStart = 12;
   const localEnd = 40;
-  assert(localEnd <= targetShard.text.length, "target shard should contain test span");
+  assert(
+    localEnd <= targetShard.text.length,
+    "target shard should contain test span",
+  );
 
   const mapped = mapShardSpanToDocument(targetShard, {
     offsetMode: "utf16_code_unit",
@@ -85,7 +88,8 @@ test("long-text fixture enforces quote invariant on grounded token spans", async
             charEnd: extraction.span.charEnd - 1,
           },
         }),
-    ),
-    (error) => error instanceof Error && error.message.includes("does not match"),
+      ),
+    (error) =>
+      error instanceof Error && error.message.includes("does not match"),
   );
 });

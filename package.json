@@ -28,6 +28,8 @@
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "prepack": "npm run build",
+    "fmt": "deno fmt",
+    "fmt:check": "deno fmt --check",
     "test": "node tests/run.ts",
     "test:deno": "deno run --allow-read tests/run.ts",
     "test:bun": "bun run tests/run.ts",
@@ -43,7 +45,7 @@
     "unicode-check": "node scripts/unicode-and-linebreak-check.ts",
     "oss-check": "node scripts/oss-check.ts",
     "orphan-check": "node scripts/orphan-check.ts",
-    "check": "npm run repo-scope-check && npm run repo-text-check && npm run unicode-check && npm run oss-check && npm test && npm run typecheck && npm run orphan-check"
+    "check": "npm run repo-scope-check && npm run repo-text-check && npm run unicode-check && npm run oss-check && npm run fmt:check && npm test && npm run typecheck && npm run orphan-check"
   },
   "dependencies": {},
   "devDependencies": {

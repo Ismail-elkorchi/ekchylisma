@@ -1,6 +1,9 @@
 import type { Extraction, Program } from "../core/types.ts";
 import { assertQuoteInvariant } from "../core/invariants.ts";
-import { buildProviderRequest, runExtractionWithProvider } from "../engine/run.ts";
+import {
+  buildProviderRequest,
+  runExtractionWithProvider,
+} from "../engine/run.ts";
 import { chunkDocument } from "../engine/chunk.ts";
 import type { Provider } from "../providers/types.ts";
 import { FakeProvider, hashProviderRequest } from "../providers/fake.ts";
@@ -104,14 +107,14 @@ function standardDeviation(values: number[]): number {
 }
 
 function shapeIsValid(extraction: Extraction): boolean {
-  return typeof extraction.extractionClass === "string"
-    && typeof extraction.quote === "string"
-    && extraction.offsetMode === "utf16_code_unit"
-    && typeof extraction.charStart === "number"
-    && typeof extraction.charEnd === "number"
-    && extraction.span.charStart === extraction.charStart
-    && extraction.span.charEnd === extraction.charEnd
-    && extraction.span.offsetMode === extraction.offsetMode;
+  return typeof extraction.extractionClass === "string" &&
+    typeof extraction.quote === "string" &&
+    extraction.offsetMode === "utf16_code_unit" &&
+    typeof extraction.charStart === "number" &&
+    typeof extraction.charEnd === "number" &&
+    extraction.span.charStart === extraction.charStart &&
+    extraction.span.charEnd === extraction.charEnd &&
+    extraction.span.offsetMode === extraction.offsetMode;
 }
 
 function normalizeScheduleLabel(
@@ -126,7 +129,9 @@ function normalizeScheduleLabel(
   return String(labels[runIndex % labels.length]);
 }
 
-function computeCaseOutcomeDriftRate(caseOutcomesByRun: Array<Map<string, string>>): number {
+function computeCaseOutcomeDriftRate(
+  caseOutcomesByRun: Array<Map<string, string>>,
+): number {
   if (caseOutcomesByRun.length <= 1) {
     return 0;
   }
@@ -169,12 +174,16 @@ async function buildFakeProvider(
   const provider = new FakeProvider();
 
   for (const testCase of dataset) {
-    const shards = await chunkDocument(testCase.documentText, program.programHash, {
-      documentId: testCase.caseId,
-      chunkSize,
-      overlap,
-      offsetMode: "utf16_code_unit",
-    });
+    const shards = await chunkDocument(
+      testCase.documentText,
+      program.programHash,
+      {
+        documentId: testCase.caseId,
+        chunkSize,
+        overlap,
+        offsetMode: "utf16_code_unit",
+      },
+    );
 
     for (const shard of shards) {
       const request = buildProviderRequest(program, shard, model);
@@ -208,22 +217,31 @@ export async function runSuite(
   let totalExtractions = 0;
 
   for (let runIndex = 0; runIndex < runs; runIndex += 1) {
-    const promptVariant = normalizeScheduleLabel(options.promptVariants, runIndex, "default");
-    const seedLabel = normalizeScheduleLabel(options.seedLabels, runIndex, "seed");
+    const promptVariant = normalizeScheduleLabel(
+      options.promptVariants,
+      runIndex,
+      "default",
+    );
+    const seedLabel = normalizeScheduleLabel(
+      options.seedLabels,
+      runIndex,
+      "seed",
+    );
 
-    const provider =
-      providerMode === "fake"
-        ? await buildFakeProvider(
-          options.program,
-          options.model,
-          options.dataset,
-          chunkSize,
-          overlap,
-        )
-        : options.realProvider;
+    const provider = providerMode === "fake"
+      ? await buildFakeProvider(
+        options.program,
+        options.model,
+        options.dataset,
+        chunkSize,
+        overlap,
+      )
+      : options.realProvider;
 
     if (!provider) {
-      throw new Error("realProvider must be provided when providerMode is 'real'.");
+      throw new Error(
+        "realProvider must be provided when providerMode is 'real'.",
+      );
     }
 
     let failures = 0;
@@ -293,27 +311,37 @@ export async function runSuite(
   const pairwiseScores: number[] = [];
   for (let left = 0; left < extractionSets.length; left += 1) {
     for (let right = left + 1; right < extractionSets.length; right += 1) {
-      pairwiseScores.push(jaccardScore(extractionSets[left], extractionSets[right]));
+      pairwiseScores.push(
+        jaccardScore(extractionSets[left], extractionSets[right]),
+      );
     }
   }
 
   const stability = pairwiseScores.length === 0 ? 1 : average(pairwiseScores);
   const caseOutcomeDriftRate = computeCaseOutcomeDriftRate(caseOutcomesByRun);
 
-  const promptVariantsUsed = new Set(runSummaries.map((summary) => summary.promptVariant));
+  const promptVariantsUsed = new Set(
+    runSummaries.map((summary) => summary.promptVariant),
+  );
   const seedsUsed = new Set(runSummaries.map((summary) => summary.seedLabel));
   const providerLabels = new Set(
     options.dataset
       .map((entry) => entry.providerLabel)
-      .filter((value): value is string => typeof value === "string" && value.length > 0),
+      .filter((value): value is string =>
+        typeof value === "string" && value.length > 0
+      ),
   );
   if (providerLabels.size === 0) {
     providerLabels.add(providerMode === "fake" ? "fake" : "real");
   }
 
   return {
-    schemaValidRate: totalExtractions === 0 ? 1 : validShapeCount / totalExtractions,
-    quoteInvariantRate: totalExtractions === 0 ? 1 : validQuoteCount / totalExtractions,
+    schemaValidRate: totalExtractions === 0
+      ? 1
+      : validShapeCount / totalExtractions,
+    quoteInvariantRate: totalExtractions === 0
+      ? 1
+      : validQuoteCount / totalExtractions,
     uniqueExtractionStability: stability,
     variance: {
       runCount: runs,
@@ -327,7 +355,8 @@ export async function runSuite(
     },
     breadth: {
       datasetCaseCount: options.dataset.length,
-      uniqueCaseIdCount: new Set(options.dataset.map((entry) => entry.caseId)).size,
+      uniqueCaseIdCount:
+        new Set(options.dataset.map((entry) => entry.caseId)).size,
       providerLabelCount: providerLabels.size,
       promptVariantCount: promptVariantsUsed.size,
       seedCount: seedsUsed.size,

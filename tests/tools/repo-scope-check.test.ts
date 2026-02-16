@@ -21,13 +21,25 @@ test("repo-scope-check fails when forbidden paths are present", async () => {
 
   let failedAsExpected = false;
   try {
-    await execFileAsync("node", [SCRIPT_PATH], { cwd: TEMP_DIR, encoding: "utf8" });
+    await execFileAsync("node", [SCRIPT_PATH], {
+      cwd: TEMP_DIR,
+      encoding: "utf8",
+    });
   } catch (error) {
-    const details = error as { code?: number; stderr?: string; stdout?: string; message?: string };
-    const output = [details.stderr ?? "", details.stdout ?? "", details.message ?? ""].join("\n");
-    failedAsExpected = typeof details.code === "number"
-      && details.code !== 0
-      && output.includes("repo-scope-check failed");
+    const details = error as {
+      code?: number;
+      stderr?: string;
+      stdout?: string;
+      message?: string;
+    };
+    const output = [
+      details.stderr ?? "",
+      details.stdout ?? "",
+      details.message ?? "",
+    ].join("\n");
+    failedAsExpected = typeof details.code === "number" &&
+      details.code !== 0 &&
+      output.includes("repo-scope-check failed");
   } finally {
     await rm(TEMP_DIR, { recursive: true, force: true });
   }

@@ -33,22 +33,41 @@ test("repo-text-check fails when forbidden docs signal path is present", async (
     `${JSON.stringify(minimalRegressionRecord())}\n`,
     "utf8",
   );
-  await writeFile(join(TEMP_DIR, "docs", "SIGNAL_INDEX.md"), "signal boundary fixture\n", "utf8");
+  await writeFile(
+    join(TEMP_DIR, "docs", "SIGNAL_INDEX.md"),
+    "signal boundary fixture\n",
+    "utf8",
+  );
 
   let failedAsExpected = false;
   try {
-    await execFileAsync("node", [SCRIPT_PATH], { cwd: TEMP_DIR, encoding: "utf8" });
+    await execFileAsync("node", [SCRIPT_PATH], {
+      cwd: TEMP_DIR,
+      encoding: "utf8",
+    });
   } catch (error) {
-    const details = error as { code?: number; stderr?: string; stdout?: string; message?: string };
-    const output = [details.stderr ?? "", details.stdout ?? "", details.message ?? ""].join("\n");
-    failedAsExpected = typeof details.code === "number"
-      && details.code !== 0
-      && output.includes("forbidden path matches policy");
+    const details = error as {
+      code?: number;
+      stderr?: string;
+      stdout?: string;
+      message?: string;
+    };
+    const output = [
+      details.stderr ?? "",
+      details.stdout ?? "",
+      details.message ?? "",
+    ].join("\n");
+    failedAsExpected = typeof details.code === "number" &&
+      details.code !== 0 &&
+      output.includes("forbidden path matches policy");
   } finally {
     await rm(TEMP_DIR, { recursive: true, force: true });
   }
 
-  assert(failedAsExpected, "repo-text-check should fail on forbidden docs signal path");
+  assert(
+    failedAsExpected,
+    "repo-text-check should fail on forbidden docs signal path",
+  );
 });
 
 test("repo-text-check fails when forbidden marker appears in first 200 lines", async () => {
@@ -69,16 +88,31 @@ test("repo-text-check fails when forbidden marker appears in first 200 lines", a
 
   let failedAsExpected = false;
   try {
-    await execFileAsync("node", [SCRIPT_PATH], { cwd: TEMP_DIR, encoding: "utf8" });
+    await execFileAsync("node", [SCRIPT_PATH], {
+      cwd: TEMP_DIR,
+      encoding: "utf8",
+    });
   } catch (error) {
-    const details = error as { code?: number; stderr?: string; stdout?: string; message?: string };
-    const output = [details.stderr ?? "", details.stdout ?? "", details.message ?? ""].join("\n");
-    failedAsExpected = typeof details.code === "number"
-      && details.code !== 0
-      && output.includes("forbidden marker phrase");
+    const details = error as {
+      code?: number;
+      stderr?: string;
+      stdout?: string;
+      message?: string;
+    };
+    const output = [
+      details.stderr ?? "",
+      details.stdout ?? "",
+      details.message ?? "",
+    ].join("\n");
+    failedAsExpected = typeof details.code === "number" &&
+      details.code !== 0 &&
+      output.includes("forbidden marker phrase");
   } finally {
     await rm(TEMP_DIR, { recursive: true, force: true });
   }
 
-  assert(failedAsExpected, "repo-text-check should fail on forbidden marker phrase");
+  assert(
+    failedAsExpected,
+    "repo-text-check should fail on forbidden marker phrase",
+  );
 });

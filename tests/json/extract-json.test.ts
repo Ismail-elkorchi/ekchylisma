@@ -1,15 +1,14 @@
-import { detectJsonFlavor, extractFirstJson } from "../../src/json/extractJson.ts";
 import {
-  jsonFixture,
-  jsonlFixture,
-  wrappedJsonFixture,
-} from "./fixtures.ts";
+  detectJsonFlavor,
+  extractFirstJson,
+} from "../../src/json/extractJson.ts";
+import { jsonFixture, jsonlFixture, wrappedJsonFixture } from "./fixtures.ts";
 import { assert, assertEqual, test } from "../harness.ts";
 
 test("extractFirstJson finds first complete object inside text blob", () => {
   const slice = extractFirstJson(wrappedJsonFixture);
   assert(slice !== null, "slice should exist");
-  assertEqual(slice?.text, "{\"ok\": true,}");
+  assertEqual(slice?.text, '{"ok": true,}');
   assertEqual(slice?.kind, "object");
 });
 

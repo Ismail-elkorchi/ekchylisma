@@ -1,5 +1,8 @@
 import { sha256Hex } from "../../src/core/hash.ts";
-import { compilePrompt, hashPromptText } from "../../src/engine/promptCompiler.ts";
+import {
+  compilePrompt,
+  hashPromptText,
+} from "../../src/engine/promptCompiler.ts";
 import { chunkDocument } from "../../src/engine/chunk.ts";
 import {
   buildProviderRequest,
@@ -77,9 +80,15 @@ test("runWithEvidence returns shard outcomes and provenance for successful extra
   assertEqual(bundle.diagnostics.budgetLog.time.deadlineReached, false);
   assertEqual(bundle.diagnostics.budgetLog.repair.maxCandidateChars, null);
   assertEqual(bundle.diagnostics.budgetLog.repair.maxRepairChars, null);
-  assertEqual(bundle.diagnostics.budgetLog.repair.candidateCharsTruncatedCount, 0);
+  assertEqual(
+    bundle.diagnostics.budgetLog.repair.candidateCharsTruncatedCount,
+    0,
+  );
   assertEqual(bundle.diagnostics.budgetLog.repair.repairCharsTruncatedCount, 0);
-  assertEqual(bundle.diagnostics.multiPassLog.mode, "draft_validate_repair_finalize");
+  assertEqual(
+    bundle.diagnostics.multiPassLog.mode,
+    "draft_validate_repair_finalize",
+  );
   assertEqual(bundle.diagnostics.multiPassLog.maxPasses, 2);
   assertEqual(bundle.diagnostics.multiPassLog.shards.length, 1);
   assertEqual(bundle.diagnostics.multiPassLog.shards[0].finalPass, 1);
@@ -114,7 +123,7 @@ test("runWithEvidence normalizes legacy program input into structured program sh
     document: {
       text: documentText,
     },
-    provider: new FakeProvider({ defaultResponse: "{\"extractions\":[]}" }),
+    provider: new FakeProvider({ defaultResponse: '{"extractions":[]}' }),
     model: "fake-model",
     chunkSize: 64,
     overlap: 0,
@@ -125,7 +134,10 @@ test("runWithEvidence normalizes legacy program input into structured program sh
   assertEqual(bundle.program.classes[0].name, "extraction");
   assertEqual(bundle.program.constraints.requireExactQuote, true);
   assertEqual(bundle.program.constraints.forbidOverlap, true);
-  assert(bundle.program.programId.startsWith("program-"), "programId should be generated");
+  assert(
+    bundle.program.programId.startsWith("program-"),
+    "programId should be generated",
+  );
 });
 
 test("runWithEvidence normalizes schema dialect metadata into canonical subset", async () => {
@@ -150,7 +162,7 @@ test("runWithEvidence normalizes schema dialect metadata into canonical subset",
     document: {
       text: documentText,
     },
-    provider: new FakeProvider({ defaultResponse: "{\"extractions\":[]}" }),
+    provider: new FakeProvider({ defaultResponse: '{"extractions":[]}' }),
     model: "fake-model",
     chunkSize: 64,
     overlap: 0,
@@ -191,7 +203,7 @@ test("runWithEvidence rejects unsupported schema dialect keywords deterministica
         document: {
           text: documentText,
         },
-        provider: new FakeProvider({ defaultResponse: "{\"extractions\":[]}" }),
+        provider: new FakeProvider({ defaultResponse: '{"extractions":[]}' }),
         model: "fake-model",
         chunkSize: 64,
         overlap: 0,
@@ -215,12 +227,13 @@ test("runWithEvidence rejects invalid program class declarations deterministical
         document: {
           text: documentText,
         },
-        provider: new FakeProvider({ defaultResponse: "{\"extractions\":[]}" }),
+        provider: new FakeProvider({ defaultResponse: '{"extractions":[]}' }),
         model: "fake-model",
         chunkSize: 64,
         overlap: 0,
       }),
-    (error) => error instanceof Error && error.message.includes("duplicate name"),
+    (error) =>
+      error instanceof Error && error.message.includes("duplicate name"),
     "duplicate class declarations should fail normalization",
   );
 });
@@ -228,7 +241,7 @@ test("runWithEvidence rejects invalid program class declarations deterministical
 test("runWithEvidence classifies valid empty output as empty_by_evidence", async () => {
   const program = await buildProgram();
   const provider = new FakeProvider({
-    defaultResponse: "{\"extractions\":[]}",
+    defaultResponse: '{"extractions":[]}',
   });
 
   const bundle = await runWithEvidence({
@@ -277,8 +290,9 @@ test("runWithEvidence classifies parse failures as empty_by_failure with explici
   assertEqual(bundle.diagnostics.repairLog.entries[0].parseOk, false);
   assertEqual(bundle.diagnostics.shardOutcomes[0].status, "failure");
   assert(
-    bundle.diagnostics.shardOutcomes[0].status !== "failure"
-      || bundle.diagnostics.shardOutcomes[0].failure.kind === "json_pipeline_failure",
+    bundle.diagnostics.shardOutcomes[0].status !== "failure" ||
+      bundle.diagnostics.shardOutcomes[0].failure.kind ===
+        "json_pipeline_failure",
     "failure outcome should retain explicit failure kind",
   );
 });
@@ -461,7 +475,7 @@ test("runWithEvidence classifies empty partial runs as empty_by_failure", async 
     const request = buildProviderRequest(program, shards[index], "fake-model");
     const requestHash = await hashProviderRequest(request);
     if (index === 0) {
-      responses[requestHash] = "{\"extractions\":[]}";
+      responses[requestHash] = '{"extractions":[]}';
     }
   }
 
@@ -532,8 +546,8 @@ test("runWithEvidence enforces timeBudgetMs and surfaces budget_exhausted failur
   assertEqual(bundle.diagnostics.multiPassLog.shards[0].finalPass, 0);
   assertEqual(bundle.diagnostics.shardOutcomes[0].status, "failure");
   assert(
-    bundle.diagnostics.shardOutcomes[0].status !== "failure"
-      || bundle.diagnostics.shardOutcomes[0].failure.kind === "budget_exhausted",
+    bundle.diagnostics.shardOutcomes[0].status !== "failure" ||
+      bundle.diagnostics.shardOutcomes[0].failure.kind === "budget_exhausted",
     "failure outcome should surface budget exhaustion kind",
   );
 });
@@ -585,7 +599,10 @@ test("runWithEvidence records repair cap diagnostics and deterministic failure s
   assertEqual(first.diagnostics.failures[0].kind, "json_pipeline_failure");
   assertEqual(first.diagnostics.budgetLog.repair.maxCandidateChars, null);
   assertEqual(first.diagnostics.budgetLog.repair.maxRepairChars, 24);
-  assertEqual(first.diagnostics.budgetLog.repair.candidateCharsTruncatedCount, 0);
+  assertEqual(
+    first.diagnostics.budgetLog.repair.candidateCharsTruncatedCount,
+    0,
+  );
   assertEqual(first.diagnostics.budgetLog.repair.repairCharsTruncatedCount, 1);
   assertEqual(first.diagnostics.repairLog.entries.length, 1);
   assertEqual(first.diagnostics.repairLog.entries[0].budget.maxRepairChars, 24);
@@ -600,7 +617,7 @@ test("runWithEvidence records repair cap diagnostics and deterministic failure s
 
 test("runWithEvidence repairs payload shape failure on second pass and finalizes extraction", async () => {
   const program = await buildProgram();
-  const badDraft = "{\"items\":[]}";
+  const badDraft = '{"items":[]}';
   const repaired = JSON.stringify({
     extractions: [
       {
@@ -624,12 +641,18 @@ test("runWithEvidence repairs payload shape failure on second pass and finalizes
   }))[0];
   const draftRequest = buildProviderRequest(program, shard, "fake-model");
   const draftHash = await hashProviderRequest(draftRequest);
-  const repairRequest = buildRepairProviderRequest(program, shard, "fake-model", {
-    previousResponseText: badDraft,
-    failureKind: "payload_shape_failure",
-    failureMessage: "Provider response must be an array or object with `extractions` array.",
-    priorPass: 1,
-  });
+  const repairRequest = buildRepairProviderRequest(
+    program,
+    shard,
+    "fake-model",
+    {
+      previousResponseText: badDraft,
+      failureKind: "payload_shape_failure",
+      failureMessage:
+        "Provider response must be an array or object with `extractions` array.",
+      priorPass: 1,
+    },
+  );
   const repairHash = await hashProviderRequest(repairRequest);
 
   const provider = new FakeProvider({
@@ -704,12 +727,18 @@ test("runWithEvidence repairs quote mismatch failure on second pass and finalize
   }))[0];
   const draftRequest = buildProviderRequest(program, shard, "fake-model");
   const draftHash = await hashProviderRequest(draftRequest);
-  const repairRequest = buildRepairProviderRequest(program, shard, "fake-model", {
-    previousResponseText: badDraft,
-    failureKind: "quote_invariant_failure",
-    failureMessage: "Extraction quote does not match the document slice at span.",
-    priorPass: 1,
-  });
+  const repairRequest = buildRepairProviderRequest(
+    program,
+    shard,
+    "fake-model",
+    {
+      previousResponseText: badDraft,
+      failureKind: "quote_invariant_failure",
+      failureMessage:
+        "Extraction quote does not match the document slice at span.",
+      priorPass: 1,
+    },
+  );
   const repairHash = await hashProviderRequest(repairRequest);
 
   const provider = new FakeProvider({
@@ -738,7 +767,8 @@ test("runWithEvidence repairs quote mismatch failure on second pass and finalize
   assertEqual(bundle.diagnostics.multiPassLog.shards[0].finalPass, 2);
   assertEqual(
     bundle.diagnostics.multiPassLog.shards[0].stages.some((stage) =>
-      stage.stage === "repair" && stage.failureKind === "quote_invariant_failure"
+      stage.stage === "repair" &&
+      stage.failureKind === "quote_invariant_failure"
     ),
     true,
   );

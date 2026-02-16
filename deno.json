@@ -1,0 +1,9 @@
+{
+  "fmt": {
+    "exclude": [
+      "dist",
+      "node_modules",
+      "tests/fixtures/minified-example.ts"
+    ]
+  }
+}

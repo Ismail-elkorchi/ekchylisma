@@ -29,7 +29,9 @@ export function normalizeNewlines(text: string): NormalizationResult {
   };
 }
 
-export function trimTrailingWhitespacePerLine(text: string): NormalizationResult {
+export function trimTrailingWhitespacePerLine(
+  text: string,
+): NormalizationResult {
   const normalized = text.replace(/[\t ]+$/gm, "");
   return {
     text: normalized,

@@ -51,7 +51,9 @@ function parseJsonl(source: string): unknown[] {
     });
 }
 
-export function validateRegressionDatasetRecords(records: unknown[]): RegressionDatasetCase[] {
+export function validateRegressionDatasetRecords(
+  records: unknown[],
+): RegressionDatasetCase[] {
   const requiredFields = [
     "caseId",
     "category",
@@ -65,9 +67,17 @@ export function validateRegressionDatasetRecords(records: unknown[]): Regression
     "packId",
   ];
   const requiredFieldSet = new Set(requiredFields);
-  const expectedFields = ["emptyResultKind", "minExtractions", "maxExtractions"];
+  const expectedFields = [
+    "emptyResultKind",
+    "minExtractions",
+    "maxExtractions",
+  ];
   const expectedFieldSet = new Set(expectedFields);
-  const validKinds = new Set(["non_empty", "empty_by_evidence", "empty_by_failure"]);
+  const validKinds = new Set([
+    "non_empty",
+    "empty_by_evidence",
+    "empty_by_failure",
+  ]);
   const caseIds = new Set<string>();
 
   return records.map((record, index) => {
@@ -92,7 +102,9 @@ export function validateRegressionDatasetRecords(records: unknown[]): Regression
       throw new Error(`line ${line}: caseId must be a non-empty string`);
     }
     if (!isValidCaseId(record.caseId)) {
-      throw new Error(`line ${line}: caseId does not match semantic identifier grammar`);
+      throw new Error(
+        `line ${line}: caseId does not match semantic identifier grammar`,
+      );
     }
     if (containsPlaceholderToken(record.caseId)) {
       throw new Error(`line ${line}: caseId contains a placeholder token`);
@@ -120,7 +132,9 @@ export function validateRegressionDatasetRecords(records: unknown[]): Regression
     if (typeof record.sourceUrl !== "string" || !isUrl(record.sourceUrl)) {
       throw new Error(`line ${line}: sourceUrl must be a valid URL`);
     }
-    if (typeof record.sourceQuote !== "string" || record.sourceQuote.length === 0) {
+    if (
+      typeof record.sourceQuote !== "string" || record.sourceQuote.length === 0
+    ) {
       throw new Error(`line ${line}: sourceQuote must be a non-empty string`);
     }
     if (record.sourceQuote.length > 280) {
@@ -130,7 +144,9 @@ export function validateRegressionDatasetRecords(records: unknown[]): Regression
       throw new Error(`line ${line}: packId must be a non-empty string`);
     }
     if (!isValidPackId(record.packId)) {
-      throw new Error(`line ${line}: packId does not match semantic identifier grammar`);
+      throw new Error(
+        `line ${line}: packId does not match semantic identifier grammar`,
+      );
     }
     if (containsPlaceholderToken(record.packId)) {
       throw new Error(`line ${line}: packId contains a placeholder token`);
@@ -157,21 +173,35 @@ export function validateRegressionDatasetRecords(records: unknown[]): Regression
     ) {
       throw new Error(`line ${line}: expected.emptyResultKind is invalid`);
     }
-    if (!Number.isInteger(record.expected.minExtractions) || record.expected.minExtractions < 0) {
-      throw new Error(`line ${line}: expected.minExtractions must be a non-negative integer`);
+    if (
+      !Number.isInteger(record.expected.minExtractions) ||
+      record.expected.minExtractions < 0
+    ) {
+      throw new Error(
+        `line ${line}: expected.minExtractions must be a non-negative integer`,
+      );
     }
-    if (!Number.isInteger(record.expected.maxExtractions) || record.expected.maxExtractions < 0) {
-      throw new Error(`line ${line}: expected.maxExtractions must be a non-negative integer`);
+    if (
+      !Number.isInteger(record.expected.maxExtractions) ||
+      record.expected.maxExtractions < 0
+    ) {
+      throw new Error(
+        `line ${line}: expected.maxExtractions must be a non-negative integer`,
+      );
     }
     if (record.expected.maxExtractions < record.expected.minExtractions) {
-      throw new Error(`line ${line}: expected.maxExtractions must be >= expected.minExtractions`);
+      throw new Error(
+        `line ${line}: expected.maxExtractions must be >= expected.minExtractions`,
+      );
     }
 
     return record as RegressionDatasetCase;
   });
 }
 
-export async function loadRegressionDataset(path: string): Promise<RegressionDatasetCase[]> {
+export async function loadRegressionDataset(
+  path: string,
+): Promise<RegressionDatasetCase[]> {
   const source = await readFile(path, "utf8");
   const records = parseJsonl(source);
   return validateRegressionDatasetRecords(records);

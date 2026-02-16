@@ -4,7 +4,7 @@ import { runWithEvidence } from "../../src/engine/run.ts";
 import { FakeProvider } from "../../src/providers/fake.ts";
 import { assert, assertEqual, test } from "../harness.ts";
 
-const PACK_ID = "2026-02-15--repair-log-in-diagnostics--477928bf";
+const PACK_REF = "2026-02-15--repair-log-in-diagnostics--477928bf";
 
 const CASE_IDS = [
   "repair-log-in-diagnostics--google-langextract--375--5a10c260",
@@ -22,8 +22,12 @@ const CASE_IDS = [
 ] as const;
 
 async function findCase(caseId: string) {
-  const records = await loadRegressionDataset("bench/datasets/regression.jsonl");
-  const entry = records.find((item) => item.caseId === caseId && item.packId === PACK_ID);
+  const records = await loadRegressionDataset(
+    "bench/datasets/regression.jsonl",
+  );
+  const entry = records.find((item) =>
+    item.caseId === caseId && item.packId === PACK_REF
+  );
   if (!entry) {
     throw new Error(`missing regression record for ${caseId}`);
   }
@@ -37,7 +41,9 @@ for (const caseId of CASE_IDS) {
       defaultResponse: entry.providerResponseText,
     });
 
-    const programHash = await sha256Hex(`${entry.instructions}:${JSON.stringify(entry.targetSchema)}`);
+    const programHash = await sha256Hex(
+      `${entry.instructions}:${JSON.stringify(entry.targetSchema)}`,
+    );
     const bundle = await runWithEvidence({
       runId: `regression-${entry.caseId}`,
       program: {
@@ -56,16 +62,21 @@ for (const caseId of CASE_IDS) {
       overlap: 0,
     });
 
-    assertEqual(bundle.diagnostics.emptyResultKind, entry.expected.emptyResultKind);
+    assertEqual(
+      bundle.diagnostics.emptyResultKind,
+      entry.expected.emptyResultKind,
+    );
     assert(
-      bundle.extractions.length >= entry.expected.minExtractions
-        && bundle.extractions.length <= entry.expected.maxExtractions,
+      bundle.extractions.length >= entry.expected.minExtractions &&
+        bundle.extractions.length <= entry.expected.maxExtractions,
       "extraction count must match expected bounds",
     );
     assertEqual(bundle.diagnostics.repairLog.entries.length, 1);
     assertEqual(bundle.diagnostics.repairLog.entries[0].changed, true);
     assertEqual(
-      bundle.diagnostics.repairLog.entries[0].appliedSteps.includes("fixTrailingCommas"),
+      bundle.diagnostics.repairLog.entries[0].appliedSteps.includes(
+        "fixTrailingCommas",
+      ),
       true,
     );
   });

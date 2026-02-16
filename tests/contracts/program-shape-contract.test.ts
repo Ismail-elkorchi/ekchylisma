@@ -25,11 +25,13 @@ test("program contract requires structured program shape fields", async () => {
   );
   assertEqual(schema.properties?.classes?.minItems, 1);
   assert(
-    schema.properties?.constraints?.required?.includes("requireExactQuote") === true,
+    schema.properties?.constraints?.required?.includes("requireExactQuote") ===
+      true,
     "constraints.requireExactQuote should be required",
   );
   assert(
-    schema.properties?.constraints?.required?.includes("forbidOverlap") === true,
+    schema.properties?.constraints?.required?.includes("forbidOverlap") ===
+      true,
     "constraints.forbidOverlap should be required",
   );
 });

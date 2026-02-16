@@ -23,7 +23,10 @@ test("evidence bundle contract requires runCompleteness diagnostics fields", asy
 
   const diagnostics = schema.properties?.diagnostics;
   assert(diagnostics !== undefined, "diagnostics schema should exist");
-  assert(diagnostics.required?.includes("runCompleteness"), "runCompleteness should be required");
+  assert(
+    diagnostics.required?.includes("runCompleteness"),
+    "runCompleteness should be required",
+  );
 
   const runCompleteness = diagnostics.properties?.runCompleteness;
   assert(runCompleteness !== undefined, "runCompleteness schema should exist");

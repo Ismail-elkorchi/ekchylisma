@@ -29,7 +29,11 @@ test("runSuite computes deterministic metrics with FakeProvider mode", async () 
             {
               extractionClass: "token",
               quote: "Beta",
-              span: { offsetMode: "utf16_code_unit", charStart: 6, charEnd: 10 },
+              span: {
+                offsetMode: "utf16_code_unit",
+                charStart: 6,
+                charEnd: 10,
+              },
               grounding: "explicit",
             },
           ],

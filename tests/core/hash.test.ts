@@ -10,11 +10,18 @@ test("sha256Hex returns known vectors", async () => {
       "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592",
     ],
     ["🙂", "d06f1525f791397809f9bc98682b5c13318eca4c3123433467fd4dffda44fd14"],
-    ["a".repeat(1024 * 1024), "9bc1b2a288b26af7257a36277ae3816a7d4f16e89c1e7e77d0a5c48bad62b360"],
+    [
+      "a".repeat(1024 * 1024),
+      "9bc1b2a288b26af7257a36277ae3816a7d4f16e89c1e7e77d0a5c48bad62b360",
+    ],
   ] as const;
 
   for (const [input, expected] of vectors) {
-    assertEqual(await sha256Hex(input), expected, `digest mismatch for ${JSON.stringify(input.slice(0, 20))}`);
+    assertEqual(
+      await sha256Hex(input),
+      expected,
+      `digest mismatch for ${JSON.stringify(input.slice(0, 20))}`,
+    );
   }
 });
 

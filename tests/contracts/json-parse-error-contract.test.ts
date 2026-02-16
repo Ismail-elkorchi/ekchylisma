@@ -13,7 +13,10 @@ test("json parse error contract supports deterministic line-based frame decode e
   };
 
   assert(schema.required?.includes("line") === true, "line should be required");
-  assert(schema.required?.includes("column") === true, "column should be required");
+  assert(
+    schema.required?.includes("column") === true,
+    "column should be required",
+  );
   assertEqual(schema.properties?.message?.type, "string");
   assertEqual(
     JSON.stringify(schema.properties?.line?.type),

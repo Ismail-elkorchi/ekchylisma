@@ -48,20 +48,25 @@ test("OpenAIProvider generateStructured sends structured output payload and pars
         /\/chat\/completions$/,
         [
           (body) => assertEqual(body.model as string, "gpt-test"),
-          (body) => assert((body.response_format as { type?: string }).type === "json_schema", "response_format should use json_schema"),
+          (body) =>
+            assert(
+              (body.response_format as { type?: string }).type ===
+                "json_schema",
+              "response_format should use json_schema",
+            ),
         ],
         {
           ok: true,
           status: 200,
           json: {
-            choices: [{ message: { content: "{\"value\":\"ok\"}" } }],
+            choices: [{ message: { content: '{"value":"ok"}' } }],
           },
         },
       ),
     },
   );
 
-  assertEqual(response.text, "{\"value\":\"ok\"}");
+  assertEqual(response.text, '{"value":"ok"}');
   assertEqual(response.runRecord.provider, "openai");
 });
 
@@ -84,14 +89,14 @@ test("OpenAIProvider generate omits structured response format payload", async (
           ok: true,
           status: 200,
           json: {
-            choices: [{ message: { content: "{\"value\":\"ok\"}" } }],
+            choices: [{ message: { content: '{"value":"ok"}' } }],
           },
         },
       ),
     },
   );
 
-  assertEqual(response.text, "{\"value\":\"ok\"}");
+  assertEqual(response.text, '{"value":"ok"}');
   assertEqual(response.runRecord.provider, "openai");
 });
 
@@ -114,12 +119,12 @@ test("OpenAIProvider prefers tool-call arguments over message content", async ()
             choices: [
               {
                 message: {
-                  content: "{\"extractions\":[]}",
+                  content: '{"extractions":[]}',
                   tool_calls: [
                     {
                       function: {
                         arguments:
-                          "{\"extractions\":[{\"extractionClass\":\"token\",\"quote\":\"Beta\",\"span\":{\"offsetMode\":\"utf16_code_unit\",\"charStart\":6,\"charEnd\":10},\"grounding\":\"explicit\"}]}",
+                          '{"extractions":[{"extractionClass":"token","quote":"Beta","span":{"offsetMode":"utf16_code_unit","charStart":6,"charEnd":10},"grounding":"explicit"}]}',
                       },
                     },
                   ],
@@ -134,7 +139,7 @@ test("OpenAIProvider prefers tool-call arguments over message content", async ()
 
   assertEqual(response.outputChannel, "tool_call");
   assert(
-    response.text.includes("\"extractions\""),
+    response.text.includes('"extractions"'),
     "tool-call argument payload should be returned",
   );
 });
@@ -165,7 +170,7 @@ test("GeminiProvider generateStructured uses responseSchema when provided", asyn
             candidates: [
               {
                 content: {
-                  parts: [{ text: "{\"value\":\"ok\"}" }],
+                  parts: [{ text: '{"value":"ok"}' }],
                 },
               },
             ],
@@ -175,7 +180,7 @@ test("GeminiProvider generateStructured uses responseSchema when provided", asyn
     },
   );
 
-  assertEqual(response.text, "{\"value\":\"ok\"}");
+  assertEqual(response.text, '{"value":"ok"}');
   assertEqual(response.runRecord.provider, "gemini");
 });
 
@@ -199,7 +204,7 @@ test("GeminiProvider prefers functionCall args over text parts", async () => {
               {
                 content: {
                   parts: [
-                    { text: "{\"extractions\":[]}" },
+                    { text: '{"extractions":[]}' },
                     {
                       functionCall: {
                         args: {
@@ -230,7 +235,7 @@ test("GeminiProvider prefers functionCall args over text parts", async () => {
 
   assertEqual(response.outputChannel, "tool_call");
   assert(
-    response.text.includes("\"extractions\""),
+    response.text.includes('"extractions"'),
     "function-call arguments should be prioritized over plain text parts",
   );
 });
@@ -248,14 +253,18 @@ test("OllamaProvider generateStructured sends /api/chat request and parses conte
         /\/api\/chat$/,
         [
           (body) => assertEqual(body.model as string, "llama-test"),
-          (body) => assert(typeof body.format === "object", "format should be schema object"),
+          (body) =>
+            assert(
+              typeof body.format === "object",
+              "format should be schema object",
+            ),
         ],
         {
           ok: true,
           status: 200,
           json: {
             message: {
-              content: "{\"value\":\"ok\"}",
+              content: '{"value":"ok"}',
             },
           },
         },
@@ -263,7 +272,7 @@ test("OllamaProvider generateStructured sends /api/chat request and parses conte
     },
   );
 
-  assertEqual(response.text, "{\"value\":\"ok\"}");
+  assertEqual(response.text, '{"value":"ok"}');
   assertEqual(response.runRecord.provider, "ollama");
 });
 

@@ -2,7 +2,10 @@ import { readFile } from "node:fs/promises";
 import { assert, assertEqual, test } from "../harness.ts";
 
 test("json schema subset contract excludes dialect-only keywords", async () => {
-  const raw = await readFile("contracts/json-schema-subset.schema.json", "utf8");
+  const raw = await readFile(
+    "contracts/json-schema-subset.schema.json",
+    "utf8",
+  );
   const schema = JSON.parse(raw) as {
     additionalProperties?: boolean;
     properties?: Record<string, unknown>;

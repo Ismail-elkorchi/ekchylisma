@@ -19,10 +19,9 @@ function normalizeExtractions(
   extractions: Extraction[],
   filterClass: string,
 ): Extraction[] {
-  const scoped =
-    filterClass === "all"
-      ? extractions
-      : extractions.filter((entry) => entry.extractionClass === filterClass);
+  const scoped = filterClass === "all"
+    ? extractions
+    : extractions.filter((entry) => entry.extractionClass === filterClass);
 
   return [...scoped].sort((a, b) => a.span.charStart - b.span.charStart);
 }
@@ -32,14 +31,14 @@ function renderHighlights(
   extractions: Extraction[],
 ): string {
   if (!documentText) {
-    return "<p class=\"viz-empty\">Document text not provided for this document.</p>";
+    return '<p class="viz-empty">Document text not provided for this document.</p>';
   }
 
   const filtered = extractions.filter(
     (entry) =>
-      entry.span.charStart >= 0
-      && entry.span.charEnd >= entry.span.charStart
-      && entry.span.charEnd <= documentText.length,
+      entry.span.charStart >= 0 &&
+      entry.span.charEnd >= entry.span.charStart &&
+      entry.span.charEnd <= documentText.length,
   );
 
   let cursor = 0;
@@ -53,7 +52,9 @@ function renderHighlights(
 
     chunks.push(escapeHtml(documentText.slice(cursor, charStart)));
     chunks.push(
-      `<mark class=\"viz-mark\" data-start=\"${charStart}\" data-end=\"${charEnd}\" data-class=\"${escapeHtml(extraction.extractionClass)}\">${escapeHtml(documentText.slice(charStart, charEnd))}</mark>`,
+      `<mark class=\"viz-mark\" data-start=\"${charStart}\" data-end=\"${charEnd}\" data-class=\"${
+        escapeHtml(extraction.extractionClass)
+      }\">${escapeHtml(documentText.slice(charStart, charEnd))}</mark>`,
     );
     cursor = charEnd;
   }
@@ -65,7 +66,7 @@ function renderHighlights(
 
 function renderExtractionList(extractions: Extraction[]): string {
   if (extractions.length === 0) {
-    return "<li class=\"viz-empty\">No extractions for this filter.</li>";
+    return '<li class="viz-empty">No extractions for this filter.</li>';
   }
 
   return extractions
@@ -102,11 +103,13 @@ function renderBundleSections(
       const docText = documentTextById[docId] ?? "";
       const filtered = normalizeExtractions(bundle.extractions, filterClass);
 
-      return `<section class=\"viz-bundle\" data-document-id=\"${escapeHtml(docId)}\">`
-        + `<h2>${escapeHtml(docId)}</h2>`
-        + renderHighlights(docText, filtered)
-        + `<ul class=\"viz-list\">${renderExtractionList(filtered)}</ul>`
-        + "</section>";
+      return `<section class=\"viz-bundle\" data-document-id=\"${
+        escapeHtml(docId)
+      }\">` +
+        `<h2>${escapeHtml(docId)}</h2>` +
+        renderHighlights(docText, filtered) +
+        `<ul class=\"viz-list\">${renderExtractionList(filtered)}</ul>` +
+        "</section>";
     })
     .join("\n");
 }
@@ -161,13 +164,19 @@ select { padding: .4rem .6rem; border-radius: .5rem; border: 1px solid #ab9f92; 
 <label for="class-filter">Extraction class</label>
 <select id="class-filter">
 <option value="all">all</option>
-${classes.map((entry) => `<option value="${escapeHtml(entry)}">${escapeHtml(entry)}</option>`).join("")}
+${
+    classes.map((entry) =>
+      `<option value="${escapeHtml(entry)}">${escapeHtml(entry)}</option>`
+    ).join("")
+  }
 </select>
 </div>
 </header>
 <div id="viz-root">${sections}</div>
 </main>
-<script id="__ek_data" type="application/json">${escapeHtml(JSON.stringify(dataPayload))}</script>
+<script id="__ek_data" type="application/json">${
+    escapeHtml(JSON.stringify(dataPayload))
+  }</script>
 <script>
 const payload = JSON.parse(document.getElementById('__ek_data').textContent);
 const select = document.getElementById('class-filter');

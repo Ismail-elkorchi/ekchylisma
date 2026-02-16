@@ -1,14 +1,18 @@
 # Evidence Attestation
 
 ## Purpose
-`attestEvidenceBundle()` and `verifyEvidenceBundleAttestation()` provide optional integrity checks for `EvidenceBundle` payloads.
+
+`attestEvidenceBundle()` and `verifyEvidenceBundleAttestation()` provide
+optional integrity checks for `EvidenceBundle` payloads.
 
 ## Key Format
+
 - JWK is required.
 - `kty` must be `oct` (symmetric key).
 - Algorithm is fixed to `HMAC-SHA-256`.
 
 Example key generation in Node/Deno/Bun:
+
 ```ts
 const key = await crypto.subtle.generateKey(
   { name: "HMAC", hash: "SHA-256", length: 256 },
@@ -19,9 +23,11 @@ const jwk = await crypto.subtle.exportKey("jwk", key);
 ```
 
 ## Canonicalization Rules
+
 Canonicalization string is `ekchylisma-json-c14n-v1`.
 
 Rules:
+
 - Attestation field is excluded before signing/verifying.
 - Object keys are sorted lexicographically at every level.
 - Array element order is preserved.
@@ -29,6 +35,7 @@ Rules:
 - `undefined` object properties are omitted.
 
 ## Usage
+
 ```ts
 import {
   attestEvidenceBundle,
@@ -47,6 +54,8 @@ if (!result.valid) {
 ```
 
 ## Limits
+
 - Attestation provides integrity and key-possession checks only.
 - It does not validate factual correctness of extracted content.
-- It does not provide signer identity unless key distribution and trust policy are managed externally.
+- It does not provide signer identity unless key distribution and trust policy
+  are managed externally.

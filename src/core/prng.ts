@@ -35,7 +35,9 @@ function normalizeSeed(seed: number | string): number {
   throw new Error("PRNG seed must be a number or string.");
 }
 
-export function createDeterministicPrng(seed: number | string): DeterministicPrng {
+export function createDeterministicPrng(
+  seed: number | string,
+): DeterministicPrng {
   const initialSeed = normalizeSeed(seed);
   let state = initialSeed;
 
@@ -69,7 +71,10 @@ export function createDeterministicPrng(seed: number | string): DeterministicPrn
         throw new Error("maxExclusive must be greater than minInclusive.");
       }
 
-      return minInclusive + Math.floor((nextUint32() / 0x1_0000_0000) * (maxExclusive - minInclusive));
+      return minInclusive +
+        Math.floor(
+          (nextUint32() / 0x1_0000_0000) * (maxExclusive - minInclusive),
+        );
     },
   };
 }

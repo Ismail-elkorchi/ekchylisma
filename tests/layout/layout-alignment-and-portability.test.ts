@@ -13,14 +13,25 @@ test("layout: package exports map node subpath to src/node dist artifacts", asyn
 });
 
 test("layout: build config includes src/node and removes src-node", async () => {
-  const tsconfig = JSON.parse(await readFile("tsconfig.build.json", "utf8")) as {
+  const tsconfig = JSON.parse(
+    await readFile("tsconfig.build.json", "utf8"),
+  ) as {
     include?: string[];
   };
   const includes = tsconfig.include ?? [];
 
-  assert(includes.includes("src/node/**/*.ts"), "tsconfig include must cover src/node/**/*.ts");
-  assert(includes.includes("src/node/**/*.d.ts"), "tsconfig include must cover src/node/**/*.d.ts");
-  assert(!includes.includes("src-node/**/*.ts"), "tsconfig include must not reference src-node/**/*.ts");
+  assert(
+    includes.includes("src/node/**/*.ts"),
+    "tsconfig include must cover src/node/**/*.ts",
+  );
+  assert(
+    includes.includes("src/node/**/*.d.ts"),
+    "tsconfig include must cover src/node/**/*.d.ts",
+  );
+  assert(
+    !includes.includes("src-node/**/*.ts"),
+    "tsconfig include must not reference src-node/**/*.ts",
+  );
 });
 
 test("layout: script entrypoints exist and forward to tool implementations", async () => {
@@ -34,7 +45,10 @@ test("layout: script entrypoints exist and forward to tool implementations", asy
 
   for (const [scriptPath, targetPath] of entrypoints) {
     const source = await readFile(scriptPath, "utf8");
-    assert(source.includes(`import \"${targetPath}\";`), `${scriptPath} should forward to ${targetPath}`);
+    assert(
+      source.includes(`import \"${targetPath}\";`),
+      `${scriptPath} should forward to ${targetPath}`,
+    );
   }
 });
 
@@ -44,14 +58,20 @@ test("layout: CI runs PR body check via scripts entrypoint", async () => {
     workflow.includes("node scripts/pr-body-check.ts"),
     "CI workflow must execute scripts/pr-body-check.ts",
   );
-  assert(workflow.includes("- run: npm run check"), "CI workflow must run npm run check");
+  assert(
+    workflow.includes("- run: npm run check"),
+    "CI workflow must run npm run check",
+  );
 });
 
 test("layout: node adapter source path is canonical under src/node", async () => {
   const adapter = await readFile("src/node/fs.ts", "utf8");
   const example = await readFile("examples/node/render-viz.ts", "utf8");
 
-  assert(adapter.includes('from "../io/jsonl.ts"'), "node adapter should import core codec from src/io");
+  assert(
+    adapter.includes('from "../io/jsonl.ts"'),
+    "node adapter should import core codec from src/io",
+  );
   assert(
     example.includes('from "../../src/node/fs.ts"'),
     "node example should import canonical src/node adapter path",

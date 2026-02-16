@@ -54,16 +54,26 @@ test("bench score fails when case-outcome drift exceeds threshold", async () => 
       { encoding: "utf8" },
     );
   } catch (error) {
-    const detail = error as { code?: number; stdout?: string; stderr?: string; message?: string };
-    const combined = `${detail.stdout ?? ""}\n${detail.stderr ?? ""}\n${detail.message ?? ""}`;
-    failedAsExpected = typeof detail.code === "number"
-      && detail.code !== 0
-      && combined.includes("caseOutcomeDriftRate above threshold");
+    const detail = error as {
+      code?: number;
+      stdout?: string;
+      stderr?: string;
+      message?: string;
+    };
+    const combined = `${detail.stdout ?? ""}\n${detail.stderr ?? ""}\n${
+      detail.message ?? ""
+    }`;
+    failedAsExpected = typeof detail.code === "number" &&
+      detail.code !== 0 &&
+      combined.includes("caseOutcomeDriftRate above threshold");
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
 
-  assert(failedAsExpected, "expected bench score to fail when drift exceeds ceiling");
+  assert(
+    failedAsExpected,
+    "expected bench score to fail when drift exceeds ceiling",
+  );
 });
 
 test("bench score passes with bounded variance and sufficient breadth", async () => {
@@ -110,5 +120,8 @@ test("bench score passes with bounded variance and sufficient breadth", async ()
   );
 
   await rm(tempDir, { recursive: true, force: true });
-  assert(execution.stdout.includes("bench score passed"), "bench score should pass with bounded variance");
+  assert(
+    execution.stdout.includes("bench score passed"),
+    "bench score should pass with bounded variance",
+  );
 });

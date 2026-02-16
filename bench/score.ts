@@ -62,7 +62,10 @@ function parseArgs(argv: string[]): {
     minSchemaValidityRate: numeric("--min-schema-validity-rate", 1),
     minQuoteInvariantPassRate: numeric("--min-quote-invariant-pass-rate", 1),
     minCoverageRate: numeric("--min-coverage-rate", 1),
-    maxExtractionCountVariance: numeric("--max-extraction-count-variance", 0.25),
+    maxExtractionCountVariance: numeric(
+      "--max-extraction-count-variance",
+      0.25,
+    ),
     maxSuccessRateStdDev: numeric("--max-success-rate-stddev", 0.05),
     maxCaseOutcomeDriftRate: numeric("--max-case-outcome-drift-rate", 0.05),
     minRegressionCategoryCount: numeric("--min-regression-category-count", 1),
@@ -76,7 +79,9 @@ function assertThreshold(
   minimum: number,
 ): void {
   if (value < minimum) {
-    throw new Error(`${label} below threshold: ${value.toFixed(4)} < ${minimum.toFixed(4)}`);
+    throw new Error(
+      `${label} below threshold: ${value.toFixed(4)} < ${minimum.toFixed(4)}`,
+    );
   }
 }
 
@@ -86,7 +91,9 @@ function assertCeiling(
   maximum: number,
 ): void {
   if (value > maximum) {
-    throw new Error(`${label} above threshold: ${value.toFixed(4)} > ${maximum.toFixed(4)}`);
+    throw new Error(
+      `${label} above threshold: ${value.toFixed(4)} > ${maximum.toFixed(4)}`,
+    );
   }
 }
 
@@ -146,11 +153,17 @@ async function main(): Promise<void> {
       `bench score passed: ${options.resultPath}`,
       `successRate=${result.aggregate.successRate.toFixed(4)}`,
       `schemaValidityRate=${result.aggregate.schemaValidityRate.toFixed(4)}`,
-      `quoteInvariantPassRate=${result.aggregate.quoteInvariantPassRate.toFixed(4)}`,
+      `quoteInvariantPassRate=${
+        result.aggregate.quoteInvariantPassRate.toFixed(4)
+      }`,
       `coverageRate=${result.aggregate.coverageRate.toFixed(4)}`,
-      `extractionCountVariance=${result.aggregate.extractionCountVariance.toFixed(4)}`,
+      `extractionCountVariance=${
+        result.aggregate.extractionCountVariance.toFixed(4)
+      }`,
       `successRateStdDev=${result.aggregate.successRateStdDev.toFixed(4)}`,
-      `caseOutcomeDriftRate=${result.aggregate.caseOutcomeDriftRate.toFixed(4)}`,
+      `caseOutcomeDriftRate=${
+        result.aggregate.caseOutcomeDriftRate.toFixed(4)
+      }`,
       `breadth.totalCaseCount=${result.aggregate.breadth.totalCaseCount}`,
       `breadth.regressionCategoryCount=${result.aggregate.breadth.regressionCategoryCount}`,
     ].join(" | "),

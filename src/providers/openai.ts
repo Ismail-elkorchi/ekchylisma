@@ -1,4 +1,4 @@
-import { ProviderError, classifyProviderStatus } from "./errors.ts";
+import { classifyProviderStatus, ProviderError } from "./errors.ts";
 import { hashProviderRequest } from "./requestHash.ts";
 import type { Provider, ProviderRequest, ProviderResponse } from "./types.ts";
 
@@ -44,14 +44,24 @@ function extractContentText(content: unknown): string {
   return "";
 }
 
-function extractPayload(response: unknown): { text: string; outputChannel: "text" | "tool_call" } {
+function extractPayload(
+  response: unknown,
+): { text: string; outputChannel: "text" | "tool_call" } {
   if (typeof response !== "object" || response === null) {
-    throw new ProviderError("permanent", "parse_error", "OpenAI response is not an object.");
+    throw new ProviderError(
+      "permanent",
+      "parse_error",
+      "OpenAI response is not an object.",
+    );
   }
 
   const choices = (response as { choices?: unknown }).choices;
   if (!Array.isArray(choices) || choices.length === 0) {
-    throw new ProviderError("permanent", "parse_error", "OpenAI response missing choices.");
+    throw new ProviderError(
+      "permanent",
+      "parse_error",
+      "OpenAI response missing choices.",
+    );
   }
 
   const message = (choices[0] as {
@@ -68,7 +78,9 @@ function extractPayload(response: unknown): { text: string; outputChannel: "text
   if (Array.isArray(message?.tool_calls)) {
     for (const call of message.tool_calls) {
       const argumentsValue = call?.function?.arguments;
-      if (typeof argumentsValue === "string" && argumentsValue.trim().length > 0) {
+      if (
+        typeof argumentsValue === "string" && argumentsValue.trim().length > 0
+      ) {
         return {
           text: argumentsValue,
           outputChannel: "tool_call",
@@ -91,7 +103,11 @@ function extractPayload(response: unknown): { text: string; outputChannel: "text
     };
   }
 
-  throw new ProviderError("permanent", "parse_error", "OpenAI response missing message content.");
+  throw new ProviderError(
+    "permanent",
+    "parse_error",
+    "OpenAI response missing message content.",
+  );
 }
 
 export class OpenAIProvider implements Provider {
@@ -110,7 +126,9 @@ export class OpenAIProvider implements Provider {
   ): Promise<ProviderResponse> {
     const fetchFn = ensureFetch(options.fetchFn ?? this.config.fetchFn);
     const startedAt = Date.now();
-    const url = `${(this.config.baseUrl ?? "https://api.openai.com/v1").replace(/\/$/, "")}/chat/completions`;
+    const url = `${
+      (this.config.baseUrl ?? "https://api.openai.com/v1").replace(/\/$/, "")
+    }/chat/completions`;
 
     const payload: Record<string, unknown> = {
       model: request.model,

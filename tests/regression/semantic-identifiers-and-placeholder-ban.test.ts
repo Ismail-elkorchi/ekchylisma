@@ -5,7 +5,8 @@ import { runWithEvidence } from "../../src/engine/run.ts";
 import { FakeProvider } from "../../src/providers/fake.ts";
 import { assert, assertEqual, test } from "../harness.ts";
 
-const PACK_ID = "2026-02-15--semantic-identifiers-and-placeholder-ban--477928bf";
+const PACK_REF =
+  "2026-02-15--semantic-identifiers-and-placeholder-ban--477928bf";
 
 const CASE_IDS = [
   "semantic-identifiers-and-placeholder-ban--google-langextract--375--0d7baea4",
@@ -23,8 +24,12 @@ const CASE_IDS = [
 ] as const;
 
 async function findCase(caseId: string) {
-  const records = await loadRegressionDataset("bench/datasets/regression.jsonl");
-  const entry = records.find((item) => item.caseId === caseId && item.packId === PACK_ID);
+  const records = await loadRegressionDataset(
+    "bench/datasets/regression.jsonl",
+  );
+  const entry = records.find((item) =>
+    item.caseId === caseId && item.packId === PACK_REF
+  );
   if (!entry) {
     throw new Error(`missing regression record for ${caseId}`);
   }
@@ -37,10 +42,17 @@ for (const caseId of CASE_IDS) {
 
     assertEqual(isValidPackId(entry.packId), true, "packId grammar check");
     assertEqual(isValidCaseId(entry.caseId), true, "caseId grammar check");
-    assert(entry.sourceQuote.length <= 280, "sourceQuote length must be <= 280");
+    assert(
+      entry.sourceQuote.length <= 280,
+      "sourceQuote length must be <= 280",
+    );
 
-    const provider = new FakeProvider({ defaultResponse: entry.providerResponseText });
-    const programHash = await sha256Hex(`${entry.instructions}:${JSON.stringify(entry.targetSchema)}`);
+    const provider = new FakeProvider({
+      defaultResponse: entry.providerResponseText,
+    });
+    const programHash = await sha256Hex(
+      `${entry.instructions}:${JSON.stringify(entry.targetSchema)}`,
+    );
 
     const bundle = await runWithEvidence({
       runId: `regression-${entry.caseId}`,
@@ -60,10 +72,13 @@ for (const caseId of CASE_IDS) {
       overlap: 0,
     });
 
-    assertEqual(bundle.diagnostics.emptyResultKind, entry.expected.emptyResultKind);
+    assertEqual(
+      bundle.diagnostics.emptyResultKind,
+      entry.expected.emptyResultKind,
+    );
     assert(
-      bundle.extractions.length >= entry.expected.minExtractions
-        && bundle.extractions.length <= entry.expected.maxExtractions,
+      bundle.extractions.length >= entry.expected.minExtractions &&
+        bundle.extractions.length <= entry.expected.maxExtractions,
       "extraction count must match expected bounds",
     );
   });

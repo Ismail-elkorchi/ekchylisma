@@ -18,7 +18,10 @@ export interface LiteralSchema<TValue extends JsonPrimitive = JsonPrimitive> {
 }
 
 export interface EnumSchema<
-  TValues extends readonly [JsonPrimitive, ...JsonPrimitive[]] = readonly [JsonPrimitive, ...JsonPrimitive[]],
+  TValues extends readonly [JsonPrimitive, ...JsonPrimitive[]] = readonly [
+    JsonPrimitive,
+    ...JsonPrimitive[],
+  ],
 > {
   kind: "enum";
   values: TValues;
@@ -44,7 +47,11 @@ export interface ObjectSchema<TShape extends ObjectShape = ObjectShape> {
 }
 
 export interface UnionSchema<
-  TOptions extends readonly [SchemaAny, SchemaAny, ...SchemaAny[]] = readonly [SchemaAny, SchemaAny, ...SchemaAny[]],
+  TOptions extends readonly [SchemaAny, SchemaAny, ...SchemaAny[]] = readonly [
+    SchemaAny,
+    SchemaAny,
+    ...SchemaAny[],
+  ],
 > {
   kind: "union";
   options: TOptions;
@@ -69,39 +76,36 @@ type OptionalKeys<TShape extends ObjectShape> = {
   [TKey in keyof TShape]-?: TShape[TKey] extends OptionalSchema ? TKey : never;
 }[keyof TShape];
 
-type InferOptionalValue<TSchema extends SchemaAny> = TSchema extends OptionalSchema<infer TInner>
-  ? Infer<TInner>
+type InferOptionalValue<TSchema extends SchemaAny> = TSchema extends
+  OptionalSchema<infer TInner> ? Infer<TInner>
   : Infer<TSchema>;
 
-type Simplify<TValue> = {
-  [TKey in keyof TValue]: TValue[TKey];
-} & {};
+type Simplify<TValue> =
+  & {
+    [TKey in keyof TValue]: TValue[TKey];
+  }
+  & {};
 
-type InferObject<TShape extends ObjectShape> = Simplify<{
-  [TKey in RequiredKeys<TShape>]: Infer<TShape[TKey]>;
-} & {
-  [TKey in OptionalKeys<TShape>]?: InferOptionalValue<TShape[TKey]>;
-}>;
+type InferObject<TShape extends ObjectShape> = Simplify<
+  & {
+    [TKey in RequiredKeys<TShape>]: Infer<TShape[TKey]>;
+  }
+  & {
+    [TKey in OptionalKeys<TShape>]?: InferOptionalValue<TShape[TKey]>;
+  }
+>;
 
 export type Infer<TSchema extends SchemaAny> = TSchema extends StringSchema
   ? string
-  : TSchema extends NumberSchema
-    ? number
-    : TSchema extends BooleanSchema
-      ? boolean
-      : TSchema extends LiteralSchema<infer TValue>
-        ? TValue
-        : TSchema extends EnumSchema<infer TValues>
-          ? TValues[number]
-          : TSchema extends ArraySchema<infer TItem>
-            ? Array<Infer<TItem>>
-            : TSchema extends ObjectSchema<infer TShape>
-              ? InferObject<TShape>
-              : TSchema extends UnionSchema<infer TOptions>
-                ? Infer<TOptions[number]>
-                : TSchema extends OptionalSchema<infer TInner>
-                  ? Infer<TInner> | undefined
-                  : never;
+  : TSchema extends NumberSchema ? number
+  : TSchema extends BooleanSchema ? boolean
+  : TSchema extends LiteralSchema<infer TValue> ? TValue
+  : TSchema extends EnumSchema<infer TValues> ? TValues[number]
+  : TSchema extends ArraySchema<infer TItem> ? Array<Infer<TItem>>
+  : TSchema extends ObjectSchema<infer TShape> ? InferObject<TShape>
+  : TSchema extends UnionSchema<infer TOptions> ? Infer<TOptions[number]>
+  : TSchema extends OptionalSchema<infer TInner> ? Infer<TInner> | undefined
+  : never;
 
 export const string = (): StringSchema => ({ kind: "string" });
 
@@ -113,7 +117,9 @@ export const literal = <const TValue extends JsonPrimitive>(
   value: TValue,
 ): LiteralSchema<TValue> => ({ kind: "literal", value });
 
-const enumValue = <const TValues extends readonly [JsonPrimitive, ...JsonPrimitive[]]>(
+const enumValue = <
+  const TValues extends readonly [JsonPrimitive, ...JsonPrimitive[]],
+>(
   values: TValues,
 ): EnumSchema<TValues> => ({
   kind: "enum",
@@ -128,7 +134,9 @@ export const object = <const TShape extends ObjectShape>(
   shape: TShape,
 ): ObjectSchema<TShape> => ({ kind: "object", shape });
 
-export const union = <const TOptions extends readonly [SchemaAny, SchemaAny, ...SchemaAny[]]>(
+export const union = <
+  const TOptions extends readonly [SchemaAny, SchemaAny, ...SchemaAny[]],
+>(
   options: TOptions,
 ): UnionSchema<TOptions> => ({ kind: "union", options });
 

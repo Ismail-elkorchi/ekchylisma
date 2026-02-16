@@ -1,6 +1,10 @@
 import { sha256Hex } from "../../src/core/hash.ts";
 import { runSuite } from "../../src/eval/runSuite.ts";
-import type { Provider, ProviderRequest, ProviderResponse } from "../../src/providers/types.ts";
+import type {
+  Provider,
+  ProviderRequest,
+  ProviderResponse,
+} from "../../src/providers/types.ts";
 import { assert, assertEqual, test } from "../harness.ts";
 
 async function makeProgram() {
@@ -20,7 +24,9 @@ class AlternatingProvider implements Provider {
     return this.nextResponse();
   }
 
-  async generateStructured(_request: ProviderRequest): Promise<ProviderResponse> {
+  async generateStructured(
+    _request: ProviderRequest,
+  ): Promise<ProviderResponse> {
     return this.nextResponse();
   }
 
@@ -29,18 +35,16 @@ class AlternatingProvider implements Provider {
     const even = this.callCount % 2 === 0;
 
     return {
-      text: even
-        ? JSON.stringify({ extractions: [] })
-        : JSON.stringify({
-          extractions: [
-            {
-              extractionClass: "token",
-              quote: "Beta",
-              span: { offsetMode: "utf16_code_unit", charStart: 6, charEnd: 10 },
-              grounding: "explicit",
-            },
-          ],
-        }),
+      text: even ? JSON.stringify({ extractions: [] }) : JSON.stringify({
+        extractions: [
+          {
+            extractionClass: "token",
+            quote: "Beta",
+            span: { offsetMode: "utf16_code_unit", charStart: 6, charEnd: 10 },
+            grounding: "explicit",
+          },
+        ],
+      }),
       outputChannel: "text",
       runRecord: {
         provider: this.name,
@@ -68,13 +72,15 @@ test("runSuite reports breadth metadata from prompt variants, seeds, and provide
         caseId: "breadth-one",
         providerLabel: "openai",
         documentText: "Alpha Beta",
-        providerResponseText: "{\"extractions\":[{\"extractionClass\":\"token\",\"quote\":\"Beta\",\"span\":{\"offsetMode\":\"utf16_code_unit\",\"charStart\":6,\"charEnd\":10},\"grounding\":\"explicit\"}]}",
+        providerResponseText:
+          '{"extractions":[{"extractionClass":"token","quote":"Beta","span":{"offsetMode":"utf16_code_unit","charStart":6,"charEnd":10},"grounding":"explicit"}]}',
       },
       {
         caseId: "breadth-two",
         providerLabel: "gemini",
         documentText: "Gamma Delta",
-        providerResponseText: "{\"extractions\":[{\"extractionClass\":\"token\",\"quote\":\"Gamma\",\"span\":{\"offsetMode\":\"utf16_code_unit\",\"charStart\":0,\"charEnd\":5},\"grounding\":\"explicit\"}]}",
+        providerResponseText:
+          '{"extractions":[{"extractionClass":"token","quote":"Gamma","span":{"offsetMode":"utf16_code_unit","charStart":0,"charEnd":5},"grounding":"explicit"}]}',
       },
     ],
   });
@@ -102,12 +108,15 @@ test("runSuite detects case-outcome drift in variance report", async () => {
       {
         caseId: "drift-one",
         documentText: "Alpha Beta",
-        providerResponseText: "{\"extractions\":[]}",
+        providerResponseText: '{"extractions":[]}',
       },
     ],
   });
 
-  assert(result.variance.caseOutcomeDriftRate > 0, "expected drift rate to be > 0");
+  assert(
+    result.variance.caseOutcomeDriftRate > 0,
+    "expected drift rate to be > 0",
+  );
   assert(result.variance.stdDev > 0, "expected non-zero extraction stddev");
   assertEqual(result.variance.runCount, 4);
 });
@@ -124,7 +133,7 @@ test("runSuite applies deterministic default labels when seeds and variants are 
       {
         caseId: "defaults",
         documentText: "Alpha Beta",
-        providerResponseText: "{\"extractions\":[]}",
+        providerResponseText: '{"extractions":[]}',
       },
     ],
   });

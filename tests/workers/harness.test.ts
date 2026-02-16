@@ -26,7 +26,10 @@ test("workers harness executes example worker and returns portability payload", 
   try {
     const response = await mf.dispatchFetch("http://localhost/");
     assertEqual(response.status, 200);
-    assertEqual(response.headers.get("content-type"), "application/json; charset=utf-8");
+    assertEqual(
+      response.headers.get("content-type"),
+      "application/json; charset=utf-8",
+    );
 
     const payload = await response.json() as {
       runtime: string;
@@ -36,7 +39,10 @@ test("workers harness executes example worker and returns portability payload", 
 
     assertEqual(payload.runtime, "workers");
     assertEqual(payload.extractionCount, 1);
-    assert(Array.isArray(payload.extractions), "extractions should be an array");
+    assert(
+      Array.isArray(payload.extractions),
+      "extractions should be an array",
+    );
     assertEqual(payload.extractions[0]?.quote, "Beta");
   } finally {
     await mf.dispose();

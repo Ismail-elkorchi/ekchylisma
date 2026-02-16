@@ -14,7 +14,7 @@ function baseRecord() {
       },
       required: ["value"],
     },
-    providerResponseText: "{\"value\":\"Beta\"}",
+    providerResponseText: '{"value":"Beta"}',
     expected: {
       emptyResultKind: "non_empty",
       minExtractions: 1,
@@ -34,18 +34,30 @@ test("regression identifier grammar accepts valid ids", () => {
 
 test("regression identifier grammar rejects invalid caseId and packId", async () => {
   await assertRejects(
-    () => validateRegressionDatasetRecords([{ ...baseRecord(), caseId: "invalid-case-id" }]),
+    () =>
+      validateRegressionDatasetRecords([{
+        ...baseRecord(),
+        caseId: "invalid-case-id",
+      }]),
     (error) =>
-      error instanceof Error
-      && error.message.includes("caseId does not match semantic identifier grammar"),
+      error instanceof Error &&
+      error.message.includes(
+        "caseId does not match semantic identifier grammar",
+      ),
     "invalid caseId grammar should be rejected",
   );
 
   await assertRejects(
-    () => validateRegressionDatasetRecords([{ ...baseRecord(), packId: "invalid-pack-id" }]),
+    () =>
+      validateRegressionDatasetRecords([{
+        ...baseRecord(),
+        packId: "invalid-pack-id",
+      }]),
     (error) =>
-      error instanceof Error
-      && error.message.includes("packId does not match semantic identifier grammar"),
+      error instanceof Error &&
+      error.message.includes(
+        "packId does not match semantic identifier grammar",
+      ),
     "invalid packId grammar should be rejected",
   );
 

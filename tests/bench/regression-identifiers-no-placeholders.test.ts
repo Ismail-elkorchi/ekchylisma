@@ -19,7 +19,7 @@ function baseRecord() {
       },
       required: ["value"],
     },
-    providerResponseText: "{\"value\":\"Beta\"}",
+    providerResponseText: '{"value":"Beta"}',
     expected: {
       emptyResultKind: "non_empty",
       minExtractions: 1,
@@ -40,7 +40,9 @@ test("regression identifiers reject placeholder token in caseId", async () => {
           caseId: `placeholder-${CASE_PLACEHOLDER}--fake-provider--1--1a2b3c4d`,
         },
       ]),
-    (error) => error instanceof Error && error.message.includes("caseId contains a placeholder token"),
+    (error) =>
+      error instanceof Error &&
+      error.message.includes("caseId contains a placeholder token"),
     "caseId placeholder token should be rejected",
   );
 });
@@ -54,7 +56,9 @@ test("regression identifiers reject placeholder token in packId", async () => {
           packId: `2026-02-15--placeholder-${PACK_PLACEHOLDER}-pack--1a2b3c4d`,
         },
       ]),
-    (error) => error instanceof Error && error.message.includes("packId contains a placeholder token"),
+    (error) =>
+      error instanceof Error &&
+      error.message.includes("packId contains a placeholder token"),
     "packId placeholder token should be rejected",
   );
 });
@@ -65,10 +69,13 @@ test("regression identifiers reject pull-request marker token in caseId", async 
       validateRegressionDatasetRecords([
         {
           ...baseRecord(),
-          caseId: `placeholder-${CASE_PR_PLACEHOLDER}--fake-provider--1--1a2b3c4d`,
+          caseId:
+            `placeholder-${CASE_PR_PLACEHOLDER}--fake-provider--1--1a2b3c4d`,
         },
       ]),
-    (error) => error instanceof Error && error.message.includes("caseId contains a placeholder token"),
+    (error) =>
+      error instanceof Error &&
+      error.message.includes("caseId contains a placeholder token"),
     "caseId pull-request marker token should be rejected",
   );
 });
@@ -79,10 +86,13 @@ test("regression identifiers reject pull-request marker token in packId", async 
       validateRegressionDatasetRecords([
         {
           ...baseRecord(),
-          packId: `2026-02-15--placeholder-${PACK_PR_PLACEHOLDER}-pack--1a2b3c4d`,
+          packId:
+            `2026-02-15--placeholder-${PACK_PR_PLACEHOLDER}-pack--1a2b3c4d`,
         },
       ]),
-    (error) => error instanceof Error && error.message.includes("packId contains a placeholder token"),
+    (error) =>
+      error instanceof Error &&
+      error.message.includes("packId contains a placeholder token"),
     "packId pull-request marker token should be rejected",
   );
 });

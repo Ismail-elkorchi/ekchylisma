@@ -6,17 +6,27 @@ import {
 } from "../../src/engine/run.ts";
 import { FakeProvider, hashProviderRequest } from "../../src/providers/fake.ts";
 import {
-  ProviderError,
   classifyProviderStatus,
   isTransientProviderError,
+  ProviderError,
 } from "../../src/providers/errors.ts";
 import { assert, assertEqual, test } from "../harness.ts";
 
 test("provider error classification distinguishes transient/permanent", () => {
   assertEqual(classifyProviderStatus(429), "transient");
   assertEqual(classifyProviderStatus(400), "permanent");
-  assertEqual(isTransientProviderError(new ProviderError("transient", "rate_limit", "retry")), true);
-  assertEqual(isTransientProviderError(new ProviderError("permanent", "bad_request", "stop")), false);
+  assertEqual(
+    isTransientProviderError(
+      new ProviderError("transient", "rate_limit", "retry"),
+    ),
+    true,
+  );
+  assertEqual(
+    isTransientProviderError(
+      new ProviderError("permanent", "bad_request", "stop"),
+    ),
+    false,
+  );
 });
 
 test("runExtractionWithProvider executes end-to-end with FakeProvider and quote invariant", async () => {
@@ -97,9 +107,9 @@ test("runExtractionWithProvider routes schema-first requests to generateStructur
   const requestHash = await hashProviderRequest(request);
 
   const fakeProvider = new FakeProvider({
-    defaultResponse: "{\"items\":[]}",
+    defaultResponse: '{"items":[]}',
   });
-  fakeProvider.setResponse(requestHash, "{\"items\":[]}");
+  fakeProvider.setResponse(requestHash, '{"items":[]}');
   fakeProvider.setStructuredResponse(
     requestHash,
     JSON.stringify({
