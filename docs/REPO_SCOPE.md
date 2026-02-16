@@ -14,3 +14,4 @@ The following content must never be committed in this repository:
 - signal collection datasets
 - planning artifacts and execution runbooks
 - private analysis exports
+- hidden Unicode controls are forbidden; CI enforces this
