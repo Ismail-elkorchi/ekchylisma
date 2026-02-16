@@ -1,3 +1,5 @@
+import { assembleStreamingToolCalls } from "./streamToolCallAssembler.ts";
+
 export type FrameDecodeError = {
   line: number;
   message: string;
@@ -95,7 +97,11 @@ function extractFrameContent(frame: unknown): string {
 function parseFramePayload(
   payload: string,
   line: number,
-): { ok: true; content: string } | {
+): {
+  ok: true;
+  content: string;
+  frame: unknown;
+} | {
   ok: false;
   error: FrameDecodeError;
 } {
@@ -104,6 +110,7 @@ function parseFramePayload(
     return {
       ok: true,
       content: extractFrameContent(parsed),
+      frame: parsed,
     };
   } catch {
     return {
@@ -122,6 +129,7 @@ export function decodeStreamingJsonFrames(
 ): FrameDecodeResult {
   const lines = sourceText.split(/\r?\n/);
   const fragments: string[] = [];
+  const parsedFrames: unknown[] = [];
   let sawFramePrefix = false;
 
   for (let index = 0; index < lines.length; index += 1) {
@@ -156,16 +164,37 @@ export function decodeStreamingJsonFrames(
         error: parsed.error,
       };
     }
+    parsedFrames.push(parsed.frame);
     if (parsed.content.length > 0) {
       fragments.push(parsed.content);
     }
   }
 
-  if (!sawFramePrefix || fragments.length === 0) {
+  if (!sawFramePrefix) {
     return {
       ok: true,
       usedFrames: false,
       text: sourceText,
+    };
+  }
+
+  const assembledToolCallText = assembleStreamingToolCalls(parsedFrames)
+    .map((call) => call.arguments)
+    .filter((argumentsText) => argumentsText.trim().length > 0)
+    .join("\n");
+  if (assembledToolCallText.length > 0) {
+    return {
+      ok: true,
+      usedFrames: true,
+      text: assembledToolCallText,
+    };
+  }
+
+  if (fragments.length === 0) {
+    return {
+      ok: true,
+      usedFrames: true,
+      text: "",
     };
   }
 
