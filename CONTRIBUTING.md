@@ -22,6 +22,13 @@ npm run bench
 
 Include the commands and key outputs in the PR `## Verification` section.
 
+## Naming Policy
+Pull request title regex:
+`^(build|ci|docs|feat|fix|perf|refactor|test)\([a-z0-9-]+\): [A-Za-z0-9].+$`
+
+Pull request branch regex:
+`^(build|ci|docs|feat|fix|perf|refactor|test)\/[a-z0-9-]+$`
+
 ## Contribution License Terms
 No CLA is required.
 
