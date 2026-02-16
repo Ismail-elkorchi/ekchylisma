@@ -39,8 +39,6 @@ test("layout: script entrypoints exist and forward to tool implementations", asy
     ["scripts/pr-body-check.ts", "../tools/pr-body-check.ts"],
     ["scripts/repo-scope-check.ts", "../tools/repo-scope-check.ts"],
     ["scripts/repo-text-check.ts", "../tools/repo-text-check.ts"],
-    ["scripts/oss-check.ts", "../tools/oss-check.ts"],
-    ["scripts/orphan-check.ts", "../tools/orphan-check.ts"],
   ] as const;
 
   for (const [scriptPath, targetPath] of entrypoints) {

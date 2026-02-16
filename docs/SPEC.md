@@ -9,7 +9,7 @@ This file is the implementation-facing spec derived from `MASTER_SPEC.md`.
 - Quote invariant is mandatory: `document.slice(charStart, charEnd) === quote`.
 - Core code must stay web-API-first and avoid Node-only APIs.
 - Runtime dependencies are forbidden; `package.json` keeps `dependencies` empty.
-- Docs, contracts, and tests must evolve together and pass `orphan-check`.
+- Docs, contracts, and tests must evolve together and pass `npm run check`.
 
 ## Prompt-02 anti-drift summary (5 bullets)
 

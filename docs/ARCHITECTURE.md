@@ -49,8 +49,10 @@
   extraction path.
 - `.github/workflows/ci.yml`: deterministic CI checks across Node, Deno, and
   Bun.
-- `scripts/orphan-check.ts`: repository-check entrypoint for
-  docs/contracts/exports coherence and runtime example smoke checks.
+- `scripts/repo-scope-check.ts`: repository-check entrypoint for repository
+  boundary path controls.
+- `scripts/repo-text-check.ts`: repository-check entrypoint for identifier
+  grammar, placeholder-token bans, and Unicode format-control bans.
 - `src/schema/schemaCue.ts`: dependency-free schema DSL with TypeScript
   inference.
 - `src/schema/validate.ts`: deterministic validator with JSON pointer errors.

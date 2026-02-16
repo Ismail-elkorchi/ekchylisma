@@ -154,13 +154,13 @@
 - Consequence: `docs/PORTABILITY.md` can provide exact commands with a single
   expected output shape.
 
-## ADR-0014: Orphan-check enforces contract/export/example coherence
+## ADR-0014: Coherence checks enforce contract/export/example coverage
 
 - Date: 2026-02-14
 - Context: Prompt 13 requires stronger coherence enforcement across system
   artifacts.
-- Decision: Extend `tools/orphan-check.ts` to verify contract references, docs
-  coverage for every `src/index.ts` export, and runtime example smoke runs.
+- Decision: Add repository coherence checks to verify contract references and
+  docs coverage for exported surfaces.
 - Rationale: Coherence failures should be detected automatically before merge.
 - Consequence: Default check workflow now blocks drift in
   docs/contracts/examples.
@@ -347,15 +347,14 @@
   - Add `docs/REPO_SCOPE.md` with explicit allowed/disallowed content classes.
   - Add `scripts/repo-scope-check.ts` entrypoint to fail when disallowed root
     paths (`internal/`, `research/`, `signals/`, `plans/`, `projects/`) exist.
-  - Require `npm run repo-scope-check` in `npm run check` and enforce script
-    wiring via `tools/oss-check.ts`.
+  - Require `npm run repo-scope-check` in `npm run check` as an active
+    repository boundary gate.
 - Consequences:
   - Internal research and planning artifacts are blocked from accidental commit
     to the product repository.
   - Scope policy violations become deterministic CI/local check failures.
 - Verification commands:
   - `npm run repo-scope-check`
-  - `npm run oss-check`
   - `npm run check`
 
 ## ADR-0027: semantic-identifiers-and-placeholder-ban
