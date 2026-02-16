@@ -1,0 +1,38 @@
+[
+  {
+    "signal": "langchain-parser-brittleness",
+    "sourceUrl": "https://github.com/langchain-ai/langchain/issues/23297",
+    "documentText": "Alpha Beta",
+    "expectedQuote": "Beta",
+    "expectedCharStart": 6,
+    "expectedCharEnd": 10,
+    "payload": "```json\n{\"task\":\"what queries must i run\",\"steps\":[{\"step_name\":\"Step#1\",\"tool_to_use\":Document_Search_Tool}]}\n```\n{\"extractions\":[{\"extractionClass\":\"token\",\"quote\":\"Beta\",\"span\":{\"offsetMode\":\"utf16_code_unit\",\"charStart\":6,\"charEnd\":10},\"grounding\":\"explicit\"}]}"
+  },
+  {
+    "signal": "llamaindex-json-extra-data",
+    "sourceUrl": "https://github.com/run-llama/llama_index/issues/14152",
+    "documentText": "Alpha Beta",
+    "expectedQuote": "Beta",
+    "expectedCharStart": 6,
+    "expectedCharEnd": 10,
+    "payload": "{\"items\":[{\"sub_question\":\"What is the revenue growth of Uber\",\"tool_name\":\"uber_10k\"}]}\n# Example 2\n{\"extractions\":[{\"extractionClass\":\"token\",\"quote\":\"Beta\",\"span\":{\"offsetMode\":\"utf16_code_unit\",\"charStart\":6,\"charEnd\":10},\"grounding\":\"explicit\"}]}"
+  },
+  {
+    "signal": "instructor-tool-completion-json-decode",
+    "sourceUrl": "https://github.com/567-labs/instructor/issues/1380",
+    "documentText": "Alpha Beta",
+    "expectedQuote": "Beta",
+    "expectedCharStart": 6,
+    "expectedCharEnd": 10,
+    "payload": "{\"name\":\"get_weather\",\"arguments\":{\"location\":\"San Francisco\"}}\nI'll check the current weather and return structured output.\n{\"extractions\":[{\"extractionClass\":\"token\",\"quote\":\"Beta\",\"span\":{\"offsetMode\":\"utf16_code_unit\",\"charStart\":6,\"charEnd\":10},\"grounding\":\"explicit\"}]}"
+  },
+  {
+    "signal": "outlines-invalid-escape",
+    "sourceUrl": "https://github.com/dottxt-ai/outlines/issues/759",
+    "documentText": "I won't do that.",
+    "expectedQuote": "won't",
+    "expectedCharStart": 2,
+    "expectedCharEnd": 7,
+    "payload": "{\"extractions\":[{\"extractionClass\":\"token\",\"quote\":\"won\\'t\",\"span\":{\"offsetMode\":\"utf16_code_unit\",\"charStart\":2,\"charEnd\":7},\"grounding\":\"explicit\"}]}"
+  }
+]

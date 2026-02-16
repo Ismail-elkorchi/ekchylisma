@@ -6,6 +6,7 @@
   "additionalProperties": false,
   "required": [
     "name",
+    "failureCode",
     "message",
     "position",
     "line",
@@ -17,6 +18,15 @@
     "name": {
       "type": "string",
       "const": "JsonParseError"
+    },
+    "failureCode": {
+      "type": "string",
+      "enum": [
+        "stream_frame_malformed",
+        "json_payload_missing",
+        "json_parse_failed",
+        "schema_validation_failed"
+      ]
     },
     "message": {
       "type": "string"

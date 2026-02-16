@@ -1,5 +1,12 @@
+export type JsonParseFailureCode =
+  | "stream_frame_malformed"
+  | "json_payload_missing"
+  | "json_parse_failed"
+  | "schema_validation_failed";
+
 export type JsonParseError = {
   name: "JsonParseError";
+  failureCode: JsonParseFailureCode;
   message: string;
   position: number | null;
   line: number | null;
@@ -48,13 +55,18 @@ function snippetAt(text: string, position: number | null): string {
   return text.slice(start, end);
 }
 
-function buildParseError(text: string, error: unknown): JsonParseError {
+function buildParseError(
+  text: string,
+  error: unknown,
+  failureCode: JsonParseFailureCode = "json_parse_failed",
+): JsonParseError {
   const message = error instanceof Error ? error.message : String(error);
   const position = parsePosition(message);
   const { line, column } = parseLineColumn(message);
 
   return {
     name: "JsonParseError",
+    failureCode,
     message,
     position,
     line,

@@ -3,6 +3,7 @@ import { extractFirstJson } from "./extractJson.ts";
 export type RepairStepName =
   | "stripBOM"
   | "removeAsciiControlChars"
+  | "fixInvalidEscapes"
   | "trimOuterJunk"
   | "fixTrailingCommas";
 
@@ -67,6 +68,65 @@ function stripBOM(text: string): string {
 
 function removeAsciiControlChars(text: string): string {
   return text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+}
+
+function fixInvalidEscapes(text: string): string {
+  let output = "";
+  let inString = false;
+  let escaped = false;
+  let changed = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+
+    if (!inString) {
+      output += char;
+      if (char === '"') {
+        inString = true;
+      }
+      continue;
+    }
+
+    if (!escaped) {
+      output += char;
+      if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    const isSimpleEscape = char === '"' || char === "\\" || char === "/" ||
+      char === "b" || char === "f" || char === "n" || char === "r" ||
+      char === "t";
+    if (isSimpleEscape) {
+      output += char;
+      escaped = false;
+      continue;
+    }
+
+    if (char === "u") {
+      const hex = text.slice(index + 1, index + 5);
+      if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+        output += char;
+        escaped = false;
+        continue;
+      }
+    }
+
+    output = output.slice(0, -1);
+    output += char;
+    escaped = false;
+    changed = true;
+  }
+
+  if (escaped) {
+    output = output.slice(0, -1);
+    changed = true;
+  }
+
+  return changed ? output : text;
 }
 
 function trimOuterJunk(text: string): string {
@@ -150,6 +210,12 @@ export function repairJsonText(
     "removeAsciiControlChars",
     current,
     removeAsciiControlChars(current),
+  );
+  current = withStep(
+    steps,
+    "fixInvalidEscapes",
+    current,
+    fixInvalidEscapes(current),
   );
   current = withStep(steps, "trimOuterJunk", current, trimOuterJunk(current));
   current = withStep(

@@ -107,6 +107,7 @@ export type EvidenceProvenance = {
 export type JsonRepairStepName =
   | "stripBOM"
   | "removeAsciiControlChars"
+  | "fixInvalidEscapes"
   | "trimOuterJunk"
   | "fixTrailingCommas";
 
@@ -130,6 +131,11 @@ export type JsonRepairLog = {
 
 export type JsonParseErrorDetail = {
   name: "JsonParseError";
+  failureCode:
+    | "stream_frame_malformed"
+    | "json_payload_missing"
+    | "json_parse_failed"
+    | "schema_validation_failed";
   message: string;
   position: number | null;
   line: number | null;

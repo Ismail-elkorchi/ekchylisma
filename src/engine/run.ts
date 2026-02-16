@@ -47,6 +47,9 @@ import {
   JsonPipelineFailure,
   parseJsonWithRepairPipeline,
 } from "../json/pipeline.ts";
+import type { JsonParseError, JsonParseFailureCode } from "../json/parse.ts";
+import { decodeStreamingJsonFrames } from "../json/frameDecoder.ts";
+import { extractJsonCandidates, type JsonSlice } from "../json/extractJson.ts";
 import type {
   Provider,
   ProviderRequest,
@@ -210,9 +213,12 @@ type RawExtraction = {
 };
 
 class PayloadShapeFailure extends Error {
+  readonly failureCode: JsonParseFailureCode;
+
   constructor(message: string) {
     super(message);
     this.name = "PayloadShapeFailure";
+    this.failureCode = "schema_validation_failed";
   }
 }
 
@@ -388,21 +394,240 @@ function collectStructuredPayloadCandidates(payload: Record<string, unknown>): {
   return { toolCalls, fallbackTexts };
 }
 
+type JsonCandidate = {
+  text: string;
+  start: number | null;
+  end: number | null;
+  kind: "object" | "array" | null;
+};
+
+function buildJsonParseError(
+  sourceText: string,
+  failureCode: JsonParseFailureCode,
+  message: string,
+  snippet: string,
+): JsonParseError {
+  return {
+    name: "JsonParseError",
+    failureCode,
+    message,
+    position: null,
+    line: null,
+    column: null,
+    snippet,
+    inputLength: sourceText.length,
+  };
+}
+
+function buildJsonPipelineLog(
+  parsedLog: JsonPipelineDiagnostic,
+  sourceLength: number,
+  candidate: JsonCandidate,
+): JsonPipelineDiagnostic {
+  return {
+    ...parsedLog,
+    extractedJson: {
+      found: candidate.start !== null,
+      start: candidate.start,
+      end: candidate.end,
+      kind: candidate.kind,
+      sourceLength,
+      candidateLength: candidate.text.length,
+    },
+  };
+}
+
+function toJsonCandidates(sourceText: string): JsonCandidate[] {
+  const slices = extractJsonCandidates(sourceText);
+  if (slices.length === 0) {
+    return [{
+      text: sourceText,
+      start: null,
+      end: null,
+      kind: null,
+    }];
+  }
+
+  return slices.map((slice: JsonSlice) => ({
+    text: slice.text,
+    start: slice.start,
+    end: slice.end,
+    kind: slice.kind,
+  }));
+}
+
+function parseProviderPayloadEntry(options: {
+  sourceText: string;
+  label: string;
+  depth: number;
+  repairBudgets: RunBudgets["repair"] | undefined;
+}): {
+  rawExtractions: RawExtraction[];
+  jsonPipelineLog: JsonPipelineDiagnostic;
+} {
+  const decodedFrames = decodeStreamingJsonFrames(options.sourceText);
+  if (!decodedFrames.ok) {
+    const frameError = buildJsonParseError(
+      options.sourceText,
+      "stream_frame_malformed",
+      decodedFrames.error.message,
+      decodedFrames.error.frameSnippet,
+    );
+    throw new JsonPipelineFailure(frameError, {
+      extractedJson: {
+        found: false,
+        start: null,
+        end: null,
+        kind: null,
+        sourceLength: options.sourceText.length,
+        candidateLength: 0,
+      },
+      repair: {
+        changed: false,
+        steps: [],
+        budget: {
+          maxCandidateChars: options.repairBudgets?.maxCandidateChars ?? null,
+          maxRepairChars: options.repairBudgets?.maxRepairChars ?? null,
+          candidateCharsTruncated: false,
+          repairCharsTruncated: false,
+        },
+      },
+      parse: {
+        ok: false,
+        error: frameError,
+      },
+    });
+  }
+
+  const normalizedSource = decodedFrames.text;
+  const candidates = toJsonCandidates(normalizedSource);
+  let firstJsonPipelineFailure: JsonPipelineFailure | null = null;
+  let firstSchemaFailure: PayloadShapeFailure | null = null;
+
+  for (let index = 0; index < candidates.length; index += 1) {
+    const candidate = candidates[index];
+    const parsed = parseJsonWithRepairPipeline(candidate.text, {
+      repair: options.repairBudgets,
+    });
+    const candidateLog = buildJsonPipelineLog(
+      parsed.log,
+      normalizedSource.length,
+      candidate,
+    );
+
+    if (!parsed.ok) {
+      const failureCode = candidate.start === null
+        ? "json_payload_missing"
+        : parsed.error.failureCode;
+      const parseError: JsonParseError = {
+        ...parsed.error,
+        failureCode,
+        inputLength: normalizedSource.length,
+      };
+      if (firstJsonPipelineFailure === null) {
+        firstJsonPipelineFailure = new JsonPipelineFailure(
+          parseError,
+          candidateLog,
+        );
+      }
+      continue;
+    }
+
+    try {
+      const rawExtractions = parseExtractions(
+        parsed.value,
+        options.depth + 1,
+        options.repairBudgets,
+      );
+      return {
+        rawExtractions,
+        jsonPipelineLog: candidateLog,
+      };
+    } catch (error) {
+      if (error instanceof PayloadShapeFailure) {
+        if (firstSchemaFailure === null) {
+          firstSchemaFailure = error;
+        }
+        continue;
+      }
+
+      if (error instanceof JsonPipelineFailure) {
+        if (firstJsonPipelineFailure === null) {
+          firstJsonPipelineFailure = error;
+        }
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  if (firstSchemaFailure !== null) {
+    throw firstSchemaFailure;
+  }
+
+  if (firstJsonPipelineFailure !== null) {
+    throw firstJsonPipelineFailure;
+  }
+
+  throw new JsonPipelineFailure(
+    buildJsonParseError(
+      normalizedSource,
+      "json_payload_missing",
+      `${options.label} did not contain a JSON payload.`,
+      normalizedSource.slice(0, 120),
+    ),
+    {
+      extractedJson: {
+        found: false,
+        start: null,
+        end: null,
+        kind: null,
+        sourceLength: normalizedSource.length,
+        candidateLength: 0,
+      },
+      repair: {
+        changed: false,
+        steps: [],
+        budget: {
+          maxCandidateChars: options.repairBudgets?.maxCandidateChars ?? null,
+          maxRepairChars: options.repairBudgets?.maxRepairChars ?? null,
+          candidateCharsTruncated: false,
+          repairCharsTruncated: false,
+        },
+      },
+      parse: {
+        ok: false,
+        error: buildJsonParseError(
+          normalizedSource,
+          "json_payload_missing",
+          `${options.label} did not contain a JSON payload.`,
+          normalizedSource.slice(0, 120),
+        ),
+      },
+    },
+  );
+}
+
 function parseCandidatePayload(
   text: string,
   label: string,
   depth: number,
+  repairBudgets: RunBudgets["repair"] | undefined,
 ): RawExtraction[] {
-  const parsed = parseJsonWithRepairPipeline(text);
-  if (!parsed.ok) {
-    throw new PayloadShapeFailure(
-      `${label} is invalid JSON: ${parsed.error.message}`,
-    );
-  }
-  return parseExtractions(parsed.value, depth + 1);
+  return parseProviderPayloadEntry({
+    sourceText: text,
+    label,
+    depth,
+    repairBudgets,
+  }).rawExtractions;
 }
 
-function parseExtractions(payload: unknown, depth = 0): RawExtraction[] {
+function parseExtractions(
+  payload: unknown,
+  depth = 0,
+  repairBudgets: RunBudgets["repair"] | undefined = undefined,
+): RawExtraction[] {
   if (depth > 3) {
     throw new PayloadShapeFailure(
       "Provider response nesting exceeded maximum extraction envelope depth.",
@@ -422,7 +647,7 @@ function parseExtractions(payload: unknown, depth = 0): RawExtraction[] {
     const { toolCalls, fallbackTexts } = collectStructuredPayloadCandidates(
       payload as Record<string, unknown>,
     );
-    let firstFailure: PayloadShapeFailure | null = null;
+    let firstFailure: PayloadShapeFailure | JsonPipelineFailure | null = null;
 
     for (let index = 0; index < toolCalls.length; index += 1) {
       try {
@@ -430,9 +655,13 @@ function parseExtractions(payload: unknown, depth = 0): RawExtraction[] {
           toolCalls[index],
           `Tool-call payload ${index + 1}`,
           depth,
+          repairBudgets,
         );
       } catch (error) {
-        if (error instanceof PayloadShapeFailure && firstFailure === null) {
+        if (
+          (error instanceof PayloadShapeFailure ||
+            error instanceof JsonPipelineFailure) && firstFailure === null
+        ) {
           firstFailure = error;
           continue;
         }
@@ -446,9 +675,13 @@ function parseExtractions(payload: unknown, depth = 0): RawExtraction[] {
           fallbackTexts[index],
           `Text payload ${index + 1}`,
           depth,
+          repairBudgets,
         );
       } catch (error) {
-        if (error instanceof PayloadShapeFailure && firstFailure === null) {
+        if (
+          (error instanceof PayloadShapeFailure ||
+            error instanceof JsonPipelineFailure) && firstFailure === null
+        ) {
           firstFailure = error;
           continue;
         }
@@ -818,14 +1051,13 @@ async function runShardWithProvider(
     previousResponseText = response.text;
 
     try {
-      const parsed = parseJsonWithRepairPipeline(response.text, {
-        repair: options.repairBudgets,
+      const parsedPayload = parseProviderPayloadEntry({
+        sourceText: response.text,
+        label: "Provider response",
+        depth: 0,
+        repairBudgets: options.repairBudgets,
       });
-      if (!parsed.ok) {
-        throw new JsonPipelineFailure(parsed.error, parsed.log);
-      }
-
-      const rawExtractions = parseExtractions(parsed.value);
+      const rawExtractions = parsedPayload.rawExtractions;
       const extractions = rawExtractions.map((raw) => {
         const localSpan = parseRawExtractionSpan(raw);
         const globalSpan = mapShardSpanToDocument(options.shard, localSpan);
@@ -861,7 +1093,7 @@ async function runShardWithProvider(
 
       return {
         extractions,
-        jsonPipelineLog: parsed.log,
+        jsonPipelineLog: parsedPayload.jsonPipelineLog,
         providerRunRecord: response.runRecord,
         multiPassShardLog: {
           shardId: options.shard.shardId,
