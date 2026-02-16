@@ -30,6 +30,15 @@ const PLACEHOLDER_TOKEN = new RegExp(
 test(
   "export naming activation handles reject forbidden heads and placeholder tokens",
   () => {
+    assert(
+      "schemaCue" in apiExports,
+      "root exports must include schemaCue activation-handle name",
+    );
+    assert(
+      !("s" in apiExports),
+      "legacy single-letter schema export must be removed",
+    );
+
     const adversarialSamples = ["helperBridge", ["PR", "_42"].join("")];
     const matchedSampleCount = adversarialSamples.filter((name) => {
       const lower = name.toLowerCase();
