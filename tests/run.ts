@@ -14,6 +14,7 @@ import "./bench/regression-identifiers-no-placeholders.test.ts";
 import "./bench/regression-dataset-schema.test.ts";
 import "./bench/bench-run-malformed-regression.test.ts";
 import "./bench/bench-score-variance.test.ts";
+import "./bench/regression-jsonl-newline-integrity.test.ts";
 import "./engine/chunk-map-span.test.ts";
 import "./engine/checkpoint-retry-executor.test.ts";
 import "./engine/json-pipeline-run.test.ts";
@@ -51,6 +52,8 @@ import "./schema/to-json-schema.test.ts";
 import "./schema/dialect-normalization.test.ts";
 import "./tools/repo-scope-check.test.ts";
 import "./tools/repo-text-check-placeholders.test.ts";
+import "./tools/unicode-check-bidi.test.ts";
+import "./tools/unicode-check-linesep.test.ts";
 import "./viz/html.test.ts";
 import { run } from "./harness.ts";
 

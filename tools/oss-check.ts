@@ -34,12 +34,14 @@ const REQUIRED_TOOL_FILES = [
   "tools/pr-body-check.ts",
   "tools/repo-scope-check.ts",
   "tools/repo-text-check.ts",
+  "tools/unicode-and-linebreak-check.ts",
 ];
 
 const REQUIRED_SCRIPT_FILES = [
   "scripts/pr-body-check.ts",
   "scripts/repo-scope-check.ts",
   "scripts/repo-text-check.ts",
+  "scripts/unicode-and-linebreak-check.ts",
   "scripts/oss-check.ts",
   "scripts/orphan-check.ts",
 ];
@@ -107,7 +109,9 @@ async function run(): Promise<void> {
 
   const dependencies = packageJson.dependencies ?? {};
   if (Object.keys(dependencies).length > 0) {
-    throw new Error("Runtime dependencies are not allowed: package.json.dependencies must remain empty.");
+    throw new Error(
+      "Runtime dependencies are not allowed: package.json.dependencies must remain empty.",
+    );
   }
 
   const scripts = packageJson.scripts ?? {};
@@ -120,6 +124,7 @@ async function run(): Promise<void> {
   requireScript(scripts, "bench");
   requireScript(scripts, "repo-scope-check");
   requireScript(scripts, "repo-text-check");
+  requireScript(scripts, "unicode-check");
   requireScript(scripts, "oss-check");
   const checkScript = requireScript(scripts, "check");
   if (!checkScript.includes("npm run repo-scope-check")) {
@@ -128,26 +133,41 @@ async function run(): Promise<void> {
   if (!checkScript.includes("npm run repo-text-check")) {
     throw new Error("`npm run check` must include `npm run repo-text-check`.");
   }
+  if (!checkScript.includes("npm run unicode-check")) {
+    throw new Error("`npm run check` must include `npm run unicode-check`.");
+  }
   if (!checkScript.includes("npm run oss-check")) {
     throw new Error("`npm run check` must include `npm run oss-check`.");
   }
 
-  if (typeof packageJson.main !== "string" || !packageJson.main.startsWith("./dist/")) {
+  if (
+    typeof packageJson.main !== "string" ||
+    !packageJson.main.startsWith("./dist/")
+  ) {
     throw new Error("package.json.main must point to dist output.");
   }
-  if (typeof packageJson.types !== "string" || !packageJson.types.startsWith("./dist/")) {
+  if (
+    typeof packageJson.types !== "string" ||
+    !packageJson.types.startsWith("./dist/")
+  ) {
     throw new Error("package.json.types must point to dist type declarations.");
   }
 
   const files = packageJson.files ?? [];
   if (!files.includes("dist")) {
-    throw new Error("package.json.files must include `dist` for publishable artifacts.");
+    throw new Error(
+      "package.json.files must include `dist` for publishable artifacts.",
+    );
   }
 
   const exportsField = packageJson.exports ?? {};
   const exportPaths = collectStringValues(exportsField);
-  if (exportPaths.some((path) => path.endsWith(".ts") && !path.endsWith(".d.ts"))) {
-    throw new Error("package exports must not point to TypeScript source files.");
+  if (
+    exportPaths.some((path) => path.endsWith(".ts") && !path.endsWith(".d.ts"))
+  ) {
+    throw new Error(
+      "package exports must not point to TypeScript source files.",
+    );
   }
   if (!exportPaths.some((path) => path.includes("dist/"))) {
     throw new Error("package exports must point to dist output paths.");
@@ -175,7 +195,9 @@ async function run(): Promise<void> {
     /^\s*-\s*package-ecosystem:\s*["'][^"']+["']\s*$/gm,
   ) ?? [];
   if (dependabotEcosystems.length === 0) {
-    throw new Error("Dependabot config must define at least one package ecosystem.");
+    throw new Error(
+      "Dependabot config must define at least one package ecosystem.",
+    );
   }
 
   const dependabotLimitLines = dependabotConfig
@@ -192,7 +214,9 @@ async function run(): Promise<void> {
   );
   if (invalidDependabotLimitLines.length > 0) {
     throw new Error(
-      `Dependabot open-pull-requests-limit must be 0 for every ecosystem. Invalid line(s): ${invalidDependabotLimitLines.map((line) => line.trim()).join(" | ")}`,
+      `Dependabot open-pull-requests-limit must be 0 for every ecosystem. Invalid line(s): ${
+        invalidDependabotLimitLines.map((line) => line.trim()).join(" | ")
+      }`,
     );
   }
 
@@ -201,7 +225,9 @@ async function run(): Promise<void> {
     throw new Error("CI workflow must declare explicit permissions.");
   }
   if (!ciWorkflow.includes("contents: read")) {
-    throw new Error("CI workflow permissions must include least-privilege `contents: read`.");
+    throw new Error(
+      "CI workflow permissions must include least-privilege `contents: read`.",
+    );
   }
 
   const usesLines = ciWorkflow
@@ -209,7 +235,9 @@ async function run(): Promise<void> {
     .map((line) => line.trim())
     .filter((line) => line.startsWith("- uses: "));
   if (usesLines.length === 0) {
-    throw new Error("CI workflow must contain at least one GitHub Action step.");
+    throw new Error(
+      "CI workflow must contain at least one GitHub Action step.",
+    );
   }
 
   for (const line of usesLines) {
@@ -227,7 +255,9 @@ async function run(): Promise<void> {
     throw new Error("CI workflow must include a deterministic benchmark job.");
   }
   if (!ciWorkflow.includes("node scripts/pr-body-check.ts")) {
-    throw new Error("CI workflow must run PR body heading validation: node scripts/pr-body-check.ts.");
+    throw new Error(
+      "CI workflow must run PR body heading validation: node scripts/pr-body-check.ts.",
+    );
   }
   if (!ciWorkflow.includes("- run: npm run check")) {
     throw new Error("CI workflow must run `npm run check` in the node job.");
@@ -240,7 +270,9 @@ async function run(): Promise<void> {
 
 run().catch((error) => {
   console.error(
-    `oss-check failed: ${error instanceof Error ? error.message : String(error)}`,
+    `oss-check failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
   );
   process.exit(1);
 });
