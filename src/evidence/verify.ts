@@ -1,11 +1,11 @@
 import type { EvidenceBundle } from "../core/types.ts";
 import { sha256Hex } from "../core/hash.ts";
 import {
+  canonicalizeEvidenceBundle,
+  decodeBase64Url,
   EVIDENCE_ATTESTATION_ALGORITHM,
   EVIDENCE_ATTESTATION_CANONICALIZATION,
   EVIDENCE_ATTESTATION_VERSION,
-  canonicalizeEvidenceBundle,
-  decodeBase64Url,
   importHmacJwkKey,
   stripAttestation,
 } from "./common.ts";

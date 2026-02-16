@@ -1,6 +1,7 @@
 # Providers
 
 ## OpenAI
+
 ```ts
 import { OpenAIProvider } from "ekchylisma";
 
@@ -10,6 +11,7 @@ const provider = new OpenAIProvider({
 ```
 
 ## Gemini
+
 ```ts
 import { GeminiProvider } from "ekchylisma";
 
@@ -19,6 +21,7 @@ const provider = new GeminiProvider({
 ```
 
 ## Ollama
+
 ```ts
 import { OllamaProvider } from "ekchylisma";
 
@@ -28,6 +31,7 @@ const provider = new OllamaProvider({
 ```
 
 ## Integration tests
+
 - Run `npm run test:integration`.
 - Tests are skipped when corresponding credentials are not present.
 - Environment variables (Node runtime):

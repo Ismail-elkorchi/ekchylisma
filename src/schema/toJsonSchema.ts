@@ -60,7 +60,11 @@ export function toJsonSchema(schema: SchemaAny): JsonSchemaSubset {
 
     default: {
       const unreachable: never = schema;
-      throw new Error(`Unsupported schema node: ${(unreachable as { kind?: string }).kind ?? "unknown"}.`);
+      throw new Error(
+        `Unsupported schema node: ${
+          (unreachable as { kind?: string }).kind ?? "unknown"
+        }.`,
+      );
     }
   }
 }

@@ -150,8 +150,14 @@ test("visualizeEvidenceBundle includes html markers and payload", () => {
     },
   });
 
-  assert(html.includes("<script id=\"__ek_data\""), "data payload should be embedded");
-  assert(html.includes("BEGIN_UNTRUSTED_DOCUMENT") === false, "viz should not include prompt compiler markers");
+  assert(
+    html.includes('<script id="__ek_data"'),
+    "data payload should be embedded",
+  );
+  assert(
+    html.includes("BEGIN_UNTRUSTED_DOCUMENT") === false,
+    "viz should not include prompt compiler markers",
+  );
   assert(html.includes("Extraction class"), "controls should be rendered");
 });
 
@@ -163,7 +169,13 @@ test("visualizeEvidenceBundle renders span indices in initial html", () => {
   });
 
   assert(html.includes("[6, 10)"), "span indices should be listed");
-  assert(html.includes("data-start=\"6\""), "highlight start index should be present");
-  assert(html.includes("data-end=\"10\""), "highlight end index should be present");
-  assertEqual(html.includes("<mark class=\"viz-mark\""), true);
+  assert(
+    html.includes('data-start="6"'),
+    "highlight start index should be present",
+  );
+  assert(
+    html.includes('data-end="10"'),
+    "highlight end index should be present",
+  );
+  assertEqual(html.includes('<mark class="viz-mark"'), true);
 });

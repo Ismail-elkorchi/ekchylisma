@@ -20,8 +20,10 @@ type PullRequestEvent = {
   };
 };
 
-const TITLE_REGEX = /^(build|ci|docs|feat|fix|perf|refactor|test)\([a-z0-9-]+\): [A-Za-z0-9].+$/;
-const BRANCH_REGEX = /^(build|ci|docs|feat|fix|perf|refactor|test)\/[a-z0-9-]+$/;
+const TITLE_REGEX =
+  /^(build|ci|cleanup|docs|feat|fix|perf|refactor|test)\([a-z0-9-]+\): [A-Za-z0-9].+$/;
+const BRANCH_REGEX =
+  /^(build|ci|cleanup|docs|feat|fix|perf|refactor|test)\/[a-z0-9-]+$/;
 const TITLE_FORBIDDEN_TOKEN_PATTERN =
   /PR-[0-9]+|\b(?:T[O][D][O]|T[B][D]|W[I][P])\b/;
 const BRANCH_FORBIDDEN_TOKEN_PATTERN = /pr-[0-9]+/;
@@ -45,7 +47,10 @@ function assertBranchPolicy(branchName: string): void {
     );
   }
 
-  if (BRANCH_FORBIDDEN_TOKEN_PATTERN.test(branchName) || branchName.includes("program")) {
+  if (
+    BRANCH_FORBIDDEN_TOKEN_PATTERN.test(branchName) ||
+    branchName.includes("program")
+  ) {
     throw new Error("PR branch contains a forbidden token pattern.");
   }
 }
@@ -53,13 +58,17 @@ function assertBranchPolicy(branchName: string): void {
 async function run(): Promise<void> {
   const eventName = process.env.GITHUB_EVENT_NAME;
   if (eventName !== "pull_request") {
-    console.log(`pr-body-check skipped: GITHUB_EVENT_NAME=${eventName ?? "undefined"}`);
+    console.log(
+      `pr-body-check skipped: GITHUB_EVENT_NAME=${eventName ?? "undefined"}`,
+    );
     return;
   }
 
   const eventPath = process.env.GITHUB_EVENT_PATH;
   if (!eventPath) {
-    throw new Error("pr-body-check requires GITHUB_EVENT_PATH for pull_request events.");
+    throw new Error(
+      "pr-body-check requires GITHUB_EVENT_PATH for pull_request events.",
+    );
   }
 
   const [templateSource, eventSource] = await Promise.all([
@@ -77,7 +86,9 @@ async function run(): Promise<void> {
   const prTitle = payload.pull_request?.title ?? "";
   const branchName = payload.pull_request?.head?.ref ?? "";
 
-  const missingHeadings = requiredHeadings.filter((heading) => !prBody.includes(heading));
+  const missingHeadings = requiredHeadings.filter((heading) =>
+    !prBody.includes(heading)
+  );
   if (missingHeadings.length > 0) {
     throw new Error(
       `PR body is missing required heading(s): ${missingHeadings.join(", ")}`,
@@ -88,13 +99,17 @@ async function run(): Promise<void> {
   assertBranchPolicy(branchName);
 
   console.log(
-    `pr-body-check passed (PR #${String(payload.pull_request?.number ?? "unknown")}, ${requiredHeadings.length} required headings present, title and branch policies validated).`,
+    `pr-body-check passed (PR #${
+      String(payload.pull_request?.number ?? "unknown")
+    }, ${requiredHeadings.length} required headings present, title and branch policies validated).`,
   );
 }
 
 run().catch((error) => {
   console.error(
-    `pr-body-check failed: ${error instanceof Error ? error.message : String(error)}`,
+    `pr-body-check failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
   );
   process.exit(1);
 });

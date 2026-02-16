@@ -15,7 +15,9 @@ export type ChunkOptions = {
 };
 
 function validateOptions(options: ChunkOptions): void {
-  if (typeof options.documentId !== "string" || options.documentId.length === 0) {
+  if (
+    typeof options.documentId !== "string" || options.documentId.length === 0
+  ) {
     throw new Error("documentId must be a non-empty string.");
   }
 

@@ -76,7 +76,8 @@ test("executeShardsWithCheckpoint retries transient failures and completes run",
     random: () => 0,
     sleep: async () => {},
     isTransientError: (error) =>
-      typeof error === "object" && error !== null && (error as { transient?: unknown }).transient === true,
+      typeof error === "object" && error !== null &&
+      (error as { transient?: unknown }).transient === true,
     runShard: async (shard) => {
       const count = (attemptsByShard.get(shard.shardId) ?? 0) + 1;
       attemptsByShard.set(shard.shardId, count);
@@ -93,7 +94,10 @@ test("executeShardsWithCheckpoint retries transient failures and completes run",
 
   assertEqual(result.length, shards.length);
   assertEqual(attemptsByShard.get(failShardId), 3);
-  assert(result.every((entry) => entry.value.startsWith("value:")), "all shards should complete");
+  assert(
+    result.every((entry) => entry.value.startsWith("value:")),
+    "all shards should complete",
+  );
 
   const keys = await store.list("ckpt:v1:run-1:");
   assertEqual(keys.length, shards.length);
@@ -111,7 +115,10 @@ test("executeShardsWithCheckpoint skips completed shards on rerun", async () => 
   let runCount = 0;
 
   for (const shard of shards) {
-    await store.set(buildCheckpointKey("run-2", shard.shardId), `cached:${shard.shardId}`);
+    await store.set(
+      buildCheckpointKey("run-2", shard.shardId),
+      `cached:${shard.shardId}`,
+    );
   }
 
   const result = await executeShardsWithCheckpoint({
@@ -134,5 +141,8 @@ test("executeShardsWithCheckpoint skips completed shards on rerun", async () => 
 
   assertEqual(runCount, 0);
   assertEqual(result.length, shards.length);
-  assert(result.every((entry) => entry.fromCheckpoint), "entries should be checkpoint-backed");
+  assert(
+    result.every((entry) => entry.fromCheckpoint),
+    "entries should be checkpoint-backed",
+  );
 });

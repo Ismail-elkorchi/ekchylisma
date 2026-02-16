@@ -1,4 +1,7 @@
-import { assertQuoteInvariant, QuoteInvariantViolation } from "../../src/core/invariants.ts";
+import {
+  assertQuoteInvariant,
+  QuoteInvariantViolation,
+} from "../../src/core/invariants.ts";
 import { createDeterministicPrng } from "../../src/core/prng.ts";
 import { sha256Hex } from "../../src/core/hash.ts";
 import { chunkDocument } from "../../src/engine/chunk.ts";
@@ -11,9 +14,14 @@ const PROPERTY_SEEDS = [
   "property-core-invariants-seed-03",
 ] as const;
 
-const ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789    ";
+const ALPHABET =
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789    ";
 
-function randomText(prng: ReturnType<typeof createDeterministicPrng>, minLength: number, maxLength: number): string {
+function randomText(
+  prng: ReturnType<typeof createDeterministicPrng>,
+  minLength: number,
+  maxLength: number,
+): string {
   const length = prng.nextRange(minLength, maxLength + 1);
   let output = "";
 
@@ -30,7 +38,11 @@ test("deterministic PRNG emits stable sequence for identical seeds", () => {
     const right = createDeterministicPrng(seed);
 
     for (let index = 0; index < 256; index += 1) {
-      assertEqual(left.nextUint32(), right.nextUint32(), "same seed should produce identical sequence");
+      assertEqual(
+        left.nextUint32(),
+        right.nextUint32(),
+        "same seed should produce identical sequence",
+      );
     }
   }
 });
@@ -67,7 +79,11 @@ test("property: chunkDocument shard identifiers remain stable on seeded inputs",
       const first = await chunkDocument(text, "program-hash-prop", options);
       const second = await chunkDocument(text, "program-hash-prop", options);
 
-      assertEqual(JSON.stringify(first), JSON.stringify(second), "chunking output should be deterministic");
+      assertEqual(
+        JSON.stringify(first),
+        JSON.stringify(second),
+        "chunking output should be deterministic",
+      );
     }
   }
 });
@@ -120,12 +136,16 @@ test("property: mapShardSpanToDocument remains stable for generated shard spans"
       const documentText = randomText(prng, 80, 260);
       const chunkSize = prng.nextRange(20, 60);
       const overlap = prng.nextInt(Math.max(1, Math.floor(chunkSize / 4)));
-      const shards = await chunkDocument(documentText, "program-hash-span-property", {
-        documentId: `span-doc-${prng.nextUint32().toString(16)}`,
-        chunkSize,
-        overlap,
-        offsetMode: "utf16_code_unit",
-      });
+      const shards = await chunkDocument(
+        documentText,
+        "program-hash-span-property",
+        {
+          documentId: `span-doc-${prng.nextUint32().toString(16)}`,
+          chunkSize,
+          overlap,
+          offsetMode: "utf16_code_unit",
+        },
+      );
 
       const shard = shards[prng.nextInt(shards.length)];
       const localStart = prng.nextInt(Math.max(1, shard.text.length));
@@ -144,7 +164,11 @@ test("property: mapShardSpanToDocument remains stable for generated shard spans"
       );
 
       const mappedAgain = mapShardSpanToDocument(shard, localSpan);
-      assertEqual(JSON.stringify(mapped), JSON.stringify(mappedAgain), "span mapping should be deterministic");
+      assertEqual(
+        JSON.stringify(mapped),
+        JSON.stringify(mappedAgain),
+        "span mapping should be deterministic",
+      );
     }
   }
 });

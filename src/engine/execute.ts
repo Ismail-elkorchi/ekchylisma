@@ -1,14 +1,7 @@
 import type { DocumentShard } from "./chunk.ts";
 import type { RunCompleteness } from "../core/types.ts";
-import {
-  buildCheckpointKey,
-  type CheckpointStore,
-} from "./checkpoint.ts";
-import {
-  computeRetryDelayMs,
-  type RetryPolicy,
-  shouldRetry,
-} from "./retry.ts";
+import { buildCheckpointKey, type CheckpointStore } from "./checkpoint.ts";
+import { computeRetryDelayMs, type RetryPolicy, shouldRetry } from "./retry.ts";
 
 export type ExecuteShardOptions<TValue> = {
   runId: string;
@@ -49,8 +42,13 @@ export function classifyRunCompleteness(
   if (!Number.isInteger(totalShards) || totalShards < 0) {
     throw new Error("totalShards must be a non-negative integer.");
   }
-  if (!Number.isInteger(failedShards) || failedShards < 0 || failedShards > totalShards) {
-    throw new Error("failedShards must be a non-negative integer <= totalShards.");
+  if (
+    !Number.isInteger(failedShards) || failedShards < 0 ||
+    failedShards > totalShards
+  ) {
+    throw new Error(
+      "failedShards must be a non-negative integer <= totalShards.",
+    );
   }
 
   const successfulShards = totalShards - failedShards;
@@ -81,8 +79,8 @@ export function classifyRunCompleteness(
 export async function executeShardsWithCheckpoint<TValue>(
   options: ExecuteShardOptions<TValue>,
 ): Promise<ExecuteShardResult<TValue>> {
-  const isTransientError =
-    options.isTransientError ?? defaultTransientClassifier;
+  const isTransientError = options.isTransientError ??
+    defaultTransientClassifier;
   const random = options.random ?? Math.random;
   const sleep = options.sleep ?? defaultSleep;
 
@@ -113,11 +111,17 @@ export async function executeShardsWithCheckpoint<TValue>(
         });
         break;
       } catch (error) {
-        if (!shouldRetry(error, attempt, options.retryPolicy, isTransientError)) {
+        if (
+          !shouldRetry(error, attempt, options.retryPolicy, isTransientError)
+        ) {
           throw error;
         }
 
-        const delay = computeRetryDelayMs(options.retryPolicy, attempt, random());
+        const delay = computeRetryDelayMs(
+          options.retryPolicy,
+          attempt,
+          random(),
+        );
         if (delay > 0) {
           await sleep(delay);
         }

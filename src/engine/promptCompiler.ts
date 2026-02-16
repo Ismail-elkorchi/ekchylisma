@@ -30,11 +30,12 @@ export type RepairPromptContext = {
   priorPass: number;
 };
 
-export const PROMPT_DOCUMENT_START_MARKER: CompiledPromptParts["documentStartMarker"] =
-  "BEGIN_UNTRUSTED_DOCUMENT";
-export const PROMPT_DOCUMENT_END_MARKER: CompiledPromptParts["documentEndMarker"] =
-  "END_UNTRUSTED_DOCUMENT";
-export const PROMPT_REPAIR_RESPONSE_START_MARKER = "PREVIOUS_RESPONSE_TEXT_BEGIN";
+export const PROMPT_DOCUMENT_START_MARKER:
+  CompiledPromptParts["documentStartMarker"] = "BEGIN_UNTRUSTED_DOCUMENT";
+export const PROMPT_DOCUMENT_END_MARKER:
+  CompiledPromptParts["documentEndMarker"] = "END_UNTRUSTED_DOCUMENT";
+export const PROMPT_REPAIR_RESPONSE_START_MARKER =
+  "PREVIOUS_RESPONSE_TEXT_BEGIN";
 export const PROMPT_REPAIR_RESPONSE_END_MARKER = "PREVIOUS_RESPONSE_TEXT_END";
 
 function neutralizeMarker(marker: string): string {
@@ -42,7 +43,10 @@ function neutralizeMarker(marker: string): string {
 }
 
 function escapePromptBoundaryTokens(text: string, markers: string[]): string {
-  return markers.reduce((value, marker) => value.replaceAll(marker, neutralizeMarker(marker)), text);
+  return markers.reduce(
+    (value, marker) => value.replaceAll(marker, neutralizeMarker(marker)),
+    text,
+  );
 }
 
 export function escapeUntrustedPromptText(
@@ -52,7 +56,10 @@ export function escapeUntrustedPromptText(
     documentEndMarker: PROMPT_DOCUMENT_END_MARKER,
   },
 ): string {
-  return escapePromptBoundaryTokens(text, [markers.documentStartMarker, markers.documentEndMarker]);
+  return escapePromptBoundaryTokens(text, [
+    markers.documentStartMarker,
+    markers.documentEndMarker,
+  ]);
 }
 
 export async function hashPromptText(prompt: string): Promise<string> {
@@ -68,13 +75,16 @@ function stableStringify(value: unknown): string {
     return `[${value.map((item) => stableStringify(item)).join(",")}]`;
   }
 
-  const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
-    a.localeCompare(b),
-  );
+  const entries = Object.entries(value as Record<string, unknown>).sort((
+    [a],
+    [b],
+  ) => a.localeCompare(b));
 
-  return `{${entries
-    .map(([key, item]) => `${JSON.stringify(key)}:${stableStringify(item)}`)
-    .join(",")}}`;
+  return `{${
+    entries
+      .map(([key, item]) => `${JSON.stringify(key)}:${stableStringify(item)}`)
+      .join(",")
+  }}`;
 }
 
 function formatSchemaExcerpt(program: Program, maxChars: number): string {
@@ -116,7 +126,8 @@ export function compilePrompt(
   options: PromptCompilerOptions = {},
 ): string {
   const parts = compilePromptParts(program, shard, options);
-  const description = typeof program.description === "string" && program.description.trim().length > 0
+  const description = typeof program.description === "string" &&
+      program.description.trim().length > 0
     ? program.description
     : program.instructions;
   const classes = Array.isArray(program.classes) && program.classes.length > 0
@@ -160,18 +171,24 @@ export function compileRepairPrompt(
   options: PromptCompilerOptions = {},
 ): string {
   const basePrompt = compilePrompt(program, shard, options);
-  const escapedPreviousResponseText = escapePromptBoundaryTokens(context.previousResponseText, [
-    PROMPT_REPAIR_RESPONSE_START_MARKER,
-    PROMPT_REPAIR_RESPONSE_END_MARKER,
-    PROMPT_DOCUMENT_START_MARKER,
-    PROMPT_DOCUMENT_END_MARKER,
-  ]);
-  const escapedFailureMessage = escapePromptBoundaryTokens(context.failureMessage, [
-    PROMPT_REPAIR_RESPONSE_START_MARKER,
-    PROMPT_REPAIR_RESPONSE_END_MARKER,
-    PROMPT_DOCUMENT_START_MARKER,
-    PROMPT_DOCUMENT_END_MARKER,
-  ]);
+  const escapedPreviousResponseText = escapePromptBoundaryTokens(
+    context.previousResponseText,
+    [
+      PROMPT_REPAIR_RESPONSE_START_MARKER,
+      PROMPT_REPAIR_RESPONSE_END_MARKER,
+      PROMPT_DOCUMENT_START_MARKER,
+      PROMPT_DOCUMENT_END_MARKER,
+    ],
+  );
+  const escapedFailureMessage = escapePromptBoundaryTokens(
+    context.failureMessage,
+    [
+      PROMPT_REPAIR_RESPONSE_START_MARKER,
+      PROMPT_REPAIR_RESPONSE_END_MARKER,
+      PROMPT_DOCUMENT_START_MARKER,
+      PROMPT_DOCUMENT_END_MARKER,
+    ],
+  );
 
   return [
     "### REPAIR PASS CONTEXT",

@@ -5,7 +5,7 @@ import { buildProviderRequest, runWithEvidence } from "../../src/engine/run.ts";
 import { FakeProvider, hashProviderRequest } from "../../src/providers/fake.ts";
 import { assert, assertEqual, test } from "../harness.ts";
 
-const PACK_ID = "2026-02-15--provider-structured-generate-split--477928bf";
+const PACK_REF = "2026-02-15--provider-structured-generate-split--477928bf";
 
 const CASE_IDS = [
   "provider-structured-generate-split--google-langextract--375--7252748a",
@@ -31,9 +31,9 @@ type StructuredSplitScript = {
 function parseStructuredSplitScript(source: string): StructuredSplitScript {
   const parsed = JSON.parse(source) as Record<string, unknown>;
   if (
-    parsed.mode !== "structured_split_v1"
-    || typeof parsed.generate !== "string"
-    || typeof parsed.generateStructured !== "string"
+    parsed.mode !== "structured_split_v1" ||
+    typeof parsed.generate !== "string" ||
+    typeof parsed.generateStructured !== "string"
   ) {
     throw new Error("invalid structured_split_v1 script");
   }
@@ -46,8 +46,12 @@ function parseStructuredSplitScript(source: string): StructuredSplitScript {
 }
 
 async function findCase(caseId: string) {
-  const records = await loadRegressionDataset("bench/datasets/regression.jsonl");
-  const entry = records.find((item) => item.caseId === caseId && item.packId === PACK_ID);
+  const records = await loadRegressionDataset(
+    "bench/datasets/regression.jsonl",
+  );
+  const entry = records.find((item) =>
+    item.caseId === caseId && item.packId === PACK_REF
+  );
   if (!entry) {
     throw new Error(`missing regression record for ${caseId}`);
   }
@@ -59,7 +63,9 @@ for (const caseId of CASE_IDS) {
     const entry = await findCase(caseId);
     const script = parseStructuredSplitScript(entry.providerResponseText);
 
-    const programHash = await sha256Hex(`${entry.instructions}:${JSON.stringify(entry.targetSchema)}`);
+    const programHash = await sha256Hex(
+      `${entry.instructions}:${JSON.stringify(entry.targetSchema)}`,
+    );
     const program = {
       instructions: entry.instructions,
       examples: [],
@@ -99,10 +105,13 @@ for (const caseId of CASE_IDS) {
       overlap: 0,
     });
 
-    assertEqual(bundle.diagnostics.emptyResultKind, entry.expected.emptyResultKind);
+    assertEqual(
+      bundle.diagnostics.emptyResultKind,
+      entry.expected.emptyResultKind,
+    );
     assert(
-      bundle.extractions.length >= entry.expected.minExtractions
-        && bundle.extractions.length <= entry.expected.maxExtractions,
+      bundle.extractions.length >= entry.expected.minExtractions &&
+        bundle.extractions.length <= entry.expected.maxExtractions,
       "extraction count must match expected bounds",
     );
     assertEqual(bundle.diagnostics.failures.length, 0);

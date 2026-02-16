@@ -94,7 +94,7 @@ test("engine pipeline repairs invalid control chars before strict parse", async 
   const program = await buildProgram();
   const provider = new FakeProvider({
     defaultResponse:
-      "{\"extractions\":[{\"extractionClass\":\"token\",\"quote\":\"Beta\",\"span\":{\"offsetMode\":\"utf16_code_unit\",\"charStart\":6,\"charEnd\":10},\"attributes\":{\"raw\":\"a\u0001b\"},\"grounding\":\"explicit\"}]}",
+      '{"extractions":[{"extractionClass":"token","quote":"Beta","span":{"offsetMode":"utf16_code_unit","charStart":6,"charEnd":10},"attributes":{"raw":"a\u0001b"},"grounding":"explicit"}]}',
   });
 
   const result = await runExtractionWithProvider({
@@ -154,9 +154,9 @@ test("engine pipeline decodes streamed SSE frames with JSON fragments", async ()
   const provider = new FakeProvider({
     defaultResponse: [
       "event: message",
-      "data: {\"choices\":[{\"delta\":{\"content\":\"{\\\"extractions\\\":[\"}}]}",
-      "data: {\"choices\":[{\"delta\":{\"content\":\"{\\\"extractionClass\\\":\\\"token\\\",\\\"quote\\\":\\\"Beta\\\",\\\"span\\\":{\\\"offsetMode\\\":\\\"utf16_code_unit\\\",\\\"charStart\\\":6,\\\"charEnd\\\":10},\\\"grounding\\\":\\\"explicit\\\"}\"}}]}",
-      "data: {\"choices\":[{\"delta\":{\"content\":\"]}\"}}]}",
+      'data: {"choices":[{"delta":{"content":"{\\"extractions\\":["}}]}',
+      'data: {"choices":[{"delta":{"content":"{\\"extractionClass\\":\\"token\\",\\"quote\\":\\"Beta\\",\\"span\\":{\\"offsetMode\\":\\"utf16_code_unit\\",\\"charStart\\":6,\\"charEnd\\":10},\\"grounding\\":\\"explicit\\"}"}}]}',
+      'data: {"choices":[{"delta":{"content":"]}"}}]}',
       "data: [DONE]",
     ].join("\n"),
   });
@@ -182,8 +182,8 @@ test("engine pipeline reports deterministic parse error on malformed streamed fr
   const provider = new FakeProvider({
     defaultResponse: [
       "event: message",
-      "data: {\"choices\":[{\"delta\":{\"content\":\"{\\\"extractions\\\":[\"}}]}",
-      "data: {\"choices\":[{\"delta\":{\"content\":\"broken\"}}",
+      'data: {"choices":[{"delta":{"content":"{\\"extractions\\":["}}]}',
+      'data: {"choices":[{"delta":{"content":"broken"}}',
     ].join("\n"),
   });
 
@@ -206,7 +206,10 @@ test("engine pipeline reports deterministic parse error on malformed streamed fr
       if (error.log.parse.ok) {
         return false;
       }
-      assertEqual(error.log.parse.error.message, "Malformed streamed frame at line 3.");
+      assertEqual(
+        error.log.parse.error.message,
+        "Malformed streamed frame at line 3.",
+      );
       return true;
     },
   );

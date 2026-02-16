@@ -1,13 +1,17 @@
 # Bench Harness
 
 ## Purpose
-Provide reproducible, evidence-oriented measurements for extraction behavior without provider non-determinism by default.
+
+Provide reproducible, evidence-oriented measurements for extraction behavior
+without provider non-determinism by default.
 
 ## Dataset Format
-Datasets are JSONL files under `bench/datasets/`.
-Current smoke dataset includes short token cases and one deterministic long-text token case.
+
+Datasets are JSONL files under `bench/datasets/`. Current smoke dataset includes
+short token cases and one deterministic long-text token case.
 
 Each record includes:
+
 - `caseId`
 - `documentText`
 - `instructions`
@@ -16,18 +20,22 @@ Each record includes:
 - `goldSpans` (`extractionClass`, `quote`, `charStart`, `charEnd`)
 
 ## Deterministic Protocol
+
 Default mode uses `FakeProvider` with recorded responses.
 
 Run:
+
 ```bash
 npm run bench:run
 npm run bench:score
 ```
 
 Result file:
+
 - `bench/results/latest.json`
 
 ## Reported Metrics
+
 - `successRate`: case-level runs with zero shard failures.
 - `schemaValidityRate`: extraction shape validity.
 - `quoteInvariantPassRate`: quote/span invariant pass rate.
@@ -38,15 +46,21 @@ Result file:
 - `breadth.totalCaseCount` and `breadth.regressionCategoryCount`.
 
 ## Variance-aware Mode
+
 Run multiple trials:
+
 ```bash
 npm run bench:run -- --mode variance --trials 5
 npm run bench:score -- --result bench/results/latest.json --max-case-outcome-drift-rate 0.1
 ```
 
-Variance mode aggregates metrics across trials and reports extraction-count variance, success-rate variability, and per-case drift signatures.
+Variance mode aggregates metrics across trials and reports extraction-count
+variance, success-rate variability, and per-case drift signatures.
 
 ## Limitations
+
 - Deterministic mode does not measure provider/model stochastic variance.
-- Current dataset is small and synthetic; expand datasets before drawing production conclusions.
-- Coverage metrics are span-based and do not score semantic attribute correctness.
+- Current dataset is small and synthetic; expand datasets before drawing
+  production conclusions.
+- Coverage metrics are span-based and do not score semantic attribute
+  correctness.

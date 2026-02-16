@@ -1,4 +1,8 @@
-import { FakeProvider, runWithEvidence, sha256Hex } from "../../dist/esm/src/index.js";
+import {
+  FakeProvider,
+  runWithEvidence,
+  sha256Hex,
+} from "../../dist/esm/src/index.js";
 
 const output = document.getElementById("output");
 

@@ -1,4 +1,4 @@
-import { s, type Infer } from "../../src/schema/s.ts";
+import { type Infer, s } from "../../src/schema/s.ts";
 
 type Expect<T extends true> = T;
 

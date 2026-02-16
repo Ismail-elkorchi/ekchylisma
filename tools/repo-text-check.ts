@@ -6,18 +6,23 @@ import {
   isValidPackId,
 } from "../src/core/identifiers.ts";
 
+const WORKFLOW_DIR_TOKEN = ["WORK", "BENCH"].join("");
+
 const FORBIDDEN_DOC_PATTERNS = [
   /^docs\/PROGRAM_.*\.md$/,
   /^docs\/COMPETITION_.*\.md$/,
   /^docs\/.*SIGNAL.*\.md$/,
   /^docs\/.*PLAN.*\.md$/,
   /^docs\/.*MATRIX.*\.md$/,
-  /^docs\/.*WORKBENCH.*\.md$/,
+  new RegExp(`^docs\\/.*${WORKFLOW_DIR_TOKEN}.*\\.md$`),
 ];
 
-const FORBIDDEN_ROOT_PATHS = ["WORKBENCH"];
+const FORBIDDEN_ROOT_PATHS = [WORKFLOW_DIR_TOKEN];
 const FORBIDDEN_HEADER_TERMS = ["competition", "scan"];
-const FORBIDDEN_HEADER_PATTERN = new RegExp(FORBIDDEN_HEADER_TERMS.join("\\s+"), "i");
+const FORBIDDEN_HEADER_PATTERN = new RegExp(
+  FORBIDDEN_HEADER_TERMS.join("\\s+"),
+  "i",
+);
 
 const SKIP_DIRS = new Set([".git", "node_modules", "dist"]);
 
@@ -89,7 +94,10 @@ async function verifyForbiddenPaths(): Promise<void> {
 async function verifyPlaceholderTokens(): Promise<void> {
   const files = await walkFiles(".");
   for (const file of files) {
-    if (file.startsWith(".git/") || file.startsWith("node_modules/") || file.startsWith("dist/")) {
+    if (
+      file.startsWith(".git/") || file.startsWith("node_modules/") ||
+      file.startsWith("dist/")
+    ) {
       continue;
     }
 
@@ -106,7 +114,6 @@ async function verifyPlaceholderTokens(): Promise<void> {
         fail(`${file}:${index + 1} contains forbidden placeholder token`);
       }
     }
-
   }
 }
 
@@ -144,6 +151,10 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error(`repo-text-check failed: ${error instanceof Error ? error.message : String(error)}`);
+  console.error(
+    `repo-text-check failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
+  );
   process.exit(1);
 });

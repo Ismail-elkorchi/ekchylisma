@@ -1,4 +1,4 @@
-import { ProviderError, classifyProviderStatus } from "./errors.ts";
+import { classifyProviderStatus, ProviderError } from "./errors.ts";
 import { hashProviderRequest } from "./requestHash.ts";
 import type { Provider, ProviderRequest, ProviderResponse } from "./types.ts";
 
@@ -19,14 +19,24 @@ function ensureFetch(fetchFn: typeof fetch | undefined): typeof fetch {
   return resolved;
 }
 
-function extractPayload(response: unknown): { text: string; outputChannel: "text" | "tool_call" } {
+function extractPayload(
+  response: unknown,
+): { text: string; outputChannel: "text" | "tool_call" } {
   if (typeof response !== "object" || response === null) {
-    throw new ProviderError("permanent", "parse_error", "Gemini response is not an object.");
+    throw new ProviderError(
+      "permanent",
+      "parse_error",
+      "Gemini response is not an object.",
+    );
   }
 
   const candidates = (response as { candidates?: unknown }).candidates;
   if (!Array.isArray(candidates) || candidates.length === 0) {
-    throw new ProviderError("permanent", "parse_error", "Gemini response missing candidates.");
+    throw new ProviderError(
+      "permanent",
+      "parse_error",
+      "Gemini response missing candidates.",
+    );
   }
 
   const parts = (candidates[0] as {
@@ -40,12 +50,18 @@ function extractPayload(response: unknown): { text: string; outputChannel: "text
     };
   }).content?.parts;
   if (!Array.isArray(parts)) {
-    throw new ProviderError("permanent", "parse_error", "Gemini response missing content parts.");
+    throw new ProviderError(
+      "permanent",
+      "parse_error",
+      "Gemini response missing content parts.",
+    );
   }
 
   for (const part of parts) {
     const argumentsValue = part.functionCall?.args;
-    if (typeof argumentsValue === "string" && argumentsValue.trim().length > 0) {
+    if (
+      typeof argumentsValue === "string" && argumentsValue.trim().length > 0
+    ) {
       return {
         text: argumentsValue,
         outputChannel: "tool_call",
@@ -64,7 +80,11 @@ function extractPayload(response: unknown): { text: string; outputChannel: "text
     .join("\n")
     .trim();
   if (text.length === 0) {
-    throw new ProviderError("permanent", "parse_error", "Gemini response contains empty text.");
+    throw new ProviderError(
+      "permanent",
+      "parse_error",
+      "Gemini response contains empty text.",
+    );
   }
 
   return {
@@ -89,8 +109,14 @@ export class GeminiProvider implements Provider {
   ): Promise<ProviderResponse> {
     const fetchFn = ensureFetch(options.fetchFn ?? this.config.fetchFn);
     const startedAt = Date.now();
-    const root = (this.config.baseUrl ?? "https://generativelanguage.googleapis.com/v1beta/models").replace(/\/$/, "");
-    const url = `${root}/${encodeURIComponent(request.model)}:generateContent?key=${encodeURIComponent(this.config.apiKey)}`;
+    const root = (this.config.baseUrl ??
+      "https://generativelanguage.googleapis.com/v1beta/models").replace(
+        /\/$/,
+        "",
+      );
+    const url = `${root}/${
+      encodeURIComponent(request.model)
+    }:generateContent?key=${encodeURIComponent(this.config.apiKey)}`;
 
     const payload: Record<string, unknown> = {
       contents: [

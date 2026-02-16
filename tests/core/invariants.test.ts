@@ -50,13 +50,16 @@ test("assertQuoteInvariant rejects invalid spans", async () => {
 
   await assertRejects(
     () => assertQuoteInvariant(doc, buildExtraction("", 3, 1)),
-    (error) => error instanceof QuoteInvariantViolation && error.detail.code === "INVALID_OFFSETS",
+    (error) =>
+      error instanceof QuoteInvariantViolation &&
+      error.detail.code === "INVALID_OFFSETS",
   );
 
   await assertRejects(
     () => assertQuoteInvariant(doc, buildExtraction("a", -1, 1)),
-    (error) => error instanceof QuoteInvariantViolation
-      && error.detail.code === "OFFSETS_OUT_OF_RANGE",
+    (error) =>
+      error instanceof QuoteInvariantViolation &&
+      error.detail.code === "OFFSETS_OUT_OF_RANGE",
   );
 });
 
@@ -71,7 +74,9 @@ test("assertQuoteInvariant rejects top-level and span offset mismatches", async 
           span: { offsetMode: "utf16_code_unit", charStart: 5, charEnd: 9 },
         }),
       ),
-    (error) => error instanceof QuoteInvariantViolation && error.detail.code === "OFFSET_MISMATCH",
+    (error) =>
+      error instanceof QuoteInvariantViolation &&
+      error.detail.code === "OFFSET_MISMATCH",
   );
 });
 
@@ -82,10 +87,12 @@ test("assertQuoteInvariant rejects unsupported offset modes", async () => {
     () =>
       assertQuoteInvariant(
         doc,
-        buildExtraction("Beta", 6, 10, { offsetMode: "utf8_byte" as Extraction["offsetMode"] }),
+        buildExtraction("Beta", 6, 10, {
+          offsetMode: "utf8_byte" as Extraction["offsetMode"],
+        }),
       ),
     (error) =>
-      error instanceof QuoteInvariantViolation
-      && error.detail.code === "UNSUPPORTED_OFFSET_MODE",
+      error instanceof QuoteInvariantViolation &&
+      error.detail.code === "UNSUPPORTED_OFFSET_MODE",
   );
 });

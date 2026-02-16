@@ -4,9 +4,9 @@ import { assert, assertEqual, test } from "../harness.ts";
 test("decodeStreamingJsonFrames assembles SSE delta content into one JSON candidate", () => {
   const streamed = [
     "event: message",
-    "data: {\"choices\":[{\"delta\":{\"content\":\"{\\\"extractions\\\":[\"}}]}",
-    "data: {\"choices\":[{\"delta\":{\"content\":\"{\\\"extractionClass\\\":\\\"token\\\",\\\"quote\\\":\\\"Beta\\\",\\\"span\\\":{\\\"offsetMode\\\":\\\"utf16_code_unit\\\",\\\"charStart\\\":6,\\\"charEnd\\\":10},\\\"grounding\\\":\\\"explicit\\\"}\"}}]}",
-    "data: {\"choices\":[{\"delta\":{\"content\":\"]}\"}}]}",
+    'data: {"choices":[{"delta":{"content":"{\\"extractions\\":["}}]}',
+    'data: {"choices":[{"delta":{"content":"{\\"extractionClass\\":\\"token\\",\\"quote\\":\\"Beta\\",\\"span\\":{\\"offsetMode\\":\\"utf16_code_unit\\",\\"charStart\\":6,\\"charEnd\\":10},\\"grounding\\":\\"explicit\\"}"}}]}',
+    'data: {"choices":[{"delta":{"content":"]}"}}]}',
     "data: [DONE]",
   ].join("\n");
 
@@ -17,7 +17,7 @@ test("decodeStreamingJsonFrames assembles SSE delta content into one JSON candid
   }
   assertEqual(decoded.usedFrames, true);
   assert(
-    decoded.text.includes("\"extractions\""),
+    decoded.text.includes('"extractions"'),
     "decoded payload should include extraction object content",
   );
 });
@@ -25,8 +25,8 @@ test("decodeStreamingJsonFrames assembles SSE delta content into one JSON candid
 test("decodeStreamingJsonFrames reports deterministic error on malformed frame", () => {
   const streamed = [
     "event: message",
-    "data: {\"choices\":[{\"delta\":{\"content\":\"{\\\"extractions\\\":[\"}}]}",
-    "data: {\"choices\":[{\"delta\":{\"content\":\"broken\"}}",
+    'data: {"choices":[{"delta":{"content":"{\\"extractions\\":["}}]}',
+    'data: {"choices":[{"delta":{"content":"broken"}}',
   ].join("\n");
 
   const decoded = decodeStreamingJsonFrames(streamed);

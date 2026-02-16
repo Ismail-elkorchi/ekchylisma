@@ -32,19 +32,19 @@ const EXAMPLE_CHECKS: ExampleCheck[] = [
     label: "node example",
     command: "node",
     args: ["examples/node/basic.ts"],
-    expectedText: "\"extractionCount\": 1",
+    expectedText: '"extractionCount": 1',
   },
   {
     label: "deno example",
     command: "deno",
     args: ["run", "examples/deno/basic.ts"],
-    expectedText: "\"extractionCount\": 1",
+    expectedText: '"extractionCount": 1',
   },
   {
     label: "bun example",
     command: "bun",
     args: ["run", "examples/bun/basic.ts"],
-    expectedText: "\"extractionCount\": 1",
+    expectedText: '"extractionCount": 1',
   },
 ];
 
@@ -75,7 +75,9 @@ async function verifyContractsReferenced(apiDoc: string): Promise<number> {
 
   if (missingReferences.length > 0) {
     throw new Error(
-      `Unreferenced contract schema(s): ${missingReferences.join(", ")}. Add them to docs/API.md.`,
+      `Unreferenced contract schema(s): ${
+        missingReferences.join(", ")
+      }. Add them to docs/API.md.`,
     );
   }
 
@@ -93,9 +95,11 @@ async function verifyExportCoverage(apiDoc: string): Promise<number> {
   const missingExports = exportPaths.filter((path) => !apiDoc.includes(path));
   if (missingExports.length > 0) {
     throw new Error(
-      `docs/API.md is missing export path reference(s): ${missingExports.join(
-        ", ",
-      )}.`,
+      `docs/API.md is missing export path reference(s): ${
+        missingExports.join(
+          ", ",
+        )
+      }.`,
     );
   }
 
@@ -145,7 +149,9 @@ async function run(): Promise<void> {
 
 run().catch((error) => {
   console.error(
-    `orphan-check failed: ${error instanceof Error ? error.message : String(error)}`,
+    `orphan-check failed: ${
+      error instanceof Error ? error.message : String(error)
+    }`,
   );
   process.exit(1);
 });

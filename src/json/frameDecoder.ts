@@ -29,7 +29,10 @@ function collectText(value: unknown): string {
       if (typeof entry === "string") {
         return entry;
       }
-      if (typeof entry === "object" && entry !== null && typeof (entry as { text?: unknown }).text === "string") {
+      if (
+        typeof entry === "object" && entry !== null &&
+        typeof (entry as { text?: unknown }).text === "string"
+      ) {
         return (entry as { text: string }).text;
       }
       return "";
@@ -54,9 +57,10 @@ function extractFrameContent(frame: unknown): string {
     const delta = typeof choice.delta === "object" && choice.delta !== null
       ? choice.delta as Record<string, unknown>
       : null;
-    const message = typeof choice.message === "object" && choice.message !== null
-      ? choice.message as Record<string, unknown>
-      : null;
+    const message =
+      typeof choice.message === "object" && choice.message !== null
+        ? choice.message as Record<string, unknown>
+        : null;
     const deltaContent = collectText(delta?.content);
     if (deltaContent.length > 0) {
       return deltaContent;
@@ -66,7 +70,8 @@ function extractFrameContent(frame: unknown): string {
 
   const candidates = record.candidates;
   if (Array.isArray(candidates) && candidates.length > 0) {
-    const content = (candidates[0] as { content?: { parts?: unknown } }).content;
+    const content =
+      (candidates[0] as { content?: { parts?: unknown } }).content;
     if (content && Array.isArray(content.parts)) {
       return collectText(content.parts);
     }
@@ -87,7 +92,10 @@ function extractFrameContent(frame: unknown): string {
   return "";
 }
 
-function parseFramePayload(payload: string, line: number): { ok: true; content: string } | {
+function parseFramePayload(
+  payload: string,
+  line: number,
+): { ok: true; content: string } | {
   ok: false;
   error: FrameDecodeError;
 } {
@@ -109,7 +117,9 @@ function parseFramePayload(payload: string, line: number): { ok: true; content: 
   }
 }
 
-export function decodeStreamingJsonFrames(sourceText: string): FrameDecodeResult {
+export function decodeStreamingJsonFrames(
+  sourceText: string,
+): FrameDecodeResult {
   const lines = sourceText.split(/\r?\n/);
   const fragments: string[] = [];
   let sawFramePrefix = false;
@@ -121,7 +131,10 @@ export function decodeStreamingJsonFrames(sourceText: string): FrameDecodeResult
       continue;
     }
 
-    if (trimmed.startsWith("event:") || trimmed.startsWith("id:") || trimmed.startsWith(":")) {
+    if (
+      trimmed.startsWith("event:") || trimmed.startsWith("id:") ||
+      trimmed.startsWith(":")
+    ) {
       sawFramePrefix = true;
       continue;
     }

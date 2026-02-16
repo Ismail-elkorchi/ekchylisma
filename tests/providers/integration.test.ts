@@ -20,7 +20,7 @@ async function maybeRunOpenAI(): Promise<void> {
   const provider = new OpenAIProvider({ apiKey });
   await provider.generate({
     model: "gpt-4o-mini",
-    prompt: "Return JSON: {\"ok\":true}",
+    prompt: 'Return JSON: {"ok":true}',
   });
   console.log("ok - OpenAI integration");
 }
@@ -35,7 +35,7 @@ async function maybeRunGemini(): Promise<void> {
   const provider = new GeminiProvider({ apiKey });
   await provider.generate({
     model: "gemini-1.5-flash",
-    prompt: "Return JSON: {\"ok\":true}",
+    prompt: 'Return JSON: {"ok":true}',
   });
   console.log("ok - Gemini integration");
 }
@@ -50,7 +50,7 @@ async function maybeRunOllama(): Promise<void> {
   const provider = new OllamaProvider();
   await provider.generate({
     model: "llama3.1",
-    prompt: "Return JSON: {\"ok\":true}",
+    prompt: 'Return JSON: {"ok":true}',
   });
   console.log("ok - Ollama integration");
 }

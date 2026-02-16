@@ -1,4 +1,4 @@
-import type { Provider, ProviderResponse, ProviderRequest } from "./types.ts";
+import type { Provider, ProviderRequest, ProviderResponse } from "./types.ts";
 import { hashProviderRequest } from "./requestHash.ts";
 
 export type FakeProviderConfig = {
@@ -26,7 +26,8 @@ export class FakeProvider implements Provider {
 
   constructor(config: FakeProviderConfig = {}) {
     this.defaultResponse = config.defaultResponse ?? '{"extractions":[]}';
-    this.structuredDefaultResponse = config.structuredDefaultResponse ?? this.defaultResponse;
+    this.structuredDefaultResponse = config.structuredDefaultResponse ??
+      this.defaultResponse;
     this.latencyMs = config.latencyMs ?? 0;
 
     if (config.responses) {
@@ -36,7 +37,9 @@ export class FakeProvider implements Provider {
     }
 
     if (config.structuredResponses) {
-      for (const [hash, response] of Object.entries(config.structuredResponses)) {
+      for (
+        const [hash, response] of Object.entries(config.structuredResponses)
+      ) {
         this.structuredResponses.set(hash, response);
       }
     }
@@ -67,11 +70,13 @@ export class FakeProvider implements Provider {
     };
   }
 
-  async generateStructured(request: ProviderRequest): Promise<ProviderResponse> {
+  async generateStructured(
+    request: ProviderRequest,
+  ): Promise<ProviderResponse> {
     const requestHash = await hashProviderRequest(request);
-    const text = this.structuredResponses.get(requestHash)
-      ?? this.responses.get(requestHash)
-      ?? this.structuredDefaultResponse;
+    const text = this.structuredResponses.get(requestHash) ??
+      this.responses.get(requestHash) ??
+      this.structuredDefaultResponse;
 
     return {
       text,

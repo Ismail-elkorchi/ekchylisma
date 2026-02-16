@@ -11,7 +11,7 @@ import {
 import { assert, assertEqual, assertRejects, test } from "../harness.ts";
 
 test("parseJsonStrict parses valid JSON", () => {
-  const value = parseJsonStrict("{\"ok\":true}");
+  const value = parseJsonStrict('{"ok":true}');
   assertEqual((value as { ok: boolean }).ok, true);
 });
 
@@ -24,7 +24,10 @@ test("unterminated string fixture yields structured parse failure", async () => 
       }
 
       assertEqual(error.detail.name, "JsonParseError");
-      assert(typeof error.detail.message === "string", "error message should be present");
+      assert(
+        typeof error.detail.message === "string",
+        "error message should be present",
+      );
       assertEqual(error.detail.inputLength, unterminatedStringFixture.length);
       return true;
     },

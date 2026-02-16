@@ -63,7 +63,10 @@ type MultiPassScript = {
   mode: "multi_pass_v1";
   draft: string;
   repair: string;
-  failureKind: "json_pipeline_failure" | "payload_shape_failure" | "quote_invariant_failure";
+  failureKind:
+    | "json_pipeline_failure"
+    | "payload_shape_failure"
+    | "quote_invariant_failure";
   failureMessage?: string;
 };
 
@@ -98,9 +101,10 @@ function parseArgs(argv: string[]): RunOptions {
   const trials = trialsRaw ? Number.parseInt(trialsRaw, 10) : 1;
 
   return {
-    smokeDatasetPath: args.get("--smoke-dataset") ?? "bench/datasets/smoke.jsonl",
-    regressionDatasetPath: args.get("--regression-dataset")
-      ?? "bench/datasets/regression.jsonl",
+    smokeDatasetPath: args.get("--smoke-dataset") ??
+      "bench/datasets/smoke.jsonl",
+    regressionDatasetPath: args.get("--regression-dataset") ??
+      "bench/datasets/regression.jsonl",
     outputPath: args.get("--out") ?? "bench/results/latest.json",
     mode,
     trials: Number.isFinite(trials) && trials > 0 ? trials : 1,
@@ -200,16 +204,16 @@ function shapeIsValid(extraction: {
   offsetMode: unknown;
   span: { charStart: unknown; charEnd: unknown; offsetMode: unknown };
 }): boolean {
-  return typeof extraction.extractionClass === "string"
-    && typeof extraction.quote === "string"
-    && extraction.offsetMode === "utf16_code_unit"
-    && typeof extraction.charStart === "number"
-    && typeof extraction.charEnd === "number"
-    && typeof extraction.span?.charStart === "number"
-    && typeof extraction.span?.charEnd === "number"
-    && extraction.span?.offsetMode === "utf16_code_unit"
-    && extraction.span.charStart === extraction.charStart
-    && extraction.span.charEnd === extraction.charEnd;
+  return typeof extraction.extractionClass === "string" &&
+    typeof extraction.quote === "string" &&
+    extraction.offsetMode === "utf16_code_unit" &&
+    typeof extraction.charStart === "number" &&
+    typeof extraction.charEnd === "number" &&
+    typeof extraction.span?.charStart === "number" &&
+    typeof extraction.span?.charEnd === "number" &&
+    extraction.span?.offsetMode === "utf16_code_unit" &&
+    extraction.span.charStart === extraction.charStart &&
+    extraction.span.charEnd === extraction.charEnd;
 }
 
 function defaultFailureMessage(kind: MultiPassScript["failureKind"]): string {
@@ -224,7 +228,9 @@ function defaultFailureMessage(kind: MultiPassScript["failureKind"]): string {
   return "Unexpected non-whitespace character after JSON at position 0";
 }
 
-function parseProviderScript(providerResponseText: string): ProviderScript | null {
+function parseProviderScript(
+  providerResponseText: string,
+): ProviderScript | null {
   let value: unknown;
   try {
     value = JSON.parse(providerResponseText);
@@ -242,13 +248,16 @@ function parseProviderScript(providerResponseText: string): ProviderScript | nul
       return null;
     }
     if (
-      record.failureKind !== "json_pipeline_failure"
-      && record.failureKind !== "payload_shape_failure"
-      && record.failureKind !== "quote_invariant_failure"
+      record.failureKind !== "json_pipeline_failure" &&
+      record.failureKind !== "payload_shape_failure" &&
+      record.failureKind !== "quote_invariant_failure"
     ) {
       return null;
     }
-    if (record.failureMessage !== undefined && typeof record.failureMessage !== "string") {
+    if (
+      record.failureMessage !== undefined &&
+      typeof record.failureMessage !== "string"
+    ) {
       return null;
     }
 
@@ -262,7 +271,10 @@ function parseProviderScript(providerResponseText: string): ProviderScript | nul
   }
 
   if (record.mode === "structured_split_v1") {
-    if (typeof record.generate !== "string" || typeof record.generateStructured !== "string") {
+    if (
+      typeof record.generate !== "string" ||
+      typeof record.generateStructured !== "string"
+    ) {
       return null;
     }
 
@@ -342,7 +354,8 @@ async function runCase(
           {
             previousResponseText: script.draft,
             failureKind: script.failureKind,
-            failureMessage: script.failureMessage ?? defaultFailureMessage(script.failureKind),
+            failureMessage: script.failureMessage ??
+              defaultFailureMessage(script.failureKind),
             priorPass: 1,
           },
         );
@@ -387,10 +400,12 @@ async function runCase(
 
   return {
     extractionCount: bundle.extractions.length,
-    schemaValidityRate:
-      bundle.extractions.length === 0 ? 1 : schemaValidCount / bundle.extractions.length,
-    quoteInvariantPassRate:
-      bundle.extractions.length === 0 ? 1 : quoteInvariantCount / bundle.extractions.length,
+    schemaValidityRate: bundle.extractions.length === 0
+      ? 1
+      : schemaValidCount / bundle.extractions.length,
+    quoteInvariantPassRate: bundle.extractions.length === 0
+      ? 1
+      : quoteInvariantCount / bundle.extractions.length,
     failures: bundle.diagnostics.failures.length,
     emptyResultKind: bundle.diagnostics.emptyResultKind,
     bundleExtractions: bundle.extractions.map((item) => ({
@@ -419,7 +434,8 @@ async function runTrial(
           span.quote,
           span.charStart,
           span.charEnd,
-        )),
+        )
+      ),
     );
     const actualSet = new Set(
       outcome.bundleExtractions.map((extraction) =>
@@ -428,7 +444,8 @@ async function runTrial(
           extraction.quote,
           extraction.charStart,
           extraction.charEnd,
-        )),
+        )
+      ),
     );
 
     let matchedGold = 0;
@@ -445,7 +462,9 @@ async function runTrial(
       success: outcome.failures === 0,
       schemaValidityRate: outcome.schemaValidityRate,
       quoteInvariantPassRate: outcome.quoteInvariantPassRate,
-      coverageRate: testCase.goldSpans.length === 0 ? 1 : matchedGold / testCase.goldSpans.length,
+      coverageRate: testCase.goldSpans.length === 0
+        ? 1
+        : matchedGold / testCase.goldSpans.length,
       failures: outcome.failures,
       emptyResultKind: outcome.emptyResultKind,
     });
@@ -454,20 +473,25 @@ async function runTrial(
   for (const testCase of regressionDataset) {
     const outcome = await runCase(testCase, trialIndex);
 
-    const extractionBoundsMatch = outcome.extractionCount >= testCase.expected.minExtractions
-      && outcome.extractionCount <= testCase.expected.maxExtractions;
-    const emptyKindMatch = outcome.emptyResultKind === testCase.expected.emptyResultKind;
+    const extractionBoundsMatch =
+      outcome.extractionCount >= testCase.expected.minExtractions &&
+      outcome.extractionCount <= testCase.expected.maxExtractions;
+    const emptyKindMatch =
+      outcome.emptyResultKind === testCase.expected.emptyResultKind;
 
     let stateSpecificMatch = true;
     if (testCase.expected.emptyResultKind === "empty_by_failure") {
-      stateSpecificMatch = outcome.failures > 0 && outcome.extractionCount === 0;
+      stateSpecificMatch = outcome.failures > 0 &&
+        outcome.extractionCount === 0;
     } else if (testCase.expected.emptyResultKind === "empty_by_evidence") {
-      stateSpecificMatch = outcome.failures === 0 && outcome.extractionCount === 0;
+      stateSpecificMatch = outcome.failures === 0 &&
+        outcome.extractionCount === 0;
     } else {
       stateSpecificMatch = outcome.extractionCount > 0;
     }
 
-    const success = extractionBoundsMatch && emptyKindMatch && stateSpecificMatch;
+    const success = extractionBoundsMatch && emptyKindMatch &&
+      stateSpecificMatch;
 
     caseResults.push({
       dataset: "regression",
@@ -486,10 +510,17 @@ async function runTrial(
     trialIndex,
     cases: caseResults,
     successRate: average(caseResults.map((entry) => (entry.success ? 1 : 0))),
-    schemaValidityRate: average(caseResults.map((entry) => entry.schemaValidityRate)),
-    quoteInvariantPassRate: average(caseResults.map((entry) => entry.quoteInvariantPassRate)),
+    schemaValidityRate: average(
+      caseResults.map((entry) => entry.schemaValidityRate),
+    ),
+    quoteInvariantPassRate: average(
+      caseResults.map((entry) => entry.quoteInvariantPassRate),
+    ),
     coverageRate: average(caseResults.map((entry) => entry.coverageRate)),
-    extractionCount: caseResults.reduce((sum, entry) => sum + entry.extractionCount, 0),
+    extractionCount: caseResults.reduce(
+      (sum, entry) => sum + entry.extractionCount,
+      0,
+    ),
   };
 }
 
@@ -499,18 +530,26 @@ async function main(): Promise<void> {
   let regressionDataset: RegressionDatasetCase[];
 
   try {
-    regressionDataset = await loadRegressionDataset(options.regressionDatasetPath);
+    regressionDataset = await loadRegressionDataset(
+      options.regressionDatasetPath,
+    );
   } catch (error) {
     throw new Error(
-      `invalid regression dataset (${options.regressionDatasetPath}): ${error instanceof Error ? error.message : String(error)}`,
+      `invalid regression dataset (${options.regressionDatasetPath}): ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
   }
 
-  const trialsTarget = options.mode === "variance" ? Math.max(2, options.trials) : options.trials;
+  const trialsTarget = options.mode === "variance"
+    ? Math.max(2, options.trials)
+    : options.trials;
   const trialResults: TrialResult[] = [];
 
   for (let trialIndex = 0; trialIndex < trialsTarget; trialIndex += 1) {
-    trialResults.push(await runTrial(smokeDataset, regressionDataset, trialIndex));
+    trialResults.push(
+      await runTrial(smokeDataset, regressionDataset, trialIndex),
+    );
   }
 
   const output = {
@@ -523,12 +562,16 @@ async function main(): Promise<void> {
     },
     aggregate: {
       successRate: average(trialResults.map((entry) => entry.successRate)),
-      schemaValidityRate: average(trialResults.map((entry) => entry.schemaValidityRate)),
+      schemaValidityRate: average(
+        trialResults.map((entry) => entry.schemaValidityRate),
+      ),
       quoteInvariantPassRate: average(
         trialResults.map((entry) => entry.quoteInvariantPassRate),
       ),
       coverageRate: average(trialResults.map((entry) => entry.coverageRate)),
-      extractionCountMean: average(trialResults.map((entry) => entry.extractionCount)),
+      extractionCountMean: average(
+        trialResults.map((entry) => entry.extractionCount),
+      ),
       extractionCountVariance: computeVariance(
         trialResults.map((entry) => entry.extractionCount),
       ),
@@ -543,17 +586,25 @@ async function main(): Promise<void> {
         smokeCaseCount: smokeDataset.length,
         regressionCaseCount: regressionDataset.length,
         totalCaseCount: smokeDataset.length + regressionDataset.length,
-        regressionCategoryCount: new Set(regressionDataset.map((entry) => entry.category)).size,
+        regressionCategoryCount:
+          new Set(regressionDataset.map((entry) => entry.category)).size,
       },
     },
     trialsResult: trialResults,
   };
 
-  const outputDir = options.outputPath.slice(0, options.outputPath.lastIndexOf("/"));
+  const outputDir = options.outputPath.slice(
+    0,
+    options.outputPath.lastIndexOf("/"),
+  );
   if (outputDir) {
     await mkdir(outputDir, { recursive: true });
   }
-  await writeFile(options.outputPath, `${JSON.stringify(output, null, 2)}\n`, "utf8");
+  await writeFile(
+    options.outputPath,
+    `${JSON.stringify(output, null, 2)}\n`,
+    "utf8",
+  );
 
   console.log(
     `bench run complete: ${options.outputPath} | smokeCases=${smokeDataset.length} | regressionCases=${regressionDataset.length}`,
@@ -561,6 +612,8 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  console.error(
+    error instanceof Error ? error.stack ?? error.message : String(error),
+  );
   process.exit(1);
 });

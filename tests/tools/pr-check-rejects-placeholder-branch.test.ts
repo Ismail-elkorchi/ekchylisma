@@ -59,14 +59,26 @@ test("pr-body-check rejects forbidden PR branch tokens", async () => {
       },
     });
   } catch (error) {
-    const details = error as { code?: number; stderr?: string; stdout?: string; message?: string };
-    const output = [details.stderr ?? "", details.stdout ?? "", details.message ?? ""].join("\n");
-    failedAsExpected = typeof details.code === "number"
-      && details.code !== 0
-      && output.includes("PR branch contains a forbidden token pattern.");
+    const details = error as {
+      code?: number;
+      stderr?: string;
+      stdout?: string;
+      message?: string;
+    };
+    const output = [
+      details.stderr ?? "",
+      details.stdout ?? "",
+      details.message ?? "",
+    ].join("\n");
+    failedAsExpected = typeof details.code === "number" &&
+      details.code !== 0 &&
+      output.includes("PR branch contains a forbidden token pattern.");
   } finally {
     await rm(TEMP_DIR, { recursive: true, force: true });
   }
 
-  assert(failedAsExpected, "pr-body-check should reject forbidden PR branch token patterns");
+  assert(
+    failedAsExpected,
+    "pr-body-check should reject forbidden PR branch token patterns",
+  );
 });

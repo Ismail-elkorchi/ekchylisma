@@ -50,11 +50,13 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isJsonScalar(value: unknown): value is string | number | boolean | null {
-  return value === null
-    || typeof value === "string"
-    || typeof value === "number"
-    || typeof value === "boolean";
+function isJsonScalar(
+  value: unknown,
+): value is string | number | boolean | null {
+  return value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean";
 }
 
 function normalizeNode(input: unknown, path: string): JsonSchemaSubset {
@@ -90,11 +92,11 @@ function normalizeNode(input: unknown, path: string): JsonSchemaSubset {
 
   if (input.type !== undefined) {
     if (
-      input.type !== "object"
-      && input.type !== "array"
-      && input.type !== "string"
-      && input.type !== "number"
-      && input.type !== "boolean"
+      input.type !== "object" &&
+      input.type !== "array" &&
+      input.type !== "string" &&
+      input.type !== "number" &&
+      input.type !== "boolean"
     ) {
       fail(path, "type must be one of object|array|string|number|boolean");
     }
@@ -105,7 +107,9 @@ function normalizeNode(input: unknown, path: string): JsonSchemaSubset {
     if (!isPlainObject(input.properties)) {
       fail(path, "properties must be an object");
     }
-    const entries = Object.entries(input.properties).sort(([a], [b]) => a.localeCompare(b));
+    const entries = Object.entries(input.properties).sort(([a], [b]) =>
+      a.localeCompare(b)
+    );
     const properties: Record<string, JsonSchemaSubset> = {};
     for (const [key, child] of entries) {
       properties[key] = normalizeNode(child, `${path}.properties.${key}`);
@@ -137,7 +141,10 @@ function normalizeNode(input: unknown, path: string): JsonSchemaSubset {
   }
 
   if (input.required !== undefined) {
-    if (!Array.isArray(input.required) || input.required.some((value) => typeof value !== "string")) {
+    if (
+      !Array.isArray(input.required) ||
+      input.required.some((value) => typeof value !== "string")
+    ) {
       fail(path, "required must be an array of strings");
     }
     normalized.required = [...new Set(input.required)].sort();
@@ -154,7 +161,9 @@ function normalizeNode(input: unknown, path: string): JsonSchemaSubset {
     if (!Array.isArray(input.anyOf) || input.anyOf.length === 0) {
       fail(path, "anyOf must be a non-empty array");
     }
-    normalized.anyOf = input.anyOf.map((item, index) => normalizeNode(item, `${path}.anyOf[${index}]`));
+    normalized.anyOf = input.anyOf.map((item, index) =>
+      normalizeNode(item, `${path}.anyOf[${index}]`)
+    );
   }
 
   if (nullable !== true) {
@@ -167,7 +176,9 @@ function normalizeNode(input: unknown, path: string): JsonSchemaSubset {
 
   const nullableBranch: JsonSchemaSubset = { const: null };
   if (normalized.anyOf) {
-    const hasNullBranch = normalized.anyOf.some((candidate) => candidate.const === null);
+    const hasNullBranch = normalized.anyOf.some((candidate) =>
+      candidate.const === null
+    );
     if (!hasNullBranch) {
       normalized.anyOf = [...normalized.anyOf, nullableBranch];
     }

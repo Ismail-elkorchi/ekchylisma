@@ -19,11 +19,14 @@ export class JsonParseFailure extends Error {
 }
 
 function parsePosition(message: string): number | null {
-  const match = message.match(/position\s+(\d+)/i) ?? message.match(/at\s+(\d+)/i);
+  const match = message.match(/position\s+(\d+)/i) ??
+    message.match(/at\s+(\d+)/i);
   return match ? Number.parseInt(match[1], 10) : null;
 }
 
-function parseLineColumn(message: string): { line: number | null; column: number | null } {
+function parseLineColumn(
+  message: string,
+): { line: number | null; column: number | null } {
   const match = message.match(/line\s+(\d+)\s+column\s+(\d+)/i);
   if (!match) {
     return { line: null, column: null };

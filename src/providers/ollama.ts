@@ -1,4 +1,4 @@
-import { ProviderError, classifyProviderStatus } from "./errors.ts";
+import { classifyProviderStatus, ProviderError } from "./errors.ts";
 import { hashProviderRequest } from "./requestHash.ts";
 import type { Provider, ProviderRequest, ProviderResponse } from "./types.ts";
 
@@ -18,9 +18,15 @@ function ensureFetch(fetchFn: typeof fetch | undefined): typeof fetch {
   return resolved;
 }
 
-function extractPayload(response: unknown): { text: string; outputChannel: "text" | "tool_call" } {
+function extractPayload(
+  response: unknown,
+): { text: string; outputChannel: "text" | "tool_call" } {
   if (typeof response !== "object" || response === null) {
-    throw new ProviderError("permanent", "parse_error", "Ollama response is not an object.");
+    throw new ProviderError(
+      "permanent",
+      "parse_error",
+      "Ollama response is not an object.",
+    );
   }
 
   const message = (response as {
@@ -37,7 +43,9 @@ function extractPayload(response: unknown): { text: string; outputChannel: "text
   if (Array.isArray(message?.tool_calls)) {
     for (const call of message.tool_calls) {
       const argumentsValue = call?.function?.arguments;
-      if (typeof argumentsValue === "string" && argumentsValue.trim().length > 0) {
+      if (
+        typeof argumentsValue === "string" && argumentsValue.trim().length > 0
+      ) {
         return {
           text: argumentsValue,
           outputChannel: "tool_call",
@@ -54,7 +62,11 @@ function extractPayload(response: unknown): { text: string; outputChannel: "text
 
   const content = message?.content;
   if (typeof content !== "string") {
-    throw new ProviderError("permanent", "parse_error", "Ollama response missing message content.");
+    throw new ProviderError(
+      "permanent",
+      "parse_error",
+      "Ollama response missing message content.",
+    );
   }
 
   return {
@@ -79,7 +91,9 @@ export class OllamaProvider implements Provider {
   ): Promise<ProviderResponse> {
     const fetchFn = ensureFetch(options.fetchFn ?? this.config.fetchFn);
     const startedAt = Date.now();
-    const url = `${(this.config.baseUrl ?? "http://127.0.0.1:11434").replace(/\/$/, "")}/api/chat`;
+    const url = `${
+      (this.config.baseUrl ?? "http://127.0.0.1:11434").replace(/\/$/, "")
+    }/api/chat`;
 
     const payload: Record<string, unknown> = {
       model: request.model,

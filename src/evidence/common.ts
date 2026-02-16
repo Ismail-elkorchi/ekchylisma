@@ -1,6 +1,7 @@
 import type { EvidenceBundle } from "../core/types.ts";
 
-const BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const BASE64_ALPHABET =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const BASE64_LOOKUP = new Map<string, number>(
   Array.from(BASE64_ALPHABET).map((character, index) => [character, index]),
 );
@@ -30,18 +31,24 @@ function canonicalizeJsonValue(value: unknown): string {
       return value ? "true" : "false";
     case "object":
       if (Array.isArray(value)) {
-        return `[${value.map((item) => canonicalizeJsonValue(item)).join(",")}]`;
+        return `[${
+          value.map((item) => canonicalizeJsonValue(item)).join(",")
+        }]`;
       }
 
       if (!isPlainObject(value)) {
         throw new Error("Cannot canonicalize non-plain-object values.");
       }
 
-      return `{${Object.entries(value)
-        .filter(([, entryValue]) => entryValue !== undefined)
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([key, entryValue]) => `${JSON.stringify(key)}:${canonicalizeJsonValue(entryValue)}`)
-        .join(",")}}`;
+      return `{${
+        Object.entries(value)
+          .filter(([, entryValue]) => entryValue !== undefined)
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(([key, entryValue]) =>
+            `${JSON.stringify(key)}:${canonicalizeJsonValue(entryValue)}`
+          )
+          .join(",")
+      }}`;
     default:
       throw new Error(`Cannot canonicalize value type: ${typeof value}`);
   }
@@ -71,7 +78,9 @@ function encodeBase64(bytes: Uint8Array): string {
     const triple = (a << 16) | (b << 8) | c;
     output += BASE64_ALPHABET[(triple >> 18) & 63];
     output += BASE64_ALPHABET[(triple >> 12) & 63];
-    output += index + 1 < bytes.length ? BASE64_ALPHABET[(triple >> 6) & 63] : "=";
+    output += index + 1 < bytes.length
+      ? BASE64_ALPHABET[(triple >> 6) & 63]
+      : "=";
     output += index + 2 < bytes.length ? BASE64_ALPHABET[triple & 63] : "=";
   }
 
@@ -96,7 +105,10 @@ function decodeBase64(base64: string): Uint8Array {
     const v3 = c3 === "=" ? 0 : BASE64_LOOKUP.get(c3);
     const v4 = c4 === "=" ? 0 : BASE64_LOOKUP.get(c4);
 
-    if (v1 === undefined || v2 === undefined || v3 === undefined || v4 === undefined) {
+    if (
+      v1 === undefined || v2 === undefined || v3 === undefined ||
+      v4 === undefined
+    ) {
       throw new Error("Invalid base64 character.");
     }
 
@@ -128,7 +140,9 @@ export function decodeBase64Url(input: string): Uint8Array {
     .replaceAll("_", "/");
 
   const remainder = normalized.length % 4;
-  const padded = remainder === 0 ? normalized : normalized + "=".repeat(4 - remainder);
+  const padded = remainder === 0
+    ? normalized
+    : normalized + "=".repeat(4 - remainder);
   return decodeBase64(padded);
 }
 

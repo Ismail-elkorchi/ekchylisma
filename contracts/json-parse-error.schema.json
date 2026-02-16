@@ -4,7 +4,15 @@
   "title": "JsonParseError",
   "type": "object",
   "additionalProperties": false,
-  "required": ["name", "message", "position", "line", "column", "snippet", "inputLength"],
+  "required": [
+    "name",
+    "message",
+    "position",
+    "line",
+    "column",
+    "snippet",
+    "inputLength"
+  ],
   "properties": {
     "name": {
       "type": "string",

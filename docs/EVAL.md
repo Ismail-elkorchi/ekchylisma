@@ -1,22 +1,32 @@
 # Evaluation
 
 ## Deterministic suite
+
 - `npm test` already includes deterministic eval tests.
 - Explicit run command: `node tests/run.ts`.
-- Seeded property invariants are included in `tests/core/property-invariants.test.ts`:
+- Seeded property invariants are included in
+  `tests/core/property-invariants.test.ts`:
   - hash determinism over generated corpora,
   - quote/offset invariant stability over generated spans,
   - span mapping stability over generated shards.
-- Property runs use fixed seed labels (`property-core-invariants-seed-01..03`) through `createDeterministicPrng(seed)` from `src/core/prng.ts`, so reruns in Node/Deno/Bun produce identical sequences.
+- Property runs use fixed seed labels (`property-core-invariants-seed-01..03`)
+  through `createDeterministicPrng(seed)` from `src/core/prng.ts`, so reruns in
+  Node/Deno/Bun produce identical sequences.
 
 ## Optional real-provider eval mode
-- Use `runSuite({ providerMode: "real", realProvider })` with configured provider instances.
-- This mode is optional and intended for manual evaluation when credentials exist.
+
+- Use `runSuite({ providerMode: "real", realProvider })` with configured
+  provider instances.
+- This mode is optional and intended for manual evaluation when credentials
+  exist.
 
 ## Bench harness
+
 - Dataset files live under `bench/datasets/`.
-- `bench/datasets/smoke.jsonl` includes deterministic short-text and long-text cases.
-- `bench/datasets/regression.jsonl` stores committed regression records from validated workbench packs.
+- `bench/datasets/smoke.jsonl` includes deterministic short-text and long-text
+  cases.
+- `bench/datasets/regression.jsonl` stores committed regression records from
+  validated regression datasets.
 - Deterministic benchmark run:
   - `npm run bench:run`
   - `npm run bench:score`
@@ -25,6 +35,7 @@
   - `npm run bench:score -- --max-case-outcome-drift-rate 0.1 --max-success-rate-stddev 0.05`
 
 ## Regression dataset format
+
 Each line in `bench/datasets/regression.jsonl` is one JSON object with:
 
 - `caseId` (string, unique in file)
@@ -40,32 +51,44 @@ Each line in `bench/datasets/regression.jsonl` is one JSON object with:
 - `sourceUrl` (URL string)
 - `packId` (string)
 
-The bench runner validates every regression record before trials execute and exits non-zero if any record is malformed.
+The bench runner validates every regression record before trials execute and
+exits non-zero if any record is malformed.
 
 ## Contributor workflow for regression records
+
 1. Prepare a pack in the workbench and validate it with workbench validators.
-2. Append the pack's `regressions.jsonl` records to `bench/datasets/regression.jsonl`.
+2. Append the pack's `regressions.jsonl` records to
+   `bench/datasets/regression.jsonl`.
 3. Run:
    - `npm run bench:run`
    - `npm run bench:score`
 4. Run the full repository matrix before opening a PR.
 
 ## Metrics
+
 - `schemaValidRate`: fraction of extracted records with valid structural shape.
-- `quoteInvariantRate`: fraction of extracted records that satisfy quote/offset invariant.
-- `uniqueExtractionStability`: pairwise Jaccard stability of unique extraction keys across runs.
-- `variance`: run-level extraction count statistics (`min`, `max`, `mean`, `stability`).
+- `quoteInvariantRate`: fraction of extracted records that satisfy quote/offset
+  invariant.
+- `uniqueExtractionStability`: pairwise Jaccard stability of unique extraction
+  keys across runs.
+- `variance`: run-level extraction count statistics (`min`, `max`, `mean`,
+  `stability`).
 - Bench aggregate variance diagnostics:
   - `extractionCountVariance` and `extractionCountStdDev`
   - `successRateStdDev`
-  - `caseOutcomeDriftRate` (fraction of cases whose result signature changes across trials)
+  - `caseOutcomeDriftRate` (fraction of cases whose result signature changes
+    across trials)
 - Bench breadth diagnostics:
   - `breadth.totalCaseCount`
   - `breadth.regressionCategoryCount`
 
 ## Interpretation
-- Deterministic fake-mode suite should remain at `1.0` for schema/quote/stability.
+
+- Deterministic fake-mode suite should remain at `1.0` for
+  schema/quote/stability.
 - Drops in `quoteInvariantRate` indicate grounding regressions.
-- Drops in `uniqueExtractionStability` indicate output drift across repeated runs.
+- Drops in `uniqueExtractionStability` indicate output drift across repeated
+  runs.
 - Increases in `caseOutcomeDriftRate` indicate unstable trial outcomes.
-- Low `breadth.regressionCategoryCount` indicates eval breadth erosion even when headline rates stay high.
+- Low `breadth.regressionCategoryCount` indicates eval breadth erosion even when
+  headline rates stay high.

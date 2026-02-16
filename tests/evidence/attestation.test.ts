@@ -197,17 +197,25 @@ test("attestEvidenceBundle produces verifiable attestation", async () => {
     signedAt: FIXED_SIGNED_AT,
   });
 
-  assert(signedBundle.attestation !== undefined, "attestation should be present");
+  assert(
+    signedBundle.attestation !== undefined,
+    "attestation should be present",
+  );
   if (!signedBundle.attestation) {
     return;
   }
 
   assertEqual(signedBundle.attestation.version, "1");
   assertEqual(signedBundle.attestation.algorithm, "HMAC-SHA-256");
-  assertEqual(signedBundle.attestation.canonicalization, "ekchylisma-json-c14n-v1");
+  assertEqual(
+    signedBundle.attestation.canonicalization,
+    "ekchylisma-json-c14n-v1",
+  );
   assertEqual(signedBundle.attestation.signedAt, FIXED_SIGNED_AT);
 
-  const verification = await verifyEvidenceBundleAttestation(signedBundle, { key });
+  const verification = await verifyEvidenceBundleAttestation(signedBundle, {
+    key,
+  });
   assertEqual(verification.valid, true, "signed bundle should verify");
 });
 
@@ -223,8 +231,14 @@ test("verifyEvidenceBundleAttestation detects payload tampering", async () => {
     runId: `${signedBundle.runId}-tampered`,
   };
 
-  const verification = await verifyEvidenceBundleAttestation(tamperedBundle, { key });
-  assertEqual(verification.valid, false, "tampered bundle should fail verification");
+  const verification = await verifyEvidenceBundleAttestation(tamperedBundle, {
+    key,
+  });
+  assertEqual(
+    verification.valid,
+    false,
+    "tampered bundle should fail verification",
+  );
 
   if (verification.valid) {
     throw new Error("expected invalid verification result");
@@ -242,8 +256,14 @@ test("verifyEvidenceBundleAttestation rejects signature from wrong key", async (
     signedAt: FIXED_SIGNED_AT,
   });
 
-  const verification = await verifyEvidenceBundleAttestation(signedBundle, { key: wrongKey });
-  assertEqual(verification.valid, false, "verification should fail with wrong key");
+  const verification = await verifyEvidenceBundleAttestation(signedBundle, {
+    key: wrongKey,
+  });
+  assertEqual(
+    verification.valid,
+    false,
+    "verification should fail with wrong key",
+  );
 
   if (verification.valid) {
     throw new Error("expected invalid verification result");

@@ -17,12 +17,15 @@ function stableStringify(value: unknown): string {
     return `[${value.map((item) => stableStringify(item)).join(",")}]`;
   }
 
-  const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
-    a.localeCompare(b),
-  );
-  return `{${entries
-    .map(([key, item]) => `${JSON.stringify(key)}:${stableStringify(item)}`)
-    .join(",")}}`;
+  const entries = Object.entries(value as Record<string, unknown>).sort((
+    [a],
+    [b],
+  ) => a.localeCompare(b));
+  return `{${
+    entries
+      .map(([key, item]) => `${JSON.stringify(key)}:${stableStringify(item)}`)
+      .join(",")
+  }}`;
 }
 
 function fail(message: string): never {
@@ -44,23 +47,24 @@ function normalizeClasses(
   classes: ProgramInput["classes"],
   examples: ProgramExample[],
 ): ProgramClass[] {
-  const classCandidates = classes && classes.length > 0
-    ? classes
-    : (() => {
-      const exampleClassNames = new Set<string>();
-      for (const example of examples) {
-        for (const output of example.output) {
-          if (typeof output.extractionClass === "string" && output.extractionClass.trim().length > 0) {
-            exampleClassNames.add(output.extractionClass.trim());
-          }
+  const classCandidates = classes && classes.length > 0 ? classes : (() => {
+    const exampleClassNames = new Set<string>();
+    for (const example of examples) {
+      for (const output of example.output) {
+        if (
+          typeof output.extractionClass === "string" &&
+          output.extractionClass.trim().length > 0
+        ) {
+          exampleClassNames.add(output.extractionClass.trim());
         }
       }
-      const names = [...exampleClassNames];
-      if (names.length === 0) {
-        return [{ name: "extraction", allowInferred: false }];
-      }
-      return names.map((name) => ({ name, allowInferred: false }));
-    })();
+    }
+    const names = [...exampleClassNames];
+    if (names.length === 0) {
+      return [{ name: "extraction", allowInferred: false }];
+    }
+    return names.map((name) => ({ name, allowInferred: false }));
+  })();
 
   if (!Array.isArray(classCandidates) || classCandidates.length === 0) {
     fail("classes must contain at least one class");
@@ -71,18 +75,25 @@ function normalizeClasses(
     if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
       fail(`classes[${index}] must be an object`);
     }
-    const name = ensureNonEmptyString(`classes[${index}].name`, (entry as { name?: unknown }).name);
+    const name = ensureNonEmptyString(
+      `classes[${index}].name`,
+      (entry as { name?: unknown }).name,
+    );
     if (seen.has(name)) {
       fail(`classes contains duplicate name: ${name}`);
     }
     seen.add(name);
 
-    const attributesSchema = (entry as { attributesSchema?: unknown }).attributesSchema;
+    const attributesSchema =
+      (entry as { attributesSchema?: unknown }).attributesSchema;
     if (
-      attributesSchema !== undefined
-      && (typeof attributesSchema !== "object" || attributesSchema === null || Array.isArray(attributesSchema))
+      attributesSchema !== undefined &&
+      (typeof attributesSchema !== "object" || attributesSchema === null ||
+        Array.isArray(attributesSchema))
     ) {
-      fail(`classes[${index}].attributesSchema must be an object when provided`);
+      fail(
+        `classes[${index}].attributesSchema must be an object when provided`,
+      );
     }
 
     const allowInferred = (entry as { allowInferred?: unknown }).allowInferred;
@@ -94,7 +105,9 @@ function normalizeClasses(
       name,
     };
     if (attributesSchema !== undefined) {
-      normalizedEntry.attributesSchema = normalizeSchemaDialect(attributesSchema);
+      normalizedEntry.attributesSchema = normalizeSchemaDialect(
+        attributesSchema,
+      );
     }
     if (allowInferred !== undefined) {
       normalizedEntry.allowInferred = allowInferred;
@@ -106,7 +119,9 @@ function normalizeClasses(
   return normalized;
 }
 
-function normalizeConstraints(input: ProgramInput["constraints"]): ProgramConstraints {
+function normalizeConstraints(
+  input: ProgramInput["constraints"],
+): ProgramConstraints {
   const requireExactQuote = input?.requireExactQuote ?? true;
   const forbidOverlap = input?.forbidOverlap ?? true;
   const maxExtractionsPerShard = input?.maxExtractionsPerShard;
@@ -118,10 +133,12 @@ function normalizeConstraints(input: ProgramInput["constraints"]): ProgramConstr
     fail("constraints.forbidOverlap must be boolean when provided");
   }
   if (
-    maxExtractionsPerShard !== undefined
-    && (!Number.isInteger(maxExtractionsPerShard) || maxExtractionsPerShard <= 0)
+    maxExtractionsPerShard !== undefined &&
+    (!Number.isInteger(maxExtractionsPerShard) || maxExtractionsPerShard <= 0)
   ) {
-    fail("constraints.maxExtractionsPerShard must be a positive integer when provided");
+    fail(
+      "constraints.maxExtractionsPerShard must be a positive integer when provided",
+    );
   }
 
   const normalized: ProgramConstraints = {
@@ -134,7 +151,9 @@ function normalizeConstraints(input: ProgramInput["constraints"]): ProgramConstr
   return normalized;
 }
 
-function normalizeExamples(examples: ProgramInput["examples"]): ProgramExample[] {
+function normalizeExamples(
+  examples: ProgramInput["examples"],
+): ProgramExample[] {
   if (examples === undefined) {
     return [];
   }
@@ -156,7 +175,10 @@ function normalizeExamples(examples: ProgramInput["examples"]): ProgramExample[]
   });
 }
 
-function validateExampleClasses(classes: ProgramClass[], examples: ProgramExample[]): void {
+function validateExampleClasses(
+  classes: ProgramClass[],
+  examples: ProgramExample[],
+): void {
   const classNames = new Set(classes.map((entry) => entry.name));
   for (let index = 0; index < examples.length; index += 1) {
     for (const extraction of examples[index].output) {
@@ -175,7 +197,10 @@ export async function normalizeProgram(input: ProgramInput): Promise<Program> {
   }
 
   const instructions = ensureNonEmptyString("instructions", input.instructions);
-  const description = ensureNonEmptyString("description", input.description ?? instructions);
+  const description = ensureNonEmptyString(
+    "description",
+    input.description ?? instructions,
+  );
   const examples = normalizeExamples(input.examples);
   const classes = normalizeClasses(input.classes, examples);
   validateExampleClasses(classes, examples);

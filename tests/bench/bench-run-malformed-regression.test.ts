@@ -23,7 +23,7 @@ test("bench runner exits non-zero on malformed regression record", async () => {
     documentText: "Alpha Beta",
     instructions: "Extract token Beta.",
     targetSchema: { type: "object" },
-    providerResponseText: "{\"extractions\":[]}",
+    providerResponseText: '{"extractions":[]}',
     expected: {
       emptyResultKind: "empty_by_evidence",
       minExtractions: 0,
@@ -32,7 +32,11 @@ test("bench runner exits non-zero on malformed regression record", async () => {
     sourceUrl: "https://example.com/source",
   };
 
-  await writeFile(regressionPath, `${JSON.stringify(malformedRecord)}\n`, "utf8");
+  await writeFile(
+    regressionPath,
+    `${JSON.stringify(malformedRecord)}\n`,
+    "utf8",
+  );
 
   let failedAsExpected = false;
 
@@ -53,18 +57,26 @@ test("bench runner exits non-zero on malformed regression record", async () => {
       },
     );
   } catch (error) {
-    const details = error as { code?: number; stderr?: string; stdout?: string; message?: string };
+    const details = error as {
+      code?: number;
+      stderr?: string;
+      stdout?: string;
+      message?: string;
+    };
     const output = [
       typeof details.stderr === "string" ? details.stderr : "",
       typeof details.stdout === "string" ? details.stdout : "",
       typeof details.message === "string" ? details.message : "",
     ].join("\n");
-    failedAsExpected = typeof details.code === "number"
-      && details.code !== 0
-      && output.includes("invalid regression dataset");
+    failedAsExpected = typeof details.code === "number" &&
+      details.code !== 0 &&
+      output.includes("invalid regression dataset");
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
 
-  assert(failedAsExpected, "bench runner should fail with invalid regression dataset error");
+  assert(
+    failedAsExpected,
+    "bench runner should fail with invalid regression dataset error",
+  );
 });

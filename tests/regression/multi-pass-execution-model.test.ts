@@ -9,7 +9,7 @@ import {
 import { FakeProvider, hashProviderRequest } from "../../src/providers/fake.ts";
 import { assert, assertEqual, test } from "../harness.ts";
 
-const PACK_ID = "2026-02-15--multi-pass-execution-model--477928bf";
+const PACK_REF = "2026-02-15--multi-pass-execution-model--477928bf";
 
 const CASE_IDS = [
   "multi-pass-execution-model--google-langextract--375--9c53aca8",
@@ -30,7 +30,10 @@ type MultiPassScript = {
   mode: "multi_pass_v1";
   draft: string;
   repair: string;
-  failureKind: "json_pipeline_failure" | "payload_shape_failure" | "quote_invariant_failure";
+  failureKind:
+    | "json_pipeline_failure"
+    | "payload_shape_failure"
+    | "quote_invariant_failure";
   failureMessage?: string;
 };
 
@@ -47,13 +50,13 @@ function defaultFailureMessage(kind: MultiPassScript["failureKind"]): string {
 function parseMultiPassScript(source: string): MultiPassScript {
   const parsed = JSON.parse(source) as Record<string, unknown>;
   if (
-    parsed.mode !== "multi_pass_v1"
-    || typeof parsed.draft !== "string"
-    || typeof parsed.repair !== "string"
-    || (
-      parsed.failureKind !== "json_pipeline_failure"
-      && parsed.failureKind !== "payload_shape_failure"
-      && parsed.failureKind !== "quote_invariant_failure"
+    parsed.mode !== "multi_pass_v1" ||
+    typeof parsed.draft !== "string" ||
+    typeof parsed.repair !== "string" ||
+    (
+      parsed.failureKind !== "json_pipeline_failure" &&
+      parsed.failureKind !== "payload_shape_failure" &&
+      parsed.failureKind !== "quote_invariant_failure"
     )
   ) {
     throw new Error("invalid multi_pass_v1 script");
@@ -64,13 +67,19 @@ function parseMultiPassScript(source: string): MultiPassScript {
     draft: parsed.draft,
     repair: parsed.repair,
     failureKind: parsed.failureKind,
-    failureMessage: typeof parsed.failureMessage === "string" ? parsed.failureMessage : undefined,
+    failureMessage: typeof parsed.failureMessage === "string"
+      ? parsed.failureMessage
+      : undefined,
   };
 }
 
 async function findCase(caseId: string) {
-  const records = await loadRegressionDataset("bench/datasets/regression.jsonl");
-  const entry = records.find((item) => item.caseId === caseId && item.packId === PACK_ID);
+  const records = await loadRegressionDataset(
+    "bench/datasets/regression.jsonl",
+  );
+  const entry = records.find((item) =>
+    item.caseId === caseId && item.packId === PACK_REF
+  );
   if (!entry) {
     throw new Error(`missing regression record for ${caseId}`);
   }
@@ -86,7 +95,9 @@ for (const caseId of CASE_IDS) {
       defaultResponse: script.draft,
     });
 
-    const programHash = await sha256Hex(`${entry.instructions}:${JSON.stringify(entry.targetSchema)}`);
+    const programHash = await sha256Hex(
+      `${entry.instructions}:${JSON.stringify(entry.targetSchema)}`,
+    );
     const program = {
       instructions: entry.instructions,
       examples: [],
@@ -113,7 +124,8 @@ for (const caseId of CASE_IDS) {
         {
           previousResponseText: script.draft,
           failureKind: script.failureKind,
-          failureMessage: script.failureMessage ?? defaultFailureMessage(script.failureKind),
+          failureMessage: script.failureMessage ??
+            defaultFailureMessage(script.failureKind),
           priorPass: 1,
         },
       );
@@ -134,10 +146,13 @@ for (const caseId of CASE_IDS) {
       overlap: 0,
     });
 
-    assertEqual(bundle.diagnostics.emptyResultKind, entry.expected.emptyResultKind);
+    assertEqual(
+      bundle.diagnostics.emptyResultKind,
+      entry.expected.emptyResultKind,
+    );
     assert(
-      bundle.extractions.length >= entry.expected.minExtractions
-        && bundle.extractions.length <= entry.expected.maxExtractions,
+      bundle.extractions.length >= entry.expected.minExtractions &&
+        bundle.extractions.length <= entry.expected.maxExtractions,
       "extraction count must match expected bounds",
     );
     assertEqual(bundle.diagnostics.multiPassLog.shards.length, 1);

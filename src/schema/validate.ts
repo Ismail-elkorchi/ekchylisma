@@ -99,7 +99,12 @@ function validateLiteral(
 }
 
 function validateEnum(
-  schema: EnumSchema<readonly [string | number | boolean | null, ...(string | number | boolean | null)[]]>,
+  schema: EnumSchema<
+    readonly [
+      string | number | boolean | null,
+      ...(string | number | boolean | null)[],
+    ]
+  >,
   value: unknown,
   path: string,
   errors: ValidationError[],
@@ -163,7 +168,14 @@ function validateObject(
       continue;
     }
 
-    validateNode(childSchema, valueRecord[key], keyPath, errors, depth + 1, state);
+    validateNode(
+      childSchema,
+      valueRecord[key],
+      keyPath,
+      errors,
+      depth + 1,
+      state,
+    );
   }
 
   if (!state.strictObject) {
@@ -329,7 +341,11 @@ function validateNode(
 
     default: {
       const unreachable: never = schema;
-      throw new Error(`Unsupported schema node: ${(unreachable as { kind?: string }).kind ?? "unknown"}.`);
+      throw new Error(
+        `Unsupported schema node: ${
+          (unreachable as { kind?: string }).kind ?? "unknown"
+        }.`,
+      );
     }
   }
 }

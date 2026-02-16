@@ -30,7 +30,10 @@ export class QuoteInvariantViolation extends Error {
 
 export function assertQuoteInvariant(
   docText: string,
-  extraction: Pick<Extraction, "quote" | "offsetMode" | "charStart" | "charEnd" | "span">,
+  extraction: Pick<
+    Extraction,
+    "quote" | "offsetMode" | "charStart" | "charEnd" | "span"
+  >,
 ): void {
   const { quote, offsetMode, charStart, charEnd, span } = extraction;
 
@@ -47,11 +50,15 @@ export function assertQuoteInvariant(
     });
   }
 
-  if (!Number.isInteger(charStart) || !Number.isInteger(charEnd) || charStart > charEnd) {
+  if (
+    !Number.isInteger(charStart) || !Number.isInteger(charEnd) ||
+    charStart > charEnd
+  ) {
     throw new QuoteInvariantViolation({
       name: "QuoteInvariantError",
       code: "INVALID_OFFSETS",
-      message: "Offsets must contain integer bounds where charStart <= charEnd.",
+      message:
+        "Offsets must contain integer bounds where charStart <= charEnd.",
       quote,
       actualQuote: "",
       charStart,
@@ -61,9 +68,9 @@ export function assertQuoteInvariant(
   }
 
   if (
-    span.offsetMode !== offsetMode
-    || span.charStart !== charStart
-    || span.charEnd !== charEnd
+    span.offsetMode !== offsetMode ||
+    span.charStart !== charStart ||
+    span.charEnd !== charEnd
   ) {
     throw new QuoteInvariantViolation({
       name: "QuoteInvariantError",

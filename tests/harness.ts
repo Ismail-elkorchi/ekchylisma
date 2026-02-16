@@ -17,9 +17,15 @@ export function assert(condition: unknown, message: string): void {
   }
 }
 
-export function assertEqual<T>(actual: T, expected: T, label = "values differ"): void {
+export function assertEqual<T>(
+  actual: T,
+  expected: T,
+  label = "values differ",
+): void {
   if (!Object.is(actual, expected)) {
-    throw new Error(`${label}: expected ${String(expected)}, got ${String(actual)}`);
+    throw new Error(
+      `${label}: expected ${String(expected)}, got ${String(actual)}`,
+    );
   }
 }
 
@@ -32,7 +38,9 @@ export async function assertRejects(
     await fn();
   } catch (error) {
     if (!predicate(error)) {
-      throw new Error(`${label}: predicate did not match error ${String(error)}`);
+      throw new Error(
+        `${label}: predicate did not match error ${String(error)}`,
+      );
     }
     return;
   }
@@ -49,7 +57,9 @@ export async function run(): Promise<void> {
       console.log(`ok - ${name}`);
     } catch (error) {
       failures += 1;
-      const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+      const detail = error instanceof Error
+        ? `${error.name}: ${error.message}`
+        : String(error);
       console.error(`not ok - ${name} :: ${detail}`);
     }
   }

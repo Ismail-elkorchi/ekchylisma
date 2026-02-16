@@ -6,8 +6,7 @@ export interface CheckpointStore<TValue> {
 }
 
 export class InMemoryCheckpointStore<TValue>
-  implements CheckpointStore<TValue>
-{
+  implements CheckpointStore<TValue> {
   private store = new Map<string, TValue>();
 
   async get(key: string): Promise<TValue | undefined> {

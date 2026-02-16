@@ -57,11 +57,12 @@ test("mapShardSpanToDocument rejects out-of-range spans", async () => {
   });
 
   await assertRejects(
-    () => mapShardSpanToDocument(shard, {
-      offsetMode: "utf16_code_unit",
-      charStart: 1,
-      charEnd: 8,
-    }),
+    () =>
+      mapShardSpanToDocument(shard, {
+        offsetMode: "utf16_code_unit",
+        charStart: 1,
+        charEnd: 8,
+      }),
     (error) => error instanceof Error && error.message.includes("exceeds"),
   );
 });
