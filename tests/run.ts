@@ -9,6 +9,7 @@ import "./contracts/json-parse-error-contract.test.ts";
 import "./contracts/json-schema-subset-dialect-guard.test.ts";
 import "./contracts/provider-response-channel-contract.test.ts";
 import "./contracts/program-shape-contract.test.ts";
+import "./ci/release-workflow-pinning.test.ts";
 import "./docs/traceability-no-stale-gap-claims.test.ts";
 import "./bench/regression-identifiers-grammar.test.ts";
 import "./bench/regression-identifiers-no-placeholders.test.ts";
