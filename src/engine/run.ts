@@ -996,6 +996,75 @@ function determineEmptyResultKind(
   return "empty_by_evidence";
 }
 
+function stableJsonString(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableJsonString(entry)).join(",")}]`;
+  }
+
+  const entries = Object.keys(value as Record<string, unknown>)
+    .sort()
+    .map((key) =>
+      `${JSON.stringify(key)}:${
+        stableJsonString((value as Record<string, unknown>)[key])
+      }`
+    );
+  return `{${entries.join(",")}}`;
+}
+
+function compareExtractions(left: Extraction, right: Extraction): number {
+  if (left.charStart !== right.charStart) {
+    return left.charStart - right.charStart;
+  }
+  if (left.charEnd !== right.charEnd) {
+    return left.charEnd - right.charEnd;
+  }
+  if (left.extractionClass !== right.extractionClass) {
+    return left.extractionClass.localeCompare(right.extractionClass);
+  }
+  if (left.quote !== right.quote) {
+    return left.quote.localeCompare(right.quote);
+  }
+  if (left.grounding !== right.grounding) {
+    return left.grounding.localeCompare(right.grounding);
+  }
+  const leftAttributes = stableJsonString(left.attributes ?? null);
+  const rightAttributes = stableJsonString(right.attributes ?? null);
+  return leftAttributes.localeCompare(rightAttributes);
+}
+
+function extractionIdentityKey(extraction: Extraction): string {
+  return [
+    extraction.offsetMode,
+    String(extraction.charStart),
+    String(extraction.charEnd),
+    extraction.extractionClass,
+    extraction.quote,
+    extraction.grounding,
+    stableJsonString(extraction.attributes ?? null),
+  ].join("|");
+}
+
+function orderAndDedupExtractions(extractions: Extraction[]): Extraction[] {
+  const sorted = extractions.slice().sort(compareExtractions);
+  const unique: Extraction[] = [];
+  const seen = new Set<string>();
+
+  for (const extraction of sorted) {
+    const key = extractionIdentityKey(extraction);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    unique.push(extraction);
+  }
+
+  return unique;
+}
+
 async function runShardWithProvider(
   options: RunShardOptions,
 ): Promise<ShardRunValue> {
@@ -1514,7 +1583,10 @@ export async function runWithEvidence(
     }
   }
 
-  const extractions = shardOutcomes.flatMap((outcome) => outcome.extractions);
+  const rawExtractions = shardOutcomes.flatMap((outcome) =>
+    outcome.extractions
+  );
+  const extractions = orderAndDedupExtractions(rawExtractions);
   const runCompleteness = classifyRunCompleteness(
     shardOutcomes.length,
     failures.length,

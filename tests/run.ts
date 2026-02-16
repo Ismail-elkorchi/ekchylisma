@@ -22,6 +22,7 @@ import "./engine/chunk-map-span.test.ts";
 import "./engine/checkpoint-retry-executor.test.ts";
 import "./engine/json-pipeline-run.test.ts";
 import "./engine/ecosystem-json-regressions.test.ts";
+import "./engine/provenance-dedup-and-stability.test.ts";
 import "./engine/long-text-fixture.test.ts";
 import "./engine/prompt-compiler.test.ts";
 import "./engine/security-hardening.test.ts";
