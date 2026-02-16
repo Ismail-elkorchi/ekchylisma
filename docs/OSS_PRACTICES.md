@@ -23,6 +23,7 @@ This document defines operational checks used to keep the repository forkable, r
 | PR-only integration workflow | CI must run on pull requests and gate merges | `.github/workflows/ci.yml` + branch policy |
 | PR body template presence | Repository PR template must exist and be used for standardized verification/evidence sections | `npm run oss-check` |
 | PR body heading enforcement | CI node job must execute `node scripts/pr-body-check.ts` and fail on missing template headings in pull request bodies | CI `node` job and `npm run oss-check` |
+| PR title and branch naming enforcement | CI node job must execute `node scripts/pr-body-check.ts` and fail on nonconforming title or branch patterns | CI `node` job and `npm run oss-check` |
 | Requirement evidence mapping | Every `REQ-*` in `MASTER_SPEC.md` must map to code/tests/CI or explicit gap rationale | `SPEC_TRACEABILITY.md` review in PR |
 | Baseline reproducibility snapshot | Baseline command matrix and environment notes tracked | `docs/BASELINE_AUDIT.md` |
 

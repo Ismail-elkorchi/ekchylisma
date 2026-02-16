@@ -53,6 +53,8 @@ import "./schema/to-json-schema.test.ts";
 import "./schema/dialect-normalization.test.ts";
 import "./tools/repo-scope-check.test.ts";
 import "./tools/repo-text-check-placeholders.test.ts";
+import "./tools/pr-check-rejects-placeholder-title.test.ts";
+import "./tools/pr-check-rejects-placeholder-branch.test.ts";
 import "./tools/unicode-check-bidi.test.ts";
 import "./tools/unicode-check-linesep.test.ts";
 import "./viz/html.test.ts";

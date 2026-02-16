@@ -12,9 +12,43 @@ function extractHeadings(markdown: string): string[] {
 type PullRequestEvent = {
   pull_request?: {
     body?: string | null;
+    title?: string | null;
     number?: number;
+    head?: {
+      ref?: string | null;
+    };
   };
 };
+
+const TITLE_REGEX = /^(build|ci|docs|feat|fix|perf|refactor|test)\([a-z0-9-]+\): [A-Za-z0-9].+$/;
+const BRANCH_REGEX = /^(build|ci|docs|feat|fix|perf|refactor|test)\/[a-z0-9-]+$/;
+const TITLE_FORBIDDEN_TOKEN_PATTERN =
+  /PR-[0-9]+|\b(?:T[O][D][O]|T[B][D]|W[I][P])\b/;
+const BRANCH_FORBIDDEN_TOKEN_PATTERN = /pr-[0-9]+/;
+
+function assertTitlePolicy(prTitle: string): void {
+  if (!TITLE_REGEX.test(prTitle)) {
+    throw new Error(
+      `PR title does not match required pattern: ${TITLE_REGEX.source}`,
+    );
+  }
+
+  if (TITLE_FORBIDDEN_TOKEN_PATTERN.test(prTitle)) {
+    throw new Error("PR title contains a forbidden token pattern.");
+  }
+}
+
+function assertBranchPolicy(branchName: string): void {
+  if (!BRANCH_REGEX.test(branchName)) {
+    throw new Error(
+      `PR branch does not match required pattern: ${BRANCH_REGEX.source}`,
+    );
+  }
+
+  if (BRANCH_FORBIDDEN_TOKEN_PATTERN.test(branchName) || branchName.includes("program")) {
+    throw new Error("PR branch contains a forbidden token pattern.");
+  }
+}
 
 async function run(): Promise<void> {
   const eventName = process.env.GITHUB_EVENT_NAME;
@@ -40,6 +74,8 @@ async function run(): Promise<void> {
 
   const payload = JSON.parse(eventSource) as PullRequestEvent;
   const prBody = payload.pull_request?.body ?? "";
+  const prTitle = payload.pull_request?.title ?? "";
+  const branchName = payload.pull_request?.head?.ref ?? "";
 
   const missingHeadings = requiredHeadings.filter((heading) => !prBody.includes(heading));
   if (missingHeadings.length > 0) {
@@ -48,8 +84,11 @@ async function run(): Promise<void> {
     );
   }
 
+  assertTitlePolicy(prTitle);
+  assertBranchPolicy(branchName);
+
   console.log(
-    `pr-body-check passed (PR #${String(payload.pull_request?.number ?? "unknown")}, ${requiredHeadings.length} required headings present).`,
+    `pr-body-check passed (PR #${String(payload.pull_request?.number ?? "unknown")}, ${requiredHeadings.length} required headings present, title and branch policies validated).`,
   );
 }
 
