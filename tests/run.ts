@@ -33,6 +33,7 @@ import "./io/jsonl.test.ts";
 import "./layout/layout-alignment-and-portability.test.ts";
 import "./json/extract-json.test.ts";
 import "./json/frame-decoder.test.ts";
+import "./json/stream-tool-call-assembler.test.ts";
 import "./json/repair.test.ts";
 import "./json/parse.test.ts";
 import "./providers/fake-e2e.test.ts";
