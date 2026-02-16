@@ -11,6 +11,7 @@ import "./contracts/provider-response-channel-contract.test.ts";
 import "./contracts/program-shape-contract.test.ts";
 import "./ci/release-workflow-pinning.test.ts";
 import "./docs/traceability-no-stale-gap-claims.test.ts";
+import "./docs/eval-language.test.ts";
 import "./bench/regression-identifiers-grammar.test.ts";
 import "./bench/regression-identifiers-no-placeholders.test.ts";
 import "./bench/regression-dataset-schema.test.ts";

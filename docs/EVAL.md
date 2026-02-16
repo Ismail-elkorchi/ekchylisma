@@ -56,13 +56,21 @@ exits non-zero if any record is malformed.
 
 ## Contributor workflow for regression records
 
-1. Prepare a pack in the workbench and validate it with workbench validators.
-2. Append the pack's `regressions.jsonl` records to
-   `bench/datasets/regression.jsonl`.
-3. Run:
+1. Add new regression entries directly to `bench/datasets/regression.jsonl`.
+2. For each new entry, include `sourceUrl`, `sourceQuote`, `expected`, and a
+   deterministic `caseId`.
+3. Add or update a matching regression test file under `tests/regression/` so
+   the new records execute in `npm test`.
+4. Run the regression runner:
    - `npm run bench:run`
    - `npm run bench:score`
-4. Run the full repository matrix before opening a PR.
+5. Run the full repository matrix before opening a PR:
+   - `npm run test:deno`
+   - `npm run test:bun`
+   - `npm run test:workers`
+   - `npm run test:browser`
+   - `npm run bench`
+   - `npm run check`
 
 ## Metrics
 
