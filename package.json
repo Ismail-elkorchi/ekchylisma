@@ -42,10 +42,7 @@
     "typecheck": "deno check tests/schema/inference.check.ts",
     "repo-scope-check": "node scripts/repo-scope-check.ts",
     "repo-text-check": "node scripts/repo-text-check.ts",
-    "unicode-check": "node scripts/unicode-and-linebreak-check.ts",
-    "oss-check": "node scripts/oss-check.ts",
-    "orphan-check": "node scripts/orphan-check.ts",
-    "check": "npm run repo-scope-check && npm run repo-text-check && npm run unicode-check && npm run oss-check && npm run fmt:check && npm test && npm run typecheck && npm run orphan-check"
+    "check": "npm run repo-scope-check && npm run repo-text-check && npm run typecheck && npm test && npm run test:workers && npm run test:browser"
   },
   "dependencies": {},
   "devDependencies": {

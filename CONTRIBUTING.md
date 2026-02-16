@@ -18,20 +18,21 @@ Run the full matrix before opening or updating a PR:
 npm run check
 npm run test:deno
 npm run test:bun
-npm run test:workers
-npm run test:browser
 npm run bench
 ```
+
+`npm run check` executes boundary checks, typecheck, Node tests, and portability
+smoke tests for Workers and Browser targets.
 
 Include the commands and key outputs in the PR `## Verification` section.
 
 ## Naming Policy
 
 Pull request title regex:
-`^(build|ci|docs|feat|fix|perf|refactor|test)\([a-z0-9-]+\): [A-Za-z0-9].+$`
+`^(build|ci|cleanup|docs|feat|fix|perf|refactor|test)\([a-z0-9-]+\): [A-Za-z0-9].+$`
 
 Pull request branch regex:
-`^(build|ci|docs|feat|fix|perf|refactor|test)\/[a-z0-9-]+$`
+`^(build|ci|cleanup|docs|feat|fix|perf|refactor|test)\/[a-z0-9-]+$`
 
 ## Contribution License Terms
 
